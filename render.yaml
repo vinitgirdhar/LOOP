@@ -1,0 +1,143 @@
+# Render blueprint — deploys the whole stack in one go.
+#
+#   New → Blueprint → point at this repo → Apply
+#
+# After the first deploy, fill in the values marked `sync: false` in the Render
+# dashboard (API keys and the two cross-service URLs), then redeploy.
+#
+# Free tier notes:
+#   • web services spin down after ~15 min idle — the API self-pings every 5 min
+#     (apps/api/src/jobs/keepAlive.ts) and .github/workflows/keep-alive.yml pings
+#     from outside so a sleeping service is woken again.
+#   • free Postgres instances expire after 30 days; upgrade or recreate.
+#   • pgvector is available on Render Postgres 16 — the app enables it on boot.
+
+databases:
+  - name: loop-postgres
+    databaseName: loop
+    user: loop
+    plan: free
+    postgresMajorVersion: '16'
+
+services:
+  # ── API: Express + Socket.IO + cron ──────────────────────────────────────
+  - type: web
+    name: loop-api
+    runtime: node
+    plan: free
+    region: oregon
+    branch: main
+    healthCheckPath: /api/health
+    buildCommand: npm ci && npm run db:generate
+    # db:deploy applies migrations; db push is the fallback for a fresh database.
+    preDeployCommand: npm run db:push -- --accept-data-loss
+    startCommand: npm run start --workspace @loop/api
+    autoDeploy: true
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: NODE_VERSION
+        value: '22'
+      - key: PORT
+        value: '4000'
+      - key: DATABASE_URL
+        fromDatabase:
+          name: loop-postgres
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          name: loop-redis
+          type: keyvalue
+          property: connectionString
+      - key: JWT_ACCESS_SECRET
+        generateValue: true
+      - key: JWT_REFRESH_SECRET
+        generateValue: true
+      - key: ACCESS_TOKEN_TTL
+        value: 15m
+      - key: REFRESH_TOKEN_TTL_DAYS
+        value: '30'
+      # API and web are on different hostnames, so cookies must be cross-site.
+      - key: CROSS_SITE_COOKIES
+        value: 'true'
+      - key: API_URL
+        fromService:
+          name: loop-api
+          type: web
+          property: url
+      - key: KEEP_ALIVE_URL
+        fromService:
+          name: loop-api
+          type: web
+          property: url
+      - key: WEB_URL
+        fromService:
+          name: loop-web
+          type: web
+          property: url
+      - key: CORS_ORIGINS
+        fromService:
+          name: loop-web
+          type: web
+          property: url
+      # ── fill these in the dashboard ──
+      - key: GROQ_API_KEY
+        sync: false
+      - key: GROQ_MODEL
+        value: llama-3.3-70b-versatile
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: GEMINI_MODEL
+        value: gemini-2.0-flash
+      - key: GEMINI_EMBED_MODEL
+        value: text-embedding-004
+      - key: GOOGLE_CLIENT_ID
+        sync: false
+      - key: GOOGLE_CLIENT_SECRET
+        sync: false
+      - key: CLOUDINARY_CLOUD_NAME
+        sync: false
+      - key: CLOUDINARY_API_KEY
+        sync: false
+      - key: CLOUDINARY_API_SECRET
+        sync: false
+      - key: RESEND_API_KEY
+        sync: false
+      - key: MAIL_FROM
+        value: Loop <onboarding@resend.dev>
+      - key: GITHUB_WEBHOOK_SECRET
+        sync: false
+
+  # ── Web: Next.js ─────────────────────────────────────────────────────────
+  - type: web
+    name: loop-web
+    runtime: node
+    plan: free
+    region: oregon
+    branch: main
+    buildCommand: npm ci && npm run build --workspace @loop/web
+    startCommand: npm run start --workspace @loop/web
+    autoDeploy: true
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: NODE_VERSION
+        value: '22'
+      - key: NEXT_PUBLIC_API_URL
+        fromService:
+          name: loop-api
+          type: web
+          property: url
+      - key: NEXT_PUBLIC_SITE_URL
+        fromService:
+          name: loop-web
+          type: web
+          property: url
+
+  # ── Redis (presence, rate limiting) ──────────────────────────────────────
+  - type: keyvalue
+    name: loop-redis
+    plan: free
+    region: oregon
+    maxmemoryPolicy: allkeys-lru
+    ipAllowList: []
