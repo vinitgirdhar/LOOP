@@ -1,0 +1,42 @@
+name: Keep Render awake
+
+# Render free web services spin down after ~15 minutes without inbound traffic.
+# The API also self-pings every 5 minutes, but a sleeping container cannot wake
+# itself — this workflow pings from outside GitHub's runners, so it recovers a
+# service that already went to sleep.
+#
+# Setup: Settings → Secrets and variables → Actions → Variables
+#   API_PING_URL  https://loop-api.onrender.com/api/health
+#   WEB_PING_URL  https://loop-web.onrender.com
+on:
+  schedule:
+    # GitHub's shortest reliable cadence. Free minutes are not consumed by
+    # scheduled workflows on public repositories.
+    - cron: '*/10 * * * *'
+  workflow_dispatch:
+
+concurrency:
+  group: keep-alive
+  cancel-in-progress: true
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Ping API
+        if: vars.API_PING_URL != ''
+        run: |
+          for attempt in 1 2 3; do
+            code=$(curl -sS -o /dev/null -w '%{http_code}' --max-time 90 "${{ vars.API_PING_URL }}" || echo 000)
+            echo "attempt $attempt → HTTP $code"
+            if [ "$code" = "200" ]; then exit 0; fi
+            sleep 20
+          done
+          echo "::warning::API did not return 200 after 3 attempts (cold start can exceed 90s on the free tier)"
+
+      - name: Ping web
+        if: vars.WEB_PING_URL != ''
+        run: |
+          code=$(curl -sS -o /dev/null -w '%{http_code}' --max-time 90 "${{ vars.WEB_PING_URL }}" || echo 000)
+          echo "web → HTTP $code"
