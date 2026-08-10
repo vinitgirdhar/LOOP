@@ -21,7 +21,19 @@ interface SocketUser {
  */
 export function createSocketServer(httpServer: HttpServer): Server {
   const io = new Server(httpServer, {
-    cors: { origin: corsOrigins, credentials: true },
+    cors: {
+      origin: (origin, callback) => {
+        if (
+          !origin ||
+          corsOrigins.includes(origin) ||
+          (process.env.NODE_ENV === 'development' && (origin.includes('localhost') || origin.includes('127.0.0.1')))
+        ) {
+          return callback(null, true);
+        }
+        callback(null, false);
+      },
+      credentials: true,
+    },
     path: '/socket.io',
     // Long polling stays enabled as the fallback when websockets are blocked.
     transports: ['websocket', 'polling'],

@@ -44,8 +44,14 @@ export function createApp(): Express {
   app.use(
     cors({
       origin: (origin, callback) => {
-        if (!origin || corsOrigins.includes(origin)) return callback(null, true);
-        callback(new Error(`Origin ${origin} is not allowed`));
+        if (
+          !origin ||
+          corsOrigins.includes(origin) ||
+          (env.NODE_ENV === 'development' && (origin.includes('localhost') || origin.includes('127.0.0.1')))
+        ) {
+          return callback(null, true);
+        }
+        callback(null, false);
       },
       credentials: true,
       exposedHeaders: ['Content-Disposition'],
