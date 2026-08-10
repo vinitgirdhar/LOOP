@@ -113,7 +113,7 @@ export default function AskPage({ params }: { params: Promise<{ workspaceId: str
         {turns.map((turn, index) => (
           <div key={index} className="space-y-2">
             <div className="flex justify-end">
-              <p className="max-w-[85%] rounded-2xl rounded-br-sm bg-[var(--accent)] px-3.5 py-2 text-[13px] text-white">{turn.question}</p>
+              <p className="max-w-[85%] rounded-2xl rounded-br-sm bg-[var(--accent)] px-3.5 py-2 text-[13px] text-[var(--accent-text)]">{turn.question}</p>
             </div>
 
             {turn.error ? (

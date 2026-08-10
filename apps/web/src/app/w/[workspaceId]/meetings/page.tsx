@@ -157,7 +157,7 @@ export default function MeetingsPage({ params }: { params: Promise<{ workspaceId
               <ul className="space-y-1.5">
                 {open.participants.map((participant) => (
                   <li key={participant.userId} className="flex items-center gap-2.5">
-                    <Avatar name={participant.user.name} src={participant.user.avatarUrl} size={24} />
+                    <Avatar seed={participant.user.id} name={participant.user.name} src={participant.user.avatarUrl} size={24} />
                     <span className="min-w-0 flex-1 truncate text-[13px]">{participant.user.name}</span>
                     <Badge tone={participant.status === 'ACCEPTED' ? 'success' : participant.status === 'DECLINED' ? 'danger' : 'neutral'}>
                       {participant.status.toLowerCase()}
@@ -345,7 +345,7 @@ function CreateMeetingModal({
                   checked={participantIds.includes(member.id)}
                   onChange={(e) => setParticipantIds((current) => (e.target.checked ? [...current, member.id] : current.filter((id) => id !== member.id)))}
                 />
-                <Avatar name={member.name} src={member.avatarUrl} size={20} />
+                <Avatar seed={member.id} name={member.name} src={member.avatarUrl} size={20} />
                 <span className="text-[13px]">{member.name}</span>
               </label>
             ))}

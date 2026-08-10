@@ -161,7 +161,7 @@ export function ChatWorkspace({ workspaceId, channelId }: { workspaceId: string;
               ) : (
                 grouped.map((group) => (
                   <div key={group.id} className="flex gap-2.5">
-                    <Avatar name={group.author.name} src={group.author.avatarUrl} size={30} />
+                    <Avatar seed={group.author.id} name={group.author.name} src={group.author.avatarUrl} size={30} />
                     <div className="min-w-0 flex-1">
                       <p className="text-[13px]">
                         <span className="font-semibold">{group.author.name}</span>{' '}
@@ -428,7 +428,7 @@ function ThreadDrawer({ thread, channelId, onClose }: { thread: Message | null; 
           <ul className="space-y-2">
             {(replies ?? []).map((reply) => (
               <li key={reply.id} className="flex gap-2">
-                <Avatar name={reply.author.name} src={reply.author.avatarUrl} size={24} />
+                <Avatar seed={reply.author.id} name={reply.author.name} src={reply.author.avatarUrl} size={24} />
                 <div>
                   <p className="text-[12px] font-semibold">
                     {reply.author.name} <span className="text-[10px] font-normal text-[var(--text-faint)]">{relativeTime(reply.createdAt)}</span>

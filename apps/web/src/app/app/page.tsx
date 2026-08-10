@@ -11,6 +11,7 @@ import { ThemeToggle } from '@/components/providers/theme';
 import { FormError } from '@/components/auth-form';
 import { api, apiErrorMessage } from '@/lib/api';
 import { Icon } from '@/components/icons';
+import { greeting } from '@/lib/format';
 
 function WorkspacePicker() {
   const router = useRouter();
@@ -59,9 +60,15 @@ function WorkspacePicker() {
         </div>
       </header>
 
-      <main id="main" className="mx-auto max-w-2xl px-4 pb-16 pt-4 sm:px-6">
-        <h1 className="text-xl font-bold tracking-[-0.02em]">Hello {user.name.split(' ')[0]}</h1>
-        <p className="mt-1 text-[13px] text-[var(--text-muted)]">Pick a workspace, or start a new one.</p>
+      <main id="main" className="mx-auto max-w-2xl px-4 pb-16 pt-2 sm:px-6">
+        <div className="flex items-center gap-3.5">
+          <Avatar seed={user.id} name={user.name} src={user.avatarUrl} size={52} />
+          <div className="min-w-0">
+            <p className="text-[13px] text-[var(--text-muted)]">{greeting()} 👋</p>
+            <h1 className="truncate text-[22px] font-bold leading-tight">{user.name.split(' ')[0]}</h1>
+          </div>
+        </div>
+        <p className="mt-5 text-[13px] text-[var(--text-muted)]">Pick a workspace, or start a new one.</p>
 
         {unverified && (
           <Card className="mt-4 border-[var(--warning)]/40 bg-[var(--warning-soft)]">
@@ -86,7 +93,7 @@ function WorkspacePicker() {
               }}
               className="card flex w-full items-center gap-3 p-4 text-left transition-colors hover:border-[var(--accent)]"
             >
-              <Avatar name={membership.workspace.name} src={membership.workspace.logoUrl} size={38} />
+              <Avatar name={membership.workspace.name} src={membership.workspace.logoUrl} size={38} kind="workspace" />
               <span className="min-w-0 flex-1">
                 <span className="block truncate text-sm font-semibold">{membership.workspace.name}</span>
                 <span className="block text-xs text-[var(--text-muted)]">{ROLE_LABELS[membership.role]}</span>

@@ -1,0 +1,115 @@
+# Supabase
+
+The backend. Postgres, auth, storage, realtime and row level security, replacing
+`apps/api` (Express + Prisma + Socket.io + Redis + Cloudinary).
+
+Deployment shape: **web on Vercel, everything else on Supabase.** There is no
+server of our own left to run.
+
+## The queries, in order
+
+Apply them lowest number first. Each depends on everything before it.
+
+| # | File | What it does |
+|---|------|--------------|
+| 1 | `migrations/0001_extensions_and_enums.sql` | `pgcrypto`, `pg_trgm`, `pgvector`; the 10 enums |
+| 2 | `migrations/0002_identity_and_rbac.sql` | `profiles` (keyed to `auth.users`), permissions / roles / role_permissions |
+| 3 | `migrations/0003_tenancy.sql` | organisations, workspaces, departments, membership, invites |
+| 4 | `migrations/0004_projects_and_tasks.sql` | projects, board columns, milestones, sprints, burndown, tasks, subtasks, dependencies, labels, comments |
+| 5 | `migrations/0005_content_files_and_wiki.sql` | folders, attachments, wiki pages and versions |
+| 6 | `migrations/0006_collaboration.sql` | channels, messages, reactions, meetings, holidays, time logs |
+| 7 | `migrations/0007_intelligence_and_system.sql` | integrations, Auto-Pilot suggestions, health snapshots, embeddings, ask logs, activity, audit, settings, flags |
+| 8 | `migrations/0008_functions_and_triggers.sql` | authorisation helpers, `handle_new_user`, `updated_at`, task numbering, `match_embeddings` |
+| 9 | `migrations/0009_rls_core.sql` | RLS on every table; policies for identity, tenancy, projects, tasks |
+| 10 | `migrations/0010_rls_content_and_comms.sql` | policies for files, wiki, chat, meetings, time, intelligence |
+| 11 | `migrations/0011_realtime_and_storage.sql` | realtime publication, `attachments` and `avatars` buckets, storage policies |
+| 12 | `migrations/0012_seed_reference_data.sql` | the permission matrix, four roles, plans, feature flags |
+
+Result: **44 tables, 99 policies, RLS enabled on all of them.**
+
+Number 12 is not demo content. Nothing can be authorised without it, because
+every write policy resolves through `role_permissions`.
+
+## Applying them
+
+```bash
+# local
+supabase start
+supabase db reset          # runs 0001..0012 in order
+
+# hosted
+supabase link --project-ref <ref>
+supabase db push
+```
+
+Or paste each file into the SQL editor, lowest number first.
+
+## Checking it
+
+```bash
+npm i pg                       # standalone, not a project dependency
+node supabase/tests/rls.test.cjs
+```
+
+Builds a workspace with an OWNER, a MEMBER and a CLIENT and asserts who can
+read what. The client boundary is the reason this test exists: the product
+promises a client account cannot reach internal chat or unshared docs, and that
+promise is now nothing but a policy.
+
+Passing means, among other things: a CLIENT sees only projects they were added
+to, only `is_shared` wiki pages, and zero messages; a MEMBER cannot promote
+themselves or delete a project.
+
+## How authorisation works
+
+`apps/api/src/middleware/auth.ts` checked a permission once and then trusted
+every query behind it. Here the rule travels with the data — a missed check
+cannot leak, because there is no query path that skips a policy.
+
+- **read** → membership of the row's workspace
+- **write** → a named permission, resolved through the role matrix
+- **CLIENT** → additionally narrowed to projects they belong to
+- **service_role** → bypasses all of it; only for jobs and webhooks, never in the browser
+
+The helpers in 0008 (`app_is_member`, `app_has_permission`, `app_can_see_project`, …)
+are `SECURITY DEFINER` so a policy on `workspace_members` does not recurse into
+itself, `STABLE` so the planner calls them once per statement rather than once
+per row, and pinned to an empty `search_path` so they cannot be hijacked.
+
+## Deliberate changes from the Prisma schema
+
+| Was | Now | Why |
+|-----|-----|-----|
+| `users.password_hash`, `sessions`, `verification_tokens`, `two_factor_*`, `google_id` | `auth.users`, `auth.identities`, `auth.mfa_factors` | Supabase Auth owns credentials; refresh rotation and reuse detection come with it |
+| `cuid()` text ids | `uuid` | native, indexable, what `auth.uid()` returns |
+| camelCase columns | snake_case | what PostgREST and `supabase gen types` expect |
+| `attachments.url` + Cloudinary | `attachments.storage_path` + private bucket | access goes through a signed URL under the same membership rule as the row |
+| Socket.io rooms | realtime publication | broadcasts are filtered by the same RLS as reads |
+| Redis rate limiting | Supabase / Vercel edge limits | no server of ours to hold the counter |
+
+Enum **values** stay SCREAMING_CASE (`OWNER`, `URGENT`, `ACTIVE`) on purpose —
+the web app already keys `ROLE_LABELS`, `PRIORITY_STYLE` and `STATUS_STYLE` off
+those exact strings.
+
+Two behaviours the old API enforced with a read-then-write, now constraints the
+database keeps: one running timer per person (`time_logs_one_running_per_user`),
+and per-project task numbering (advisory lock in `assign_task_number`, so two
+simultaneous creates cannot both claim PAY-7).
+
+## Not done yet
+
+This is the backend. **The web app still calls the Express API** — nothing in
+`apps/web/src/lib/api.ts` has been repointed. Remaining work, roughly in order:
+
+1. `@supabase/supabase-js` client + `@supabase/ssr` for cookie sessions in Next.
+2. Replace `lib/api.ts` and `providers/auth.tsx` with Supabase Auth.
+3. Repoint ~40 components from REST calls to `supabase.from(...)`, mapping
+   camelCase → snake_case.
+4. Swap `providers/socket.tsx` for realtime channel subscriptions.
+5. Port the three service modules that are real logic, not CRUD, to Edge
+   Functions: `autopilot.ts`, `rag.ts`, `sprintMetrics.ts` / `health.ts`.
+6. Move the two cron jobs (nightly burndown, health snapshots) to
+   `pg_cron` or scheduled Edge Functions.
+7. Delete `apps/api` and `packages/db`.
+
+Steps 5 and 6 need the `service_role` key and must never run in the browser.

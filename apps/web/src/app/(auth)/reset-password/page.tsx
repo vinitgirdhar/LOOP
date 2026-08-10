@@ -27,7 +27,7 @@ function ResetPassword() {
       footer={<AuthFooterLink href="/login">Back to sign in</AuthFooterLink>}
     >
       <form
-        className="space-y-3"
+        className="space-y-4"
         onSubmit={async (event) => {
           event.preventDefault();
           setError(null);
@@ -53,7 +53,7 @@ function ResetPassword() {
             </Field>
             <Field label="One-time code">
               <input
-                className="input text-center text-lg tracking-[0.4em]"
+                className="input code-input"
                 inputMode="numeric"
                 maxLength={6}
                 value={otp}
@@ -68,10 +68,10 @@ function ResetPassword() {
           <input className="input" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required autoComplete="new-password" />
         </Field>
 
-        <Button type="submit" variant="primary" className="w-full" loading={loading} disabled={!strong || (!token && otp.length !== 6)}>
+        <Button type="submit" variant="primary" className="btn-hero" loading={loading} disabled={!strong || (!token && otp.length !== 6)}>
           Update password
         </Button>
-        <p className="text-center text-[11px] text-[var(--text-faint)]">Every other device will be signed out.</p>
+        <p className="text-center text-[12px] opacity-60">Every other device will be signed out.</p>
       </form>
     </AuthCard>
   );

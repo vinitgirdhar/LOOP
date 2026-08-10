@@ -120,7 +120,7 @@ export function NotificationBell({ workspaceId }: { workspaceId: string }) {
                 const content = (
                   <div className={cx('flex gap-2.5 px-3.5 py-2.5 transition-colors hover:bg-[var(--bg-inset)]', !item.readAt && 'bg-[var(--accent-soft)]/40')}>
                     {item.actor ? (
-                      <Avatar name={item.actor.name} src={item.actor.avatarUrl} size={26} />
+                      <Avatar seed={item.actor.id} name={item.actor.name} src={item.actor.avatarUrl} size={26} />
                     ) : (
                       <span className="flex h-[26px] w-[26px] shrink-0 items-center justify-center rounded-full bg-[var(--bg-inset)] text-[var(--text-muted)]">
                         <IconComponent width={13} height={13} />

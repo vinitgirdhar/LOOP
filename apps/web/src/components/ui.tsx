@@ -4,6 +4,7 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState, type ButtonH
 import Link from 'next/link';
 import { cx, initials } from '@/lib/format';
 import { useLockScroll } from '@/lib/hooks';
+import { Mascot, mascotFor } from '@/components/mascots';
 
 /* ── button ──────────────────────────────────────────────────────────── */
 
@@ -47,9 +48,9 @@ export function Field({ label, hint, error, children, required }: { label?: stri
       )}
       {children}
       {error ? (
-        <span className="mt-1 block text-xs text-[var(--danger)]">{error}</span>
+        <span className="field-error mt-1.5 block">{error}</span>
       ) : hint ? (
-        <span className="mt-1 block text-xs text-[var(--text-faint)]">{hint}</span>
+        <span className="field-hint mt-1.5 block">{hint}</span>
       ) : null}
     </label>
   );
@@ -85,7 +86,23 @@ export function Badge({ children, className, tone }: { children: ReactNode; clas
   return <span className={cx('badge', tone && tones[tone], className)}>{children}</span>;
 }
 
-export function Avatar({ name, src, size = 28, className }: { name: string; src?: string | null; size?: number; className?: string }) {
+interface AvatarProps {
+  name: string;
+  src?: string | null;
+  size?: number;
+  className?: string;
+  /** Stable id for the mascot draw — falls back to the name when absent. */
+  seed?: string | null;
+  /** Workspaces and projects keep a monogram; only people get a face. */
+  kind?: 'person' | 'workspace';
+}
+
+/**
+ * One avatar for the whole app. With no picture of their own a person gets one
+ * of the three mascots, chosen from their id so it never changes between
+ * screens or sessions; a workspace gets its monogram instead.
+ */
+export function Avatar({ name, src, size = 28, className, seed, kind = 'person' }: AvatarProps) {
   const [failed, setFailed] = useState(false);
   const style = { width: size, height: size, fontSize: Math.max(9, size * 0.38) };
 
@@ -102,13 +119,26 @@ export function Avatar({ name, src, size = 28, className }: { name: string; src?
       />
     );
   }
+
+  if (kind === 'workspace') {
+    return (
+      <span
+        style={{ ...style, borderRadius: Math.max(7, size * 0.3) }}
+        title={name}
+        className={cx('inline-flex shrink-0 items-center justify-center bg-[var(--ink)] font-semibold text-[var(--ink-text)]', className)}
+      >
+        {initials(name)}
+      </span>
+    );
+  }
+
   return (
     <span
-      style={style}
+      style={{ ...style, ['--mascot-paper' as string]: 'var(--surface)' }}
       title={name}
-      className={cx('inline-flex shrink-0 items-center justify-center rounded-full bg-[var(--accent-soft)] font-semibold text-[var(--accent)]', className)}
+      className={cx('inline-flex shrink-0 items-end justify-center overflow-hidden rounded-full bg-[var(--bg-inset)] text-[var(--text)]', className)}
     >
-      {initials(name)}
+      <Mascot id={mascotFor(seed ?? name)} crop="bust" size="100%" />
     </span>
   );
 }
@@ -119,7 +149,7 @@ export function AvatarStack({ people, max = 4, size = 24 }: { people: { id: stri
   return (
     <div className="flex -space-x-1.5">
       {shown.map((person) => (
-        <Avatar key={person.id} name={person.name} src={person.avatarUrl} size={size} className="ring-2 ring-[var(--surface)]" />
+        <Avatar key={person.id} seed={person.id} name={person.name} src={person.avatarUrl} size={size} className="ring-2 ring-[var(--surface)]" />
       ))}
       {extra > 0 && (
         <span
@@ -206,7 +236,7 @@ export function Modal({
       <button type="button" className="absolute inset-0 h-full w-full cursor-default" onClick={onClose} aria-label="Close" tabIndex={-1} />
       <div
         className={cx(
-          'sheet-in relative flex max-h-[90dvh] w-full flex-col rounded-t-2xl border border-b-0 bg-[var(--surface)] shadow-[var(--shadow-lg)] sm:max-h-[85dvh] sm:rounded-2xl sm:border-b',
+          'sheet-in relative flex max-h-[90dvh] w-full flex-col rounded-t-[28px] border border-b-0 bg-[var(--surface)] shadow-[var(--shadow-lg)] sm:max-h-[85dvh] sm:rounded-[24px] sm:border-b',
           wide ? 'sm:max-w-3xl' : 'sm:max-w-lg',
         )}
       >
@@ -258,7 +288,7 @@ export function Sheet({
   return (
     <div className="overlay fixed inset-0 z-[80] flex items-end justify-center sm:items-center sm:p-4" role="dialog" aria-modal="true" aria-label={title}>
       <button type="button" className="absolute inset-0 h-full w-full cursor-default" onClick={onClose} aria-label="Close" tabIndex={-1} />
-      <div className="sheet-in relative flex max-h-[85dvh] w-full flex-col rounded-t-2xl border border-b-0 bg-[var(--surface)] shadow-[var(--shadow-lg)] sm:max-w-sm sm:rounded-2xl sm:border-b">
+      <div className="sheet-in relative flex max-h-[85dvh] w-full flex-col rounded-t-[28px] border border-b-0 bg-[var(--surface)] shadow-[var(--shadow-lg)] sm:max-w-sm sm:rounded-[24px] sm:border-b">
         <span className="mx-auto mt-2 h-1 w-9 shrink-0 rounded-full bg-[var(--border-strong)] sm:hidden" aria-hidden />
         <div className="px-4 pb-1 pt-3">
           <h3 className="text-sm font-semibold">{title}</h3>
@@ -427,27 +457,71 @@ export const MenuLabel = ({ children }: { children: ReactNode }) => (
   <p className="px-3 pb-1 pt-2 text-[10px] font-semibold uppercase tracking-wider text-[var(--text-faint)]">{children}</p>
 );
 
+/**
+ * Segmented control — the pill track from the design language. Scrolls
+ * sideways on a narrow phone rather than squeezing labels into two words each.
+ */
 export function Tabs({ tabs, active, onChange }: { tabs: { key: string; label: string; count?: number }[]; active: string; onChange: (key: string) => void }) {
   return (
-    <div className="no-scrollbar -mx-1 flex gap-1 overflow-x-auto border-b px-1" role="tablist">
-      {tabs.map((tab) => (
+    <div className="no-scrollbar -mx-4 overflow-x-auto px-4 sm:mx-0 sm:px-0">
+      <div className="segmented w-full min-w-max" role="tablist">
+        {tabs.map((tab) => (
+          <button
+            key={tab.key}
+            type="button"
+            role="tab"
+            aria-selected={active === tab.key}
+            onClick={() => onChange(tab.key)}
+            className={cx('segmented-item', active === tab.key && 'segmented-item-active')}
+          >
+            {tab.label}
+            {tab.count !== undefined && <span className="ml-1.5 opacity-60">{tab.count}</span>}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/** Horizontally scrolling filter pills. */
+export function ChipRow({ items, active, onChange, className }: { items: { key: string; label: string }[]; active: string; onChange: (key: string) => void; className?: string }) {
+  return (
+    <div className={cx('no-scrollbar -mx-4 flex gap-2 overflow-x-auto px-4 sm:mx-0 sm:px-0', className)}>
+      {items.map((item) => (
         <button
-          key={tab.key}
+          key={item.key}
           type="button"
-          role="tab"
-          aria-selected={active === tab.key}
-          onClick={() => onChange(tab.key)}
-          className={cx(
-            'relative shrink-0 px-3 py-2 text-[13px] font-medium transition-colors',
-            active === tab.key ? 'text-[var(--accent)]' : 'text-[var(--text-muted)] hover:text-[var(--text)]',
-          )}
+          aria-pressed={active === item.key}
+          onClick={() => onChange(item.key)}
+          className={cx('chip', active === item.key && 'chip-active')}
         >
-          {tab.label}
-          {tab.count !== undefined && <span className="ml-1.5 text-[11px] text-[var(--text-faint)]">{tab.count}</span>}
-          {active === tab.key && <span className="absolute inset-x-2 -bottom-px h-0.5 rounded-full bg-[var(--accent)]" />}
+          {item.label}
         </button>
       ))}
     </div>
+  );
+}
+
+/** Toggle switch. Renders a real checkbox underneath so it stays operable by keyboard and screen reader. */
+export function Switch({ checked, onChange, label, disabled }: { checked: boolean; onChange: (next: boolean) => void; label: string; disabled?: boolean }) {
+  return (
+    <label className={cx('inline-flex items-center gap-3', disabled && 'opacity-50')}>
+      <input
+        type="checkbox"
+        role="switch"
+        className="peer sr-only"
+        checked={checked}
+        disabled={disabled}
+        onChange={(event) => onChange(event.target.checked)}
+      />
+      <span className="text-[13px] font-medium">{label}</span>
+      <span
+        className={cx('switch ml-auto peer-focus-visible:outline peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-[var(--ring)]', checked && 'switch-on')}
+        aria-hidden
+      >
+        <span className="switch-knob" />
+      </span>
+    </label>
   );
 }
 

@@ -39,13 +39,11 @@ export default function RegisterPage() {
 
   return (
     <AuthCard
-      title="Create your account"
-      subtitle="Verify your email, then create a workspace and invite the team."
+      title="Welcome."
+      subtitle="Create an account, verify your email, then build your first workspace."
       footer={<>Already have an account? <AuthFooterLink href="/login">Sign in</AuthFooterLink></>}
     >
-      <GoogleButton label="Sign up with Google" />
-      <AuthDivider />
-      <form onSubmit={submit} className="space-y-3">
+      <form onSubmit={submit} className="space-y-4">
         <FormError message={error} />
         <Field label="Full name">
           <input className="input" value={name} onChange={(e) => setName(e.target.value)} autoComplete="name" required autoFocus />
@@ -57,11 +55,13 @@ export default function RegisterPage() {
           <input className="input" type="password" value={password} onChange={(e) => setPassword(e.target.value)} autoComplete="new-password" required />
         </Field>
 
-        <ul className="grid grid-cols-2 gap-1">
+        {/* Inside the ink panel, strength reads through opacity — a green that
+            passes on white would sit at 3:1 against near-black. */}
+        <ul className="grid grid-cols-2 gap-1.5">
           {RULES.map((rule) => {
             const passed = rule.test(password);
             return (
-              <li key={rule.label} className={`flex items-center gap-1.5 text-[11px] ${passed ? 'text-[var(--success)]' : 'text-[var(--text-faint)]'}`}>
+              <li key={rule.label} className={`flex items-center gap-1.5 text-[11.5px] font-medium ${passed ? 'opacity-100' : 'opacity-45'}`}>
                 <span aria-hidden className="shrink-0">
                   {passed ? (
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
@@ -79,11 +79,13 @@ export default function RegisterPage() {
           })}
         </ul>
 
-        <Button type="submit" variant="primary" className="w-full" loading={loading} disabled={!valid}>
-          Create account
+        <Button type="submit" variant="primary" className="btn-hero" loading={loading} disabled={!valid}>
+          Sign up
         </Button>
       </form>
-      <p className="mt-4 text-center text-[11px] leading-relaxed text-[var(--text-faint)]">
+      <AuthDivider label="or continue with" />
+      <GoogleButton label="Google" />
+      <p className="mt-4 text-center text-[12px] leading-relaxed opacity-60">
         Email verification is required before you can create a workspace.
       </p>
     </AuthCard>

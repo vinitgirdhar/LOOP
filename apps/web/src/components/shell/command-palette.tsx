@@ -137,22 +137,22 @@ export function CommandPalette({ open, onClose }: { open: boolean; onClose: () =
   return (
     <div className="overlay fixed inset-0 z-[90] flex items-start justify-center p-3 pt-[max(4vh,env(safe-area-inset-top))] sm:pt-[12vh]" role="dialog" aria-modal="true" aria-label="Command palette">
       <button type="button" className="absolute inset-0 cursor-default" onClick={onClose} tabIndex={-1} aria-label="Close" />
-      <div className="slide-up relative flex max-h-[80dvh] w-full max-w-xl flex-col overflow-hidden rounded-2xl border bg-[var(--surface)] shadow-[var(--shadow-lg)] sm:max-h-[70dvh]">
-        <div className="flex items-center gap-2 border-b px-3.5">
-          <Icon.search width={16} height={16} className="shrink-0 text-[var(--text-faint)]" />
+      <div className="slide-up relative flex max-h-[80dvh] w-full max-w-xl flex-col overflow-hidden rounded-[22px] border bg-[var(--surface)] shadow-[var(--shadow-lg)] sm:max-h-[70dvh]">
+        <div className="flex items-center gap-2.5 border-b px-4">
+          <Icon.search width={17} height={17} className="shrink-0 text-[var(--text-faint)]" />
           <input
             autoFocus
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search tasks, docs, people — or jump to a page"
-            className="flex-1 bg-transparent py-3.5 text-sm outline-none placeholder:text-[var(--text-faint)]"
+            className="min-w-0 flex-1 bg-transparent py-4 text-[15px] outline-none placeholder:text-[var(--text-faint)]"
             aria-label="Search"
           />
           {loading && <Spinner size={14} />}
-          <kbd className="kbd hidden sm:block">esc</kbd>
+          <kbd className="kbd hidden shrink-0 sm:block">esc</kbd>
         </div>
 
-        <div className="scroll-thin flex-1 overflow-y-auto py-1.5">
+        <div className="scroll-thin flex-1 overflow-y-auto p-1.5">
           {rows.length === 0 ? (
             <p className="px-4 py-8 text-center text-[13px] text-[var(--text-muted)]">
               {query.trim().length < 2 ? 'Type at least two characters' : 'Nothing matched'}
@@ -163,25 +163,31 @@ export function CommandPalette({ open, onClose }: { open: boolean; onClose: () =
               lastGroup = row.group;
               return (
                 <div key={row.id}>
-                  {header && <p className="px-3.5 pb-1 pt-2.5 text-[10px] font-semibold uppercase tracking-wider text-[var(--text-faint)]">{header}</p>}
+                  {header && <p className="px-3 pb-1 pt-3 text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--text-faint)]">{header}</p>}
                   <button
                     type="button"
                     onMouseEnter={() => setCursor(index)}
                     onClick={row.run}
-                    className={cx('flex w-full items-center gap-2.5 px-3.5 py-2 text-left text-[13px]', index === cursor && 'bg-[var(--bg-inset)]')}
+                    aria-current={index === cursor || undefined}
+                    className={cx(
+                      'flex w-full items-center gap-3 rounded-[12px] px-3 py-2.5 text-left text-[14px] transition-colors',
+                      index === cursor ? 'bg-[var(--ink)] text-[var(--ink-text)]' : 'text-[var(--text)]',
+                    )}
                   >
                     {row.avatar ? (
-                      <Avatar name={row.avatar.name} src={row.avatar.src} size={20} />
+                      <Avatar name={row.avatar.name} src={row.avatar.src} size={21} />
                     ) : row.icon ? (
                       (() => {
                         const RowIcon = Icon[row.icon];
-                        return <RowIcon width={15} height={15} className="shrink-0 text-[var(--text-muted)]" />;
+                        return <RowIcon width={16} height={16} className={cx('shrink-0', index !== cursor && 'text-[var(--text-muted)]')} />;
                       })()
                     ) : (
-                      <span className="mx-[3px] h-2 w-2 shrink-0 rounded-full" style={{ background: row.colour ?? 'var(--border-strong)' }} />
+                      <span className="mx-[3px] h-2 w-2 shrink-0 rounded-full" style={{ background: row.colour ?? 'currentColor' }} />
                     )}
                     <span className="min-w-0 flex-1 truncate">{row.label}</span>
-                    {row.hint && <span className="shrink-0 text-[11px] text-[var(--text-faint)]">{row.hint}</span>}
+                    {row.hint && (
+                      <span className={cx('shrink-0 text-[11px]', index === cursor ? 'opacity-70' : 'text-[var(--text-faint)]')}>{row.hint}</span>
+                    )}
                   </button>
                 </div>
               );

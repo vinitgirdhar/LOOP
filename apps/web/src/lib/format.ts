@@ -60,6 +60,17 @@ export function formatBytes(bytes: number): string {
   return `${value.toFixed(value < 10 ? 1 : 0)} ${units[index]}`;
 }
 
+/**
+ * Time-of-day greeting. Reads the local clock, so only call it from a tree
+ * that renders after mount — on the server it would disagree with the client.
+ */
+export function greeting(now: Date = new Date()): string {
+  const hour = now.getHours();
+  if (hour < 12) return 'Good morning';
+  if (hour < 18) return 'Good afternoon';
+  return 'Good evening';
+}
+
 export function initials(name: string): string {
   return name
     .split(/\s+/)

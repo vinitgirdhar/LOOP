@@ -293,7 +293,7 @@ export default function TaskPage({ params }: { params: Promise<{ workspaceId: st
                           <Link href={`/w/${workspaceId}/tasks/${child.id}`} className="flex items-center gap-2 rounded-lg border px-2.5 py-1.5 text-[13px] hover:underline">
                             <span className={cx('h-2 w-2 rounded-full', child.completedAt ? 'bg-[var(--success)]' : 'bg-[var(--border-strong)]')} />
                             <span className="truncate">{child.title}</span>
-                            {child.assignee && <Avatar name={child.assignee.name} src={child.assignee.avatarUrl} size={18} className="ml-auto" />}
+                            {child.assignee && <Avatar seed={child.assignee.id} name={child.assignee.name} src={child.assignee.avatarUrl} size={18} className="ml-auto" />}
                           </Link>
                         </li>
                       ))}
@@ -359,7 +359,7 @@ export default function TaskPage({ params }: { params: Promise<{ workspaceId: st
             <ul className="space-y-3">
               {(comments ?? []).map((entry) => (
                 <li key={entry.id} className="flex gap-2.5">
-                  <Avatar name={entry.author.name} src={entry.author.avatarUrl} size={28} />
+                  <Avatar seed={entry.author.id} name={entry.author.name} src={entry.author.avatarUrl} size={28} />
                   <div className="min-w-0 flex-1">
                     <p className="text-[13px]">
                       <span className="font-semibold">{entry.author.name}</span>{' '}

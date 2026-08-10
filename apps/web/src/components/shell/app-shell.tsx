@@ -154,7 +154,7 @@ export function AppShell({ workspaceId, children }: { workspaceId: string; child
             label="Account menu"
             trigger={
               <button type="button" className="flex w-full items-center gap-2.5 rounded-lg px-2 py-2 text-left transition-colors hover:bg-[var(--bg-inset)]">
-                <Avatar name={user?.name ?? '?'} src={user?.avatarUrl} size={30} />
+                <Avatar seed={user?.id} name={user?.name ?? "?"} src={user?.avatarUrl} size={30} />
                 <span className="min-w-0 flex-1">
                   <span className="block truncate text-[13px] font-medium">{user?.name}</span>
                   <span className="block truncate text-[11px] text-[var(--text-muted)]">{role ? ROLE_LABELS[role] : ''}</span>
@@ -248,9 +248,9 @@ export function AppShell({ workspaceId, children }: { workspaceId: string; child
               aria-current={active ? 'page' : undefined}
               className={cx('bottom-bar-item', active && 'bottom-bar-item-active')}
             >
-              <span className="relative">
+              <span className="bottom-bar-glyph relative">
                 <ItemIcon width={21} height={21} />
-                {count > 0 && <span className="absolute -right-1.5 -top-0.5 h-1.5 w-1.5 rounded-full bg-[var(--danger)]" />}
+                {count > 0 && <span className="absolute right-2.5 top-1 h-1.5 w-1.5 rounded-full bg-[var(--danger)]" />}
               </span>
               <span className="truncate">{item.short}</span>
             </Link>
@@ -259,8 +259,8 @@ export function AppShell({ workspaceId, children }: { workspaceId: string; child
 
         {hasQuickActions && (
           <button type="button" onClick={() => setCreateOpen(true)} className="bottom-bar-item" aria-label="Create">
-            <span className="flex h-[26px] w-[26px] items-center justify-center rounded-full bg-[var(--accent)] text-[var(--accent-text)]">
-              <Icon.plus width={16} height={16} />
+            <span className="bottom-bar-glyph bg-[var(--ink)] text-[var(--ink-text)]">
+              <Icon.plus width={18} height={18} />
             </span>
             <span className="truncate">Create</span>
           </button>

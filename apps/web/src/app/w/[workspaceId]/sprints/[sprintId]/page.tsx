@@ -230,7 +230,7 @@ export default function SprintPage({ params }: { params: Promise<{ workspaceId: 
                         </span>
                         <span className={cx('badge shrink-0', PRIORITY_STYLE[task.priority]?.className)}>{PRIORITY_STYLE[task.priority]?.label}</span>
                         {task.storyPoints !== null && <span className="shrink-0 rounded bg-[var(--bg-inset)] px-1.5 py-0.5 text-[10px] font-semibold tabular-nums">{task.storyPoints}</span>}
-                        {task.assignee && <Avatar name={task.assignee.name} src={task.assignee.avatarUrl} size={22} />}
+                        {task.assignee && <Avatar seed={task.assignee.id} name={task.assignee.name} src={task.assignee.avatarUrl} size={22} />}
                       </Link>
                     </li>
                   );

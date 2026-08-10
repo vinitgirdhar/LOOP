@@ -16,8 +16,8 @@ export function Logo({ size = 'md' }: { size?: 'sm' | 'md' }) {
   return (
     <span className="flex items-center gap-2">
       <span
-        className="inline-flex shrink-0 items-center justify-center rounded-[9px] bg-[var(--accent)] text-[var(--accent-text)]"
-        style={{ width: box, height: box }}
+        className="inline-flex shrink-0 items-center justify-center bg-[var(--ink)] text-[var(--ink-text)]"
+        style={{ width: box, height: box, borderRadius: box * 0.34 }}
         aria-hidden
       >
         <svg width={box * 0.62} height={box * 0.62} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
@@ -44,14 +44,14 @@ export function MarketingNav() {
 
   return (
     <header className="sticky top-0 z-40 border-b bg-[var(--bg)]/85 backdrop-blur-md">
-      <nav className="mx-auto flex h-14 max-w-6xl items-center gap-3 px-4 sm:px-6" aria-label="Main">
+      <nav className="mx-auto flex h-14 max-w-6xl 2xl:max-w-7xl 3xl:max-w-[88rem] items-center gap-3 px-4 sm:px-6" aria-label="Main">
         <Link href="/" className="shrink-0">
           <Logo />
         </Link>
 
         <div className="ml-4 hidden flex-1 items-center gap-1 lg:flex">
           {NAV.map((item) => (
-            <Link key={item.href} href={item.href} className="rounded-lg px-2.5 py-1.5 text-[13px] text-[var(--text-muted)] transition-colors hover:bg-[var(--bg-inset)] hover:text-[var(--text)]">
+            <Link key={item.href} href={item.href} className="rounded-lg px-2.5 py-1.5 text-[13px] text-[var(--text-muted)] transition-colors hover:bg-[var(--bg-inset)] hover:text-[var(--text)] 2xl:text-sm">
               {item.label}
             </Link>
           ))}
@@ -68,7 +68,8 @@ export function MarketingNav() {
               <Link href="/login" className="btn btn-ghost btn-sm hidden sm:inline-flex">
                 Sign in
               </Link>
-              <Link href="/register" className="btn btn-primary btn-sm">
+              {/* First-time visitors meet the three mascots before the form. */}
+              <Link href="/welcome" className="btn btn-primary btn-sm">
                 Get started
               </Link>
             </>
@@ -98,7 +99,7 @@ export function MarketingNav() {
 export function MarketingFooter() {
   return (
     <footer className="border-t bg-[var(--bg-subtle)]">
-      <div className="mx-auto grid max-w-6xl gap-8 px-4 py-10 sm:grid-cols-2 sm:px-6 lg:grid-cols-4">
+      <div className="mx-auto grid max-w-6xl 2xl:max-w-7xl 3xl:max-w-[88rem] gap-8 px-4 py-10 sm:grid-cols-2 sm:px-6 lg:grid-cols-4">
         <div className="sm:col-span-2 lg:col-span-1">
           <Logo />
           <p className="mt-3 max-w-xs text-xs leading-relaxed text-[var(--text-muted)]">

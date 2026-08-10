@@ -1,6 +1,7 @@
 'use client';
 
 import { Suspense, useEffect, useState } from 'react';
+import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/components/providers/auth';
 import { AuthCard, AuthDivider, AuthFooterLink, DemoAccounts, FormError, GoogleButton } from '@/components/auth-form';
@@ -51,11 +52,11 @@ function LoginForm() {
   if (ticket) {
     return (
       <AuthCard title="Two-factor code" subtitle="Enter the six digit code from your authenticator app.">
-        <form onSubmit={submit} className="space-y-3">
+        <form onSubmit={submit} className="space-y-4">
           <FormError message={error} />
           <Field label="Authentication code">
             <input
-              className="input text-center text-lg tracking-[0.4em]"
+              className="input code-input"
               inputMode="numeric"
               autoComplete="one-time-code"
               maxLength={6}
@@ -65,10 +66,10 @@ function LoginForm() {
               required
             />
           </Field>
-          <Button type="submit" variant="primary" className="w-full" loading={loading} disabled={code.length !== 6}>
+          <Button type="submit" variant="primary" className="btn-hero" loading={loading} disabled={code.length !== 6}>
             Verify and sign in
           </Button>
-          <button type="button" className="w-full text-center text-xs text-[var(--text-muted)] hover:underline" onClick={() => setTicket(null)}>
+          <button type="button" className="w-full py-1 text-center text-[13px] opacity-70 hover:underline" onClick={() => setTicket(null)}>
             Use a different account
           </button>
         </form>
@@ -78,27 +79,29 @@ function LoginForm() {
 
   return (
     <AuthCard
-      title="Welcome back"
-      subtitle="Sign in to your workspace."
-      footer={<>New here? <AuthFooterLink href="/register">Create an account</AuthFooterLink></>}
+      title="Welcome back."
+      subtitle="Sign in to pick up exactly where your team left off."
+      footer={<>Don&apos;t have an account? <AuthFooterLink href="/register">Sign up</AuthFooterLink></>}
     >
-      <GoogleButton label="Sign in with Google" />
-      <AuthDivider />
-      <form onSubmit={submit} className="space-y-3">
+      <form onSubmit={submit} className="space-y-4">
         <FormError message={error} />
         <Field label="Email">
-          <input className="input" type="email" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} required autoFocus />
+          <input className="input" type="email" placeholder="you@company.com" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} required autoFocus />
         </Field>
         <Field label="Password">
-          <input className="input" type="password" autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} required />
+          <input className="input" type="password" placeholder="••••••••" autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} required />
         </Field>
-        <div className="flex justify-end">
-          <AuthFooterLink href="/forgot-password">Forgot password?</AuthFooterLink>
-        </div>
-        <Button type="submit" variant="primary" className="w-full" loading={loading}>
+        <Button type="submit" variant="primary" className="btn-hero" loading={loading}>
           Sign in
         </Button>
+        <div className="text-center">
+          <Link href="/forgot-password" className="text-[13px] font-medium underline underline-offset-4 opacity-80">
+            Forgot the password?
+          </Link>
+        </div>
       </form>
+      <AuthDivider label="or continue with" />
+      <GoogleButton label="Google" />
       <DemoAccounts
         onPick={(demo) => {
           setEmail(demo);

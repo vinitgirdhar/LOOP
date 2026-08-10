@@ -168,7 +168,7 @@ export default function CalendarPage({ params }: { params: Promise<{ workspaceId
           <ul className="space-y-2">
             {availability.map((row) => (
               <li key={row.user.id} className="flex items-center gap-2.5">
-                <Avatar name={row.user.name} src={row.user.avatarUrl} size={26} />
+                <Avatar seed={row.user.id} name={row.user.name} src={row.user.avatarUrl} size={26} />
                 <span className="min-w-0 flex-1 truncate text-[13px]">{row.user.name}</span>
                 <span className="text-[11px] text-[var(--text-muted)]">{row.meetingHours}h in meetings</span>
                 <span className="badge bg-[var(--success-soft)] text-[var(--success)]">{row.freeHours}h free</span>

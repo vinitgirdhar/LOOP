@@ -18,7 +18,7 @@ export function WorkspaceSwitcher({ workspaceId }: { workspaceId: string }) {
       label="Switch workspace"
       trigger={
         <button type="button" className="flex w-full items-center gap-2.5 rounded-lg border px-2.5 py-2 text-left transition-colors hover:bg-[var(--bg-inset)]">
-          <Avatar name={current?.workspace.name ?? 'Workspace'} src={current?.workspace.logoUrl} size={26} />
+          <Avatar name={current?.workspace.name ?? 'Workspace'} src={current?.workspace.logoUrl} size={26} kind="workspace" />
           <span className="min-w-0 flex-1">
             <span className="block truncate text-[13px] font-semibold">{current?.workspace.name ?? 'Workspace'}</span>
             <span className="block truncate text-[10px] text-[var(--text-muted)]">{current ? ROLE_LABELS[current.role] : ''}</span>
@@ -39,7 +39,7 @@ export function WorkspaceSwitcher({ workspaceId }: { workspaceId: string }) {
                 router.push(`/w/${membership.workspace.id}`);
               }}
             >
-              <Avatar name={membership.workspace.name} src={membership.workspace.logoUrl} size={18} />
+              <Avatar name={membership.workspace.name} src={membership.workspace.logoUrl} size={18} kind="workspace" />
               <span className="min-w-0 flex-1 truncate">{membership.workspace.name}</span>
               {membership.workspace.id === workspaceId && <Icon.check width={14} height={14} className="shrink-0 text-[var(--accent)]" />}
             </MenuItem>

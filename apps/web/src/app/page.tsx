@@ -1,6 +1,12 @@
 import Link from 'next/link';
 import type { Metadata } from 'next';
 import { ContactForm, Faq, MarketingFooter, MarketingNav } from '@/components/marketing';
+import { Hero } from '@/components/landing/hero';
+import { AssemblySection } from '@/components/landing/assembly-section';
+import { FeaturesInfographic } from '@/components/landing/features-infographic';
+import { PricingSection } from '@/components/landing/pricing-section';
+import { ScrollMotion } from '@/components/landing/motion';
+import { Avatar } from '@/components/ui';
 import { Icon, type IconName } from '@/components/icons';
 
 export const metadata: Metadata = {
@@ -8,38 +14,12 @@ export const metadata: Metadata = {
   alternates: { canonical: '/' },
 };
 
-const FEATURES = [
-  {
-    icon: 'bolt' as IconName,
-    title: 'Auto-Pilot board',
-    body: 'GitHub events, chat and task activity feed a rules engine. Open a PR on a branch named PAY-12 and Loop proposes moving PAY-12 to Code Review — with the pull request attached as evidence.',
-    tag: 'Differentiator',
-  },
-  {
-    icon: 'chart' as IconName,
-    title: 'Explainable health score',
-    body: 'A 0–100 score per project from five weighted signals: overdue ratio, blocked chains, velocity trend, WIP overload and silent tasks. The maths is deterministic; AI only writes the summary.',
-    tag: 'Differentiator',
-  },
-  {
-    icon: 'search' as IconName,
-    title: 'Ask the Workspace',
-    body: 'Ask "what is blocking the release?" and get an answer with citations. Retrieval is filtered by your role first, so a client account can never pull internal chat into the answer.',
-    tag: 'Differentiator',
-  },
-  { icon: 'board' as IconName, title: 'Kanban that bends', body: 'Six columns out of the box, fully editable per project. Drag on desktop, tap to move on mobile. Subtasks, dependencies, checklists, story points and bulk actions.' },
-  { icon: 'sprint' as IconName, title: 'Sprints and burndown', body: 'Capacity planning, real burndown history written nightly, burnup, velocity across ten sprints, and blockers surfaced at the top of the sprint page.' },
-  { icon: 'doc' as IconName, title: 'Docs with history', body: 'Rich text and markdown, code blocks, tables, nested pages, full version history and one-click restore. Mark a page shared to expose it to clients.' },
-  { icon: 'chat' as IconName, title: 'Real-time chat', body: 'Project channels, DMs, threads, @mentions, reactions and file sharing over WebSocket, with presence and typing indicators.' },
-  { icon: 'clock' as IconName, title: 'Time tracking', body: 'Start-stop timers, manual entries, daily logs, hours by project and utilisation against each person’s weekly capacity.' },
-  { icon: 'shield' as IconName, title: 'Security you can audit', body: 'Google OAuth, verified email, rotating refresh tokens with reuse detection, RBAC in one middleware layer, rate limiting and an audit log for every privileged action.' },
-];
-
-const PLANS = [
-  { name: 'Free', price: '$0', cadence: 'forever', seats: 'Up to 5 people', features: ['3 projects', 'Kanban, wiki and chat', 'Time tracking', 'Community support'], cta: 'Start free' },
-  { name: 'Team', price: '$12', cadence: 'per user / month', seats: 'Up to 25 people', features: ['Unlimited projects', 'Sprints and analytics', 'Auto-Pilot board', 'GitHub integration', 'Priority support'], cta: 'Start free trial', featured: true },
-  { name: 'Business', price: '$29', cadence: 'per user / month', seats: 'Unlimited', features: ['Everything in Team', 'Ask the Workspace', 'Client portal access', 'Audit log export', 'SSO ready · 99.9% SLA'], cta: 'Talk to us' },
-];
+/*
+  The page stays a server component: all the copy ships as HTML and reads
+  without JavaScript. Motion is layered on by <ScrollMotion />, which finds the
+  `data-reveal` and `data-count` hooks below, and the two 3D scenes are client
+  islands that load on their own.
+*/
 
 const TESTIMONIALS = [
   { quote: 'Our board used to be two days stale by Wednesday. Now it argues with us when it is wrong, and it shows the commit that proves it.', name: 'Ava Sharma', role: 'Head of Engineering, Northwind Labs' },
@@ -59,48 +39,58 @@ const FAQ = [
 export default function LandingPage() {
   return (
     <div className="min-h-dvh">
+      <ScrollMotion />
       <MarketingNav />
 
       <main id="main">
-        {/* Hero */}
-        <section className="relative overflow-hidden border-b">
-          <div
-            aria-hidden
-            className="pointer-events-none absolute inset-x-0 -top-24 h-64 opacity-60 blur-3xl"
-            style={{ background: 'radial-gradient(60% 60% at 50% 50%, var(--accent-soft), transparent)' }}
-          />
-          <div className="relative mx-auto max-w-6xl px-4 py-14 sm:px-6 sm:py-20 lg:py-24">
-            <div className="mx-auto max-w-3xl text-center">
-              <span className="badge bg-[var(--accent-soft)] text-[var(--accent)]">Jira + Notion + Slack + GitHub, in one place</span>
-              <h1 className="mt-4 text-3xl font-bold leading-[1.1] tracking-[-0.03em] sm:text-5xl lg:text-6xl">
-                The project tool that
-                <br className="hidden sm:block" /> keeps itself updated
-              </h1>
-              <p className="mx-auto mt-4 max-w-2xl text-[15px] leading-relaxed text-[var(--text-muted)] sm:text-base">
-                Every team already has the tools. The problem is that the board is always stale. Loop reads your real activity — commits, chat, task events —
-                and proposes the updates, with evidence you can accept or reject.
-              </p>
-              <div className="mt-7 flex flex-col items-center justify-center gap-2.5 sm:flex-row">
-                <Link href="/register" className="btn btn-primary w-full sm:w-auto">
-                  Create a workspace
-                </Link>
-                <Link href="/login" className="btn btn-secondary w-full sm:w-auto">
-                  Sign in with a demo account
-                </Link>
-              </div>
-              <p className="mt-3 text-xs text-[var(--text-faint)]">No card needed · Demo accounts for all five roles in the README</p>
-            </div>
+        <Hero />
 
-            {/* Product sketch — a static representation of the suggestions inbox */}
-            <div className="mx-auto mt-12 max-w-3xl">
+        {/* Stat strip — the numbers count up as they arrive. */}
+        <section className="border-b bg-[var(--bg-subtle)]">
+          <div data-reveal-group className="mx-auto grid max-w-6xl 2xl:max-w-7xl 3xl:max-w-[88rem] grid-cols-2 gap-y-6 px-4 py-9 sm:px-6 lg:grid-cols-4">
+            <Stat value={5} label="Signals behind every health score" />
+            <Stat value={0} label="Silent AI writes to your board" />
+            <Stat value={4} label="Roles, enforced on the API" />
+            <Stat value={1} label="Workspace instead of six tools" />
+          </div>
+        </section>
+
+        <AssemblySection />
+
+        {/* Features — Transformed into Infographic Visual Layout */}
+        <section id="features" className="scroll-mt-16 border-b">
+          <div className="mx-auto max-w-6xl 2xl:max-w-7xl 3xl:max-w-[88rem] px-4 py-14 sm:px-6 sm:py-20">
+            <div className="max-w-2xl 2xl:max-w-3xl mb-10">
+              <h2 data-reveal className="text-[26px] font-bold sm:text-4xl 2xl:text-5xl">
+                Everything a team needs, and three things nobody else ships
+              </h2>
+              <p data-reveal className="mt-3 text-[14px] leading-relaxed text-[var(--text-muted)] sm:text-[15px] 2xl:text-lg">
+                Visualized in real time: explore our self-updating engine, deterministic health math, and permission-filtered workspace RAG.
+              </p>
+            </div>
+            
+            <FeaturesInfographic />
+          </div>
+        </section>
+
+        {/* Proof — what a suggestion actually looks like */}
+        <section className="border-b bg-[var(--bg-subtle)]">
+          <div className="mx-auto max-w-3xl 2xl:max-w-4xl 3xl:max-w-[64rem] px-4 py-14 sm:px-6 sm:py-20">
+            <h2 data-reveal className="text-[26px] font-bold sm:text-4xl 2xl:text-5xl">
+              Nothing moves without evidence
+            </h2>
+            <p data-reveal className="mt-3 text-[14px] leading-relaxed text-[var(--text-muted)] sm:text-[15px] 2xl:text-lg">
+              This is the inbox, not a mock-up of one. Every card names the trigger, quotes the source and scores its own confidence.
+            </p>
+            <div data-reveal className="mt-8">
               <div className="card overflow-hidden p-0 shadow-[var(--shadow-lg)]">
                 <div className="flex items-center gap-1.5 border-b bg-[var(--bg-subtle)] px-3.5 py-2.5">
-                  <span className="h-2.5 w-2.5 rounded-full bg-[#ff5f57]" />
-                  <span className="h-2.5 w-2.5 rounded-full bg-[#febc2e]" />
-                  <span className="h-2.5 w-2.5 rounded-full bg-[#28c840]" />
-                  <span className="ml-2 text-[11px] text-[var(--text-faint)]">Auto-Pilot · Suggestions inbox</span>
+                  <span className="h-2.5 w-2.5 rounded-full bg-[var(--border-strong)]" />
+                  <span className="h-2.5 w-2.5 rounded-full bg-[var(--border-strong)]" />
+                  <span className="h-2.5 w-2.5 rounded-full bg-[var(--border-strong)]" />
+                  <span className="ml-2 text-[11px] 2xl:text-xs text-[var(--text-faint)]">Auto-Pilot · Suggestions inbox</span>
                 </div>
-                <div className="space-y-2.5 p-3.5 sm:p-4">
+                <div className="space-y-2.5 p-3.5 sm:p-4 2xl:p-6">
                   <SuggestionSketch
                     title="Move PAY-1 to Code Review"
                     confidence="94%"
@@ -119,98 +109,25 @@ export default function LandingPage() {
           </div>
         </section>
 
-        {/* Stat strip */}
-        <section className="border-b bg-[var(--bg-subtle)]">
-          <div className="mx-auto grid max-w-6xl grid-cols-2 gap-px px-4 py-8 sm:px-6 lg:grid-cols-4">
-            <Stat value="5" label="Signals behind every health score" />
-            <Stat value="0" label="Silent AI writes to your board" />
-            <Stat value="4" label="Roles, enforced on the API" />
-            <Stat value="1" label="Workspace instead of six tools" />
-          </div>
-        </section>
-
-        {/* Features */}
-        <section id="features" className="scroll-mt-16 border-b">
-          <div className="mx-auto max-w-6xl px-4 py-14 sm:px-6 sm:py-20">
-            <div className="max-w-2xl">
-              <h2 className="text-2xl font-bold tracking-[-0.02em] sm:text-3xl">Everything a team needs, and three things nobody else ships</h2>
-              <p className="mt-3 text-sm leading-relaxed text-[var(--text-muted)]">
-                The base platform is complete — projects, tasks, sprints, docs, chat, files, time, analytics. The three highlighted below are what make the
-                board trustworthy.
-              </p>
-            </div>
-            <div className="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-              {FEATURES.map((feature) => {
-                const FeatureIcon = Icon[feature.icon];
-                return (
-                <div key={feature.title} className="card p-4 transition-colors hover:border-[var(--border-strong)]">
-                  <div className="flex items-start justify-between gap-2">
-                    <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-[var(--accent-soft)] text-[var(--accent)]" aria-hidden>
-                      <FeatureIcon width={18} height={18} />
-                    </span>
-                    {feature.tag && <span className="badge bg-[var(--accent-soft)] text-[var(--accent)]">{feature.tag}</span>}
-                  </div>
-                  <h3 className="mt-2.5 text-sm font-semibold">{feature.title}</h3>
-                  <p className="mt-1.5 text-[13px] leading-relaxed text-[var(--text-muted)]">{feature.body}</p>
-                </div>
-                );
-              })}
-            </div>
-          </div>
-        </section>
-
-        {/* Pricing */}
-        <section id="pricing" className="scroll-mt-16 border-b bg-[var(--bg-subtle)]">
-          <div className="mx-auto max-w-6xl px-4 py-14 sm:px-6 sm:py-20">
-            <div className="text-center">
-              <h2 className="text-2xl font-bold tracking-[-0.02em] sm:text-3xl">Simple pricing</h2>
-              <p className="mt-2 text-sm text-[var(--text-muted)]">Start free. Upgrade when the team outgrows it.</p>
-            </div>
-            <div className="mt-8 grid gap-4 lg:grid-cols-3">
-              {PLANS.map((plan) => (
-                <div
-                  key={plan.name}
-                  className={`card flex flex-col p-5 ${plan.featured ? 'border-[var(--accent)] shadow-[var(--shadow-lg)] lg:-translate-y-2' : ''}`}
-                >
-                  <div className="flex items-center justify-between">
-                    <h3 className="text-sm font-semibold">{plan.name}</h3>
-                    {plan.featured && <span className="badge bg-[var(--accent)] text-white">Most popular</span>}
-                  </div>
-                  <p className="mt-3 flex items-baseline gap-1.5">
-                    <span className="text-3xl font-bold tracking-[-0.03em]">{plan.price}</span>
-                    <span className="text-xs text-[var(--text-muted)]">{plan.cadence}</span>
-                  </p>
-                  <p className="mt-1 text-xs text-[var(--text-faint)]">{plan.seats}</p>
-                  <ul className="mt-4 flex-1 space-y-2">
-                    {plan.features.map((feature) => (
-                      <li key={feature} className="flex items-start gap-2 text-[13px] text-[var(--text-muted)]">
-                        <svg className="mt-1 shrink-0 text-[var(--success)]" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-                          <path d="M4 12.5l5 5L20 6.5" />
-                        </svg>
-                        {feature}
-                      </li>
-                    ))}
-                  </ul>
-                  <Link href="/register" className={`btn mt-5 w-full ${plan.featured ? 'btn-primary' : 'btn-secondary'}`}>
-                    {plan.cta}
-                  </Link>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
+        {/* Pricing — Indian Rupees & Razorpay Checkout Modal */}
+        <PricingSection />
 
         {/* Testimonials */}
-        <section id="testimonials" className="scroll-mt-16 border-b">
-          <div className="mx-auto max-w-6xl px-4 py-14 sm:px-6 sm:py-20">
-            <h2 className="text-2xl font-bold tracking-[-0.02em] sm:text-3xl">Teams that stopped chasing status</h2>
-            <div className="mt-8 grid gap-4 lg:grid-cols-3">
+        <section id="testimonials" className="scroll-mt-16 border-b bg-[var(--bg-subtle)]">
+          <div className="mx-auto max-w-6xl 2xl:max-w-7xl 3xl:max-w-[88rem] px-4 py-14 sm:px-6 sm:py-20">
+            <h2 data-reveal className="text-[26px] font-bold sm:text-4xl 2xl:text-5xl">
+              Teams that stopped chasing status
+            </h2>
+            <div data-reveal-group className="mt-8 grid gap-4 lg:grid-cols-3 2xl:gap-6">
               {TESTIMONIALS.map((item) => (
-                <figure key={item.name} className="card flex flex-col p-5">
-                  <blockquote className="flex-1 text-[13px] leading-relaxed text-[var(--text)]">“{item.quote}”</blockquote>
-                  <figcaption className="mt-4 border-t pt-3">
-                    <p className="text-[13px] font-semibold">{item.name}</p>
-                    <p className="text-xs text-[var(--text-muted)]">{item.role}</p>
+                <figure key={item.name} className="card flex flex-col p-5 sm:p-6 2xl:p-7">
+                  <blockquote className="flex-1 text-[14px] 2xl:text-base leading-relaxed">“{item.quote}”</blockquote>
+                  <figcaption className="mt-5 flex items-center gap-3 border-t pt-4">
+                    <Avatar name={item.name} size={36} />
+                    <span className="min-w-0">
+                      <span className="block truncate text-[13px] 2xl:text-sm font-semibold">{item.name}</span>
+                      <span className="block truncate text-xs text-[var(--text-muted)]">{item.role}</span>
+                    </span>
                   </figcaption>
                 </figure>
               ))}
@@ -219,21 +136,27 @@ export default function LandingPage() {
         </section>
 
         {/* FAQ */}
-        <section id="faq" className="scroll-mt-16 border-b bg-[var(--bg-subtle)]">
-          <div className="mx-auto max-w-3xl px-4 py-14 sm:px-6 sm:py-20">
-            <h2 className="text-2xl font-bold tracking-[-0.02em] sm:text-3xl">Questions worth asking</h2>
-            <div className="mt-6">
+        <section id="faq" className="scroll-mt-16 border-b">
+          <div className="mx-auto max-w-3xl 2xl:max-w-4xl 3xl:max-w-[64rem] px-4 py-14 sm:px-6 sm:py-20">
+            <h2 data-reveal className="text-[26px] font-bold sm:text-4xl 2xl:text-5xl">
+              Questions worth asking
+            </h2>
+            <div data-reveal className="mt-6">
               <Faq items={FAQ} />
             </div>
           </div>
         </section>
 
         {/* Contact */}
-        <section id="contact" className="scroll-mt-16">
-          <div className="mx-auto max-w-3xl px-4 py-14 sm:px-6 sm:py-20">
-            <h2 className="text-2xl font-bold tracking-[-0.02em] sm:text-3xl">Talk to us</h2>
-            <p className="mt-2 text-sm text-[var(--text-muted)]">Tell us what your board looks like on a Friday afternoon.</p>
-            <div className="mt-6">
+        <section id="contact" className="scroll-mt-16 bg-[var(--bg-subtle)]">
+          <div className="mx-auto max-w-3xl 2xl:max-w-4xl 3xl:max-w-[64rem] px-4 py-14 sm:px-6 sm:py-20">
+            <h2 data-reveal className="text-[26px] font-bold sm:text-4xl 2xl:text-5xl">
+              Talk to us
+            </h2>
+            <p data-reveal className="mt-2 text-[14px] text-[var(--text-muted)] sm:text-[15px] 2xl:text-lg">
+              Tell us what your board looks like on a Friday afternoon.
+            </p>
+            <div data-reveal className="mt-6">
               <ContactForm />
             </div>
           </div>
@@ -245,28 +168,32 @@ export default function LandingPage() {
   );
 }
 
-function Stat({ value, label }: { value: string; label: string }) {
+function Stat({ value, label }: { value: number; label: string }) {
   return (
-    <div className="px-2 py-3 text-center">
-      <p className="text-2xl font-bold tracking-[-0.03em] text-[var(--accent)] sm:text-3xl">{value}</p>
-      <p className="mt-1 text-[11px] leading-snug text-[var(--text-muted)]">{label}</p>
+    <div className="px-2 text-center">
+      {/* Renders the final figure, so with no JavaScript the number is still
+          right; the counter simply replaces it on the way in. */}
+      <p data-count={value} className="text-4xl font-bold tabular-nums sm:text-5xl">
+        {value}
+      </p>
+      <p className="mx-auto mt-1.5 max-w-[13rem] text-[11.5px] leading-snug text-[var(--text-muted)]">{label}</p>
     </div>
   );
 }
 
 function SuggestionSketch({ title, confidence, evidence, kind }: { title: string; confidence: string; evidence: string; kind: string }) {
   return (
-    <div className="rounded-xl border bg-[var(--bg)] p-3">
+    <div className="rounded-[16px] border bg-[var(--bg)] p-3.5">
       <div className="flex items-start justify-between gap-3">
         <p className="text-[13px] font-semibold">{title}</p>
         <span className="badge shrink-0 bg-[var(--success-soft)] text-[var(--success)]">{confidence}</span>
       </div>
-      <p className="mt-2 border-l-2 border-[var(--accent)] pl-2.5 text-[11px] leading-relaxed text-[var(--text-muted)]">
-        <span className="font-medium text-[var(--text-faint)]">Evidence · {kind}</span>
+      <p className="mt-2.5 border-l-2 border-[var(--text)] pl-3 text-[11.5px] leading-relaxed text-[var(--text-muted)]">
+        <span className="font-semibold text-[var(--text-faint)]">Evidence · {kind}</span>
         <br />
         {evidence}
       </p>
-      <div className="mt-2.5 flex gap-1.5">
+      <div className="mt-3 flex gap-1.5">
         <span className="btn btn-primary btn-sm pointer-events-none">Accept</span>
         <span className="btn btn-secondary btn-sm pointer-events-none">Reject</span>
       </div>

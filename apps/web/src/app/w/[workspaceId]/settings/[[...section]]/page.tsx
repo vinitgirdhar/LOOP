@@ -104,7 +104,7 @@ function GeneralTab({ workspace, onChanged }: { workspace: WorkspaceDetail; onCh
       <Card>
         <SectionTitle title="Identity" />
         <div className="flex items-center gap-4">
-          <Avatar name={workspace.name} src={workspace.logoUrl} size={56} />
+          <Avatar name={workspace.name} src={workspace.logoUrl} size={56} kind="workspace" />
           {can('workspace.update') && (
             <label className="btn btn-secondary btn-sm cursor-pointer">
               Change logo
@@ -224,7 +224,7 @@ function MembersTab({ workspaceId }: { workspaceId: string }) {
             {(members ?? []).map((member) => (
               <li key={member.id} className="flex flex-wrap items-center gap-3 px-4 py-3">
                 <span className="relative">
-                  <Avatar name={member.user.name} src={member.user.avatarUrl} size={34} />
+                  <Avatar seed={member.user.id} name={member.user.name} src={member.user.avatarUrl} size={34} />
                   {member.online && <span className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-[var(--success)] ring-2 ring-[var(--surface)]" />}
                 </span>
                 <div className="min-w-0 flex-1">

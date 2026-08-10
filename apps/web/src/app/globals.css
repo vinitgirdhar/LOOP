@@ -1,7 +1,12 @@
 @import 'tailwindcss';
 
 /*
-  Loop design system.
+  Loop design system — monochrome edition.
+
+  Ink and paper. One neutral ramp, no brand hue: emphasis comes from weight,
+  fill and radius instead of colour. Buttons are pills, cards are generously
+  rounded, and the strongest surface in the system is a solid ink panel that
+  flips to paper in dark mode.
 
   Small on purpose: a token layer, a handful of primitives, and Tailwind
   utilities on top. Everything is sized for a 320px phone first and only then
@@ -15,47 +20,64 @@
 }
 
 :root {
-  /* Surfaces — a cool neutral ramp, not pure grey, so cards read as paper. */
+  /* Surfaces — warm-free greys so white cards read as paper on a soft ground. */
   --bg: #ffffff;
-  --bg-subtle: #f6f7f9;
-  --bg-inset: #eef0f4;
+  --bg-subtle: #f3f3f4;
+  --bg-inset: #ececed;
   --surface: #ffffff;
   --surface-raised: #ffffff;
-  --border: #e3e6ec;
-  --border-strong: #cbd1dc;
+  --border: #e7e7e9;
+  --border-strong: #d3d3d7;
 
-  --text: #0f1522;
-  --text-muted: #5b6577;
-  --text-faint: #8b95a7;
+  --text: #101011;
+  --text-muted: #6a6a70;
+  --text-faint: #9b9ba1;
 
-  /* One accent, used sparingly: selection, active nav, primary action. */
-  --accent: #4338ca;
-  --accent-hover: #372cb0;
-  --accent-soft: #eef0ff;
+  /* The accent is ink. Fills are solid black, never tinted. */
+  --accent: #131314;
+  --accent-hover: #000000;
+  --accent-soft: #efeff0;
   --accent-text: #ffffff;
 
-  --success: #067a55;
-  --success-soft: #e9f8f1;
-  --warning: #b45309;
-  --warning-soft: #fdf5e6;
-  --danger: #c62d3c;
-  --danger-soft: #fdf0f1;
-  --info: #0369a1;
-  --info-soft: #eef7fd;
+  /*
+    Ink panel — the black card the whole language is built around. It inverts
+    in dark mode, so panels always oppose the page they sit on.
+  */
+  --ink: #131314;
+  --ink-raised: #1f1f21;
+  --ink-text: #f6f6f7;
+  --ink-muted: #a0a0a6;
+  --ink-faint: #77777d;
+  --ink-border: #2c2c2f;
 
-  --ring: #8b93ee;
+  /*
+    Status still needs hue — priority, overdue and health are not decoration.
+    These are deliberately desaturated so they never fight the monochrome.
+  */
+  --success: #14795b;
+  --success-soft: #e9f4f0;
+  --warning: #8a5a10;
+  --warning-soft: #f5f0e6;
+  --danger: #b3323f;
+  --danger-soft: #f8eded;
+  --info: #29607f;
+  --info-soft: #ecf2f6;
 
-  --radius-sm: 7px;
-  --radius: 10px;
-  --radius-lg: 14px;
+  --ring: #131314;
 
-  --shadow-xs: 0 1px 2px rgb(15 21 34 / 0.05);
-  --shadow: 0 1px 2px rgb(15 21 34 / 0.05), 0 4px 12px -4px rgb(15 21 34 / 0.08);
-  --shadow-lg: 0 8px 24px -6px rgb(15 21 34 / 0.14), 0 20px 48px -20px rgb(15 21 34 / 0.22);
+  --radius-sm: 10px;
+  --radius: 14px;
+  --radius-lg: 22px;
+  --radius-xl: 28px;
+  --radius-pill: 999px;
+
+  --shadow-xs: 0 1px 2px rgb(16 16 17 / 0.05);
+  --shadow: 0 2px 4px -1px rgb(16 16 17 / 0.05), 0 10px 24px -12px rgb(16 16 17 / 0.14);
+  --shadow-lg: 0 10px 30px -8px rgb(16 16 17 / 0.16), 0 28px 60px -24px rgb(16 16 17 / 0.24);
 
   /* Chrome metrics — shared so panes can size themselves against the shell. */
-  --header-h: 3.25rem;
-  --bottom-bar-h: 3.5rem;
+  --header-h: 3.5rem;
+  --bottom-bar-h: 3.75rem;
   --safe-top: env(safe-area-inset-top, 0px);
   --safe-bottom: env(safe-area-inset-bottom, 0px);
   --safe-left: env(safe-area-inset-left, 0px);
@@ -65,38 +87,56 @@
 }
 
 .dark {
-  --bg: #0c0e14;
-  --bg-subtle: #0f1219;
-  --bg-inset: #171b25;
-  --surface: #12151d;
-  --surface-raised: #181c26;
-  --border: #232936;
-  --border-strong: #343c4d;
+  --bg: #0b0b0c;
+  --bg-subtle: #0f0f10;
+  --bg-inset: #1a1a1c;
+  --surface: #141416;
+  --surface-raised: #1c1c1f;
+  --border: #262629;
+  --border-strong: #3a3a3e;
 
-  --text: #e8ebf2;
-  --text-muted: #9aa4b6;
-  --text-faint: #6b7587;
+  --text: #f4f4f5;
+  --text-muted: #a2a2a8;
+  --text-faint: #6f6f76;
 
-  --accent: #7f88f5;
-  --accent-hover: #949bf8;
-  --accent-soft: #1b1e38;
-  --accent-text: #0c0e14;
+  --accent: #f4f4f5;
+  --accent-hover: #ffffff;
+  --accent-soft: #202023;
+  --accent-text: #0b0b0c;
 
-  --success: #3ddba0;
-  --success-soft: #0d2a22;
-  --warning: #f0b429;
-  --warning-soft: #2a2211;
-  --danger: #f8717f;
-  --danger-soft: #2d161a;
-  --info: #4cc2f5;
-  --info-soft: #0d2432;
+  /* Inverted: on a dark page the standout panel is paper, not ink. */
+  --ink: #f4f4f5;
+  --ink-raised: #e4e4e6;
+  --ink-text: #101011;
+  --ink-muted: #5c5c62;
+  --ink-faint: #85858c;
+  --ink-border: #d6d6da;
 
-  --ring: #6c74e0;
+  --success: #4fc99e;
+  --success-soft: #12241e;
+  --warning: #d8a441;
+  --warning-soft: #241d10;
+  --danger: #ef6f7c;
+  --danger-soft: #251517;
+  --info: #6fb6d8;
+  --info-soft: #101f27;
 
-  --shadow-xs: 0 1px 2px rgb(0 0 0 / 0.4);
-  --shadow: 0 1px 2px rgb(0 0 0 / 0.4), 0 4px 12px -4px rgb(0 0 0 / 0.5);
-  --shadow-lg: 0 12px 32px -8px rgb(0 0 0 / 0.6), 0 24px 56px -24px rgb(0 0 0 / 0.7);
+  --ring: #f4f4f5;
+
+  --shadow-xs: 0 1px 2px rgb(0 0 0 / 0.45);
+  --shadow: 0 2px 4px -1px rgb(0 0 0 / 0.5), 0 10px 24px -12px rgb(0 0 0 / 0.6);
+  --shadow-lg: 0 12px 32px -8px rgb(0 0 0 / 0.65), 0 28px 60px -24px rgb(0 0 0 / 0.75);
 }
+
+/*
+  Element defaults live in Tailwind's `base` layer on purpose.
+
+  An unlayered rule outranks every layered one, so a bare `:focus-visible`
+  here quietly beat `outline-none` and painted a ring on elements that had
+  explicitly opted out — the command palette's autofocused input wore a white
+  pill the moment it opened. Layering puts utilities back on top.
+*/
+@layer base {
 
 * {
   border-color: var(--border);
@@ -114,6 +154,7 @@ body {
   font-family: var(--font-sans);
   font-size: 15px;
   line-height: 1.5;
+  letter-spacing: -0.011em;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   overscroll-behavior-y: none;
@@ -140,18 +181,20 @@ canvas {
 
 h1, h2, h3, h4 {
   text-wrap: balance;
+  letter-spacing: -0.03em;
 }
 
-::selection {
-  background: color-mix(in oklab, var(--accent) 24%, transparent);
-  color: var(--text);
+/* Hide scrollbars globally across all browsers while preserving scroll functionality. */
+*, *::before, *::after {
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
+}
+::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
 }
 
-/* Keyboard users get a visible ring; pointer users do not. */
-:focus-visible {
-  outline: 2px solid var(--ring);
-  outline-offset: 2px;
-  border-radius: var(--radius-sm);
 }
 
 /*
@@ -200,9 +243,9 @@ h1, h2, h3, h4 {
 @supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
   .bottom-bar,
   .app-header {
-    background: color-mix(in oklab, var(--surface) 85%, transparent);
-    backdrop-filter: saturate(180%) blur(16px);
-    -webkit-backdrop-filter: saturate(180%) blur(16px);
+    background: color-mix(in oklab, var(--surface) 86%, transparent);
+    backdrop-filter: saturate(160%) blur(16px);
+    -webkit-backdrop-filter: saturate(160%) blur(16px);
   }
 }
 
@@ -213,27 +256,41 @@ h1, h2, h3, h4 {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 0.125rem;
+  gap: 0.1875rem;
   padding: 0 0.125rem;
   font-size: 10px;
-  font-weight: 550;
+  font-weight: 600;
   letter-spacing: -0.01em;
-  color: var(--text-muted);
+  color: var(--text-faint);
   transition: color 0.15s;
 }
 .bottom-bar-item:active {
   opacity: 0.6;
 }
+/* Active tab wears the ink pill; the label under it goes full strength. */
 .bottom-bar-item-active {
-  color: var(--accent);
+  color: var(--text);
+}
+.bottom-bar-glyph {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 1.875rem;
+  min-width: 2.75rem;
+  border-radius: var(--radius-pill);
+  transition: background-color 0.18s, color 0.18s;
+}
+.bottom-bar-item-active .bottom-bar-glyph {
+  background: var(--ink);
+  color: var(--ink-text);
 }
 
 .nav-row {
   display: flex;
   align-items: center;
   gap: 0.625rem;
-  border-radius: var(--radius);
-  padding: 0.5rem 0.625rem;
+  border-radius: var(--radius-pill);
+  padding: 0.5rem 0.75rem;
   font-size: 13px;
   font-weight: 500;
   color: var(--text-muted);
@@ -244,17 +301,21 @@ h1, h2, h3, h4 {
   color: var(--text);
 }
 .nav-row-active {
-  background: var(--accent-soft);
-  color: var(--accent);
+  background: var(--ink);
+  color: var(--ink-text);
   font-weight: 600;
+}
+.nav-row-active:hover {
+  background: var(--ink);
+  color: var(--ink-text);
 }
 
 .drawer-row {
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  border-radius: var(--radius);
-  padding: 0.625rem 0.5rem;
+  border-radius: var(--radius-pill);
+  padding: 0.625rem 0.75rem;
   font-size: 13px;
   font-weight: 500;
   min-height: 44px;
@@ -272,20 +333,25 @@ h1, h2, h3, h4 {
   height: 1.125rem;
   padding: 0 0.3rem;
   border-radius: 999px;
-  background: var(--accent);
-  color: var(--accent-text);
+  background: var(--danger);
+  color: #fff;
   font-size: 10px;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
 }
-
-.overlay {
-  background: rgb(9 12 20 / 0.5);
-  backdrop-filter: blur(2px);
-  -webkit-backdrop-filter: blur(2px);
+/* Inside an ink row the red dot disappears; borrow the panel's paper instead. */
+.nav-row-active .badge-count {
+  background: var(--ink-text);
+  color: var(--ink);
 }
 
-/* ── primitives ───────────────────────────────────────────────────────── */
+.overlay {
+  background: rgb(10 10 11 / 0.55);
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+}
+
+/* ── surfaces ─────────────────────────────────────────────────────────── */
 
 .card {
   background: var(--surface);
@@ -293,31 +359,114 @@ h1, h2, h3, h4 {
   border-radius: var(--radius-lg);
 }
 
+/*
+  The ink panel. Solid, borderless, extra-round — the hero surface for auth,
+  onboarding and any block that has to carry the page on its own. Descendants
+  read their colours from the panel, so plain text and muted text both work
+  inside it without per-element overrides.
+*/
+.panel-ink {
+  background: var(--ink);
+  color: var(--ink-text);
+  border-radius: var(--radius-xl);
+  border: none;
+}
+.panel-ink .text-muted,
+.panel-ink .label {
+  color: var(--ink-muted);
+}
+.panel-ink .divider {
+  background: var(--ink-border);
+}
+/* Fields inside ink invert too, otherwise they punch white holes in the card. */
+.panel-ink .input,
+.panel-ink .select,
+.panel-ink .textarea {
+  background: color-mix(in oklab, var(--ink-text) 8%, transparent);
+  border-color: var(--ink-border);
+  color: var(--ink-text);
+}
+.panel-ink .input::placeholder,
+.panel-ink .textarea::placeholder {
+  color: var(--ink-faint);
+}
+.panel-ink .input:focus,
+.panel-ink .select:focus,
+.panel-ink .textarea:focus {
+  border-color: var(--ink-text);
+  box-shadow: 0 0 0 3px color-mix(in oklab, var(--ink-text) 14%, transparent);
+}
+/* A primary button on ink has to flip, or it vanishes into the panel. */
+.panel-ink .btn-primary {
+  background: var(--ink-text);
+  color: var(--ink);
+}
+.panel-ink .btn-primary:hover:not(:disabled) {
+  background: var(--ink-text);
+  filter: brightness(0.94);
+}
+.panel-ink .btn-secondary {
+  background: transparent;
+  color: var(--ink-text);
+  border-color: var(--ink-border);
+}
+.panel-ink .btn-secondary:hover:not(:disabled) {
+  background: color-mix(in oklab, var(--ink-text) 8%, transparent);
+}
+.panel-ink .btn-ghost {
+  color: var(--ink-muted);
+}
+.panel-ink .btn-ghost:hover:not(:disabled) {
+  background: color-mix(in oklab, var(--ink-text) 8%, transparent);
+  color: var(--ink-text);
+}
+
+/* ── primitives ───────────────────────────────────────────────────────── */
+
 .btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  border-radius: var(--radius);
+  border-radius: var(--radius-pill);
   font-size: 0.875rem;
-  font-weight: 550;
-  letter-spacing: -0.005em;
-  padding: 0.5rem 0.875rem;
-  min-height: 2.5rem;
+  font-weight: 600;
+  letter-spacing: -0.012em;
+  padding: 0.5rem 1.25rem;
+  min-height: 2.75rem;
   border: 1px solid transparent;
-  transition: background-color 0.15s, border-color 0.15s, opacity 0.15s, transform 0.06s;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
   cursor: pointer;
   white-space: nowrap;
   user-select: none;
+  position: relative;
 }
-.btn:active:not(:disabled) { transform: scale(0.985); }
-.btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.btn:active:not(:disabled) { transform: scale(0.97); }
+.btn:disabled { opacity: 0.45; cursor: not-allowed; }
 
-.btn-primary { background: var(--accent); color: var(--accent-text); }
-.btn-primary:hover:not(:disabled) { background: var(--accent-hover); }
+.btn-primary {
+  background: var(--text);
+  color: var(--bg);
+  box-shadow: 0 4px 12px -2px color-mix(in oklab, var(--text) 20%, transparent);
+}
+.btn-primary:hover:not(:disabled) {
+  opacity: 0.93;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px -3px color-mix(in oklab, var(--text) 30%, transparent);
+}
 
-.btn-secondary { background: var(--surface); color: var(--text); border-color: var(--border-strong); }
-.btn-secondary:hover:not(:disabled) { background: var(--bg-inset); }
+.btn-secondary {
+  background: var(--surface);
+  color: var(--text);
+  border-color: var(--border-strong);
+  box-shadow: 0 1px 3px rgb(0 0 0 / 0.04);
+}
+.btn-secondary:hover:not(:disabled) {
+  background: var(--bg-inset);
+  border-color: var(--text-muted);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px -2px rgb(0 0 0 / 0.08);
+}
 
 .btn-ghost { background: transparent; color: var(--text-muted); }
 .btn-ghost:hover:not(:disabled) { background: var(--bg-inset); color: var(--text); }
@@ -325,41 +474,52 @@ h1, h2, h3, h4 {
 .btn-danger { background: var(--danger); color: #fff; }
 .btn-danger:hover:not(:disabled) { filter: brightness(1.07); }
 
-.btn-sm { padding: 0.3rem 0.65rem; min-height: 2.125rem; font-size: 0.8125rem; border-radius: var(--radius-sm); }
-.btn-icon { padding: 0.5rem; min-width: 2.5rem; }
-.btn-icon.btn-sm { min-width: 2.125rem; padding: 0.375rem; }
+.btn-sm { padding: 0.3rem 0.85rem; min-height: 2.25rem; font-size: 0.8125rem; }
+.btn-icon { padding: 0.5rem; min-width: 2.75rem; }
+.btn-icon.btn-sm { min-width: 2.25rem; padding: 0.375rem; }
 
-/* Touch pointers get Apple's 44px minimum, mice keep the tighter desktop size. */
+/* The tall pill CTA the onboarding and auth screens lead with. */
+.btn-hero {
+  width: 100%;
+  min-height: 3.25rem;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  padding-inline: 1.75rem;
+  border-radius: var(--radius-pill);
+}
+
+/* Touch pointers get a bit more height; mice keep the tighter desktop size. */
 @media (pointer: coarse) {
-  .btn { min-height: 2.75rem; }
-  .btn-icon { min-width: 2.75rem; }
-  .btn-sm { min-height: 2.375rem; }
-  .btn-icon.btn-sm { min-width: 2.375rem; }
+  .btn { min-height: 3rem; }
+  .btn-icon { min-width: 3rem; }
+  .btn-sm { min-height: 2.5rem; }
+  .btn-icon.btn-sm { min-width: 2.5rem; }
 }
 
 .input,
 .select,
 .textarea {
   width: 100%;
-  background: var(--bg);
-  border: 1px solid var(--border-strong);
+  background: var(--bg-inset);
+  border: 1px solid transparent;
   border-radius: var(--radius);
-  padding: 0.5rem 0.75rem;
+  padding: 0.625rem 0.9375rem;
   font-size: 0.9375rem;
   font-family: inherit;
   color: var(--text);
-  min-height: 2.5rem;
-  transition: border-color 0.15s, box-shadow 0.15s;
+  min-height: 2.875rem;
+  transition: background-color 0.15s, border-color 0.15s, box-shadow 0.15s;
   -webkit-appearance: none;
   appearance: none;
 }
 .input::placeholder, .textarea::placeholder { color: var(--text-faint); }
 .input:focus, .select:focus, .textarea:focus {
   outline: none;
-  border-color: var(--accent);
-  box-shadow: 0 0 0 3px color-mix(in oklab, var(--accent) 16%, transparent);
+  background: var(--surface);
+  border-color: var(--text);
+  box-shadow: 0 0 0 3px color-mix(in oklab, var(--text) 10%, transparent);
 }
-.textarea { min-height: 6rem; resize: vertical; line-height: 1.55; }
+.textarea { min-height: 6.5rem; resize: vertical; line-height: 1.55; }
 
 /* Safari zooms the page whenever a focused field is under 16px. */
 @media (pointer: coarse) {
@@ -367,17 +527,17 @@ h1, h2, h3, h4 {
   .select,
   .textarea {
     font-size: 16px;
-    min-height: 2.75rem;
+    min-height: 3.125rem;
   }
 }
 
 /* The chevron is drawn in, because appearance:none removes the native one. */
 .select {
-  padding-right: 2.25rem;
+  padding-right: 2.5rem;
   cursor: pointer;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%238b95a7' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 9l7 7 7-7'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%239b9ba1' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 9l7 7 7-7'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
-  background-position: right 0.625rem center;
+  background-position: right 0.75rem center;
   background-size: 15px;
 }
 
@@ -387,7 +547,7 @@ input[type='time'],
 input[type='datetime-local'] {
   -webkit-appearance: none;
   appearance: none;
-  min-height: 2.5rem;
+  min-height: 2.875rem;
 }
 input[type='date']::-webkit-date-and-time-value { text-align: left; }
 
@@ -399,14 +559,85 @@ input[type='radio'] {
   flex-shrink: 0;
 }
 
-.label { display: block; font-size: 0.8125rem; font-weight: 550; color: var(--text-muted); margin-bottom: 0.375rem; }
+.label {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  color: var(--text-muted);
+  margin-bottom: 0.4375rem;
+}
+
+/*
+  The auth sheet — the paper card that lifts over the dark hero.
+
+  Fields inside it drop to a single rule underneath, the way the reference
+  does. Scoping it here rather than adding a modifier class means the six auth
+  screens keep passing a plain `.input` and still get the right treatment.
+*/
+.auth-sheet .input,
+.auth-sheet .select,
+.auth-sheet .textarea {
+  background: transparent;
+  border: none;
+  border-bottom: 1.5px solid var(--border-strong);
+  border-radius: 0;
+  padding-inline: 0;
+  padding-block: 0.5rem;
+  min-height: 2.75rem;
+}
+.auth-sheet .input:focus,
+.auth-sheet .select:focus,
+.auth-sheet .textarea:focus {
+  background: transparent;
+  border-bottom-color: var(--text);
+  box-shadow: none;
+}
+.auth-sheet .label {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+  margin-bottom: 0.125rem;
+}
+/* The underline is the field's own edge, so a code entry keeps its centring. */
+.auth-sheet .code-input {
+  text-align: center;
+}
+
+/* Field hints and errors are classed rather than coloured inline, so the ink
+   panel can lift them — a 2.5:1 red on near-black is not an error message. */
+.field-hint {
+  font-size: 0.75rem;
+  line-height: 1.45;
+  color: var(--text-faint);
+}
+.field-error {
+  font-size: 0.75rem;
+  line-height: 1.45;
+  font-weight: 550;
+  color: var(--danger);
+}
+.panel-ink .field-hint { color: var(--ink-faint); }
+.panel-ink .field-error { color: color-mix(in oklab, var(--danger) 45%, var(--ink-text)); }
+
+/* A four-to-six box code entry — 2FA today, a PIN screen tomorrow. */
+.code-input {
+  width: 100%;
+  text-align: center;
+  font-size: 1.25rem;
+  font-weight: 600;
+  letter-spacing: 0.4em;
+  text-indent: 0.4em;
+}
 
 .badge {
   display: inline-flex;
   align-items: center;
   gap: 0.25rem;
   border-radius: 999px;
-  padding: 0.125rem 0.5rem;
+  padding: 0.1875rem 0.5625rem;
   font-size: 0.6875rem;
   font-weight: 600;
   letter-spacing: 0.01em;
@@ -414,8 +645,108 @@ input[type='radio'] {
   white-space: nowrap;
 }
 
-.link { color: var(--accent); text-decoration: none; }
-.link:hover { text-decoration: underline; }
+/* Filter pills — the row of category chips above a list. */
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  flex-shrink: 0;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  padding: 0.4375rem 0.875rem;
+  font-size: 0.8125rem;
+  font-weight: 550;
+  color: var(--text-muted);
+  min-height: 2.25rem;
+  transition: background-color 0.15s, color 0.15s, border-color 0.15s;
+}
+.chip:hover { border-color: var(--border-strong); color: var(--text); }
+.chip-active {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: var(--ink-text);
+}
+.chip-active:hover { color: var(--ink-text); }
+
+/*
+  Segmented control — the Details / Steps / Roles pill. The track is inset,
+  the selected item is a raised pill; on ink the roles swap.
+*/
+.segmented {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.125rem;
+  border-radius: var(--radius-pill);
+  background: var(--bg-inset);
+  padding: 0.1875rem;
+}
+.segmented-item {
+  flex: 1 1 0;
+  min-width: 0;
+  border-radius: var(--radius-pill);
+  padding: 0.4375rem 0.875rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  white-space: nowrap;
+  transition: background-color 0.18s, color 0.18s, box-shadow 0.18s;
+}
+.segmented-item:hover { color: var(--text); }
+.segmented-item-active,
+.segmented-item-active:hover {
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: var(--shadow-xs);
+}
+.panel-ink .segmented {
+  background: color-mix(in oklab, var(--ink-text) 10%, transparent);
+}
+.panel-ink .segmented-item { color: var(--ink-muted); }
+.panel-ink .segmented-item-active,
+.panel-ink .segmented-item-active:hover {
+  background: var(--ink-text);
+  color: var(--ink);
+}
+
+/* Toggle switch */
+.switch {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+  width: 3rem;
+  height: 1.75rem;
+  border-radius: var(--radius-pill);
+  background: var(--border-strong);
+  transition: background-color 0.2s;
+  cursor: pointer;
+}
+.switch-on { background: var(--ink); }
+/*
+  The knob always opposes its own track, and the track flips meaning between
+  modes: ink when on (dark on light, light on dark), plain grey when off.
+*/
+.switch-knob {
+  position: absolute;
+  left: 0.1875rem;
+  height: 1.375rem;
+  width: 1.375rem;
+  border-radius: 999px;
+  background: var(--surface);
+  box-shadow: var(--shadow-xs);
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.switch-on .switch-knob {
+  transform: translateX(1.25rem);
+  background: var(--ink-text);
+}
+.dark .switch-knob { background: var(--text); }
+.dark .switch-on .switch-knob { background: var(--ink-text); }
+
+.link { color: var(--text); text-decoration: underline; text-underline-offset: 3px; text-decoration-thickness: 1.5px; }
+.link:hover { opacity: 0.7; }
+.panel-ink .link { color: var(--ink-text); }
 
 .divider { height: 1px; background: var(--border); }
 
@@ -426,7 +757,7 @@ input[type='radio'] {
   min-width: 1.25rem;
   border: 1px solid var(--border-strong);
   border-bottom-width: 2px;
-  border-radius: 5px;
+  border-radius: 6px;
   padding: 0 0.3rem;
   font-family: inherit;
   font-size: 10px;
@@ -443,8 +774,8 @@ input[type='radio'] {
   display: inline-flex;
   align-items: center;
   gap: 0.25rem;
-  border-radius: var(--radius-sm);
-  padding: 0.25rem 0.375rem;
+  border-radius: var(--radius-pill);
+  padding: 0.25rem 0.5rem;
   color: var(--text-muted);
   transition: background-color 0.15s, color 0.15s;
 }
@@ -485,23 +816,23 @@ input[type='radio'] {
 
 /* Board card being dragged */
 .dragging { opacity: 0.4; }
-.drop-target { background: var(--accent-soft); outline: 2px dashed var(--accent); outline-offset: -4px; }
+.drop-target { background: var(--bg-inset); outline: 2px dashed var(--text-faint); outline-offset: -4px; }
 
 /* Rendered wiki content */
 .prose-loop { color: var(--text); line-height: 1.7; font-size: 0.9375rem; }
-.prose-loop h1 { font-size: 1.5rem; font-weight: 700; margin: 1.5rem 0 0.75rem; letter-spacing: -0.02em; }
-.prose-loop h2 { font-size: 1.25rem; font-weight: 650; margin: 1.5rem 0 0.5rem; letter-spacing: -0.01em; }
+.prose-loop h1 { font-size: 1.5rem; font-weight: 700; margin: 1.5rem 0 0.75rem; letter-spacing: -0.03em; }
+.prose-loop h2 { font-size: 1.25rem; font-weight: 650; margin: 1.5rem 0 0.5rem; letter-spacing: -0.02em; }
 .prose-loop h3 { font-size: 1.0625rem; font-weight: 600; margin: 1.25rem 0 0.5rem; }
 .prose-loop p { margin: 0.75rem 0; }
 .prose-loop ul, .prose-loop ol { margin: 0.75rem 0; padding-left: 1.4rem; }
 .prose-loop ul { list-style: disc; }
 .prose-loop ol { list-style: decimal; }
 .prose-loop li { margin: 0.3rem 0; }
-.prose-loop a { color: var(--accent); text-decoration: underline; }
-.prose-loop code { background: var(--bg-inset); padding: 0.1rem 0.35rem; border-radius: 5px; font-family: var(--font-mono); font-size: 0.85em; }
+.prose-loop a { color: var(--text); text-decoration: underline; text-underline-offset: 3px; }
+.prose-loop code { background: var(--bg-inset); padding: 0.1rem 0.35rem; border-radius: 6px; font-family: var(--font-mono); font-size: 0.85em; }
 .prose-loop pre { background: var(--bg-inset); padding: 0.875rem; border-radius: var(--radius); overflow-x: auto; margin: 0.875rem 0; border: 1px solid var(--border); }
 .prose-loop pre code { background: none; padding: 0; font-size: 0.8125rem; }
-.prose-loop blockquote { border-left: 3px solid var(--accent); padding-left: 0.875rem; color: var(--text-muted); margin: 0.875rem 0; }
+.prose-loop blockquote { border-left: 3px solid var(--text); padding-left: 0.875rem; color: var(--text-muted); margin: 0.875rem 0; }
 .prose-loop table { width: 100%; border-collapse: collapse; margin: 0.875rem 0; font-size: 0.875rem; display: block; overflow-x: auto; }
 .prose-loop th, .prose-loop td { border: 1px solid var(--border); padding: 0.5rem 0.65rem; text-align: left; }
 .prose-loop th { background: var(--bg-inset); font-weight: 600; }

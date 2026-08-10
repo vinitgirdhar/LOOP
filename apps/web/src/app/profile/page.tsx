@@ -58,7 +58,7 @@ export default function ProfilePage() {
 
       <main id="main" className="mx-auto max-w-3xl px-4 py-6 sm:px-6">
         <div className="mb-5 flex items-center gap-4">
-          <Avatar name={user.name} src={user.avatarUrl} size={56} />
+          <Avatar seed={user.id} name={user.name} src={user.avatarUrl} size={56} />
           <div className="min-w-0">
             <h1 className="truncate text-lg font-bold tracking-[-0.02em]">{user.name}</h1>
             <p className="truncate text-[13px] text-[var(--text-muted)]">{user.email}</p>
@@ -94,7 +94,7 @@ export default function ProfilePage() {
                 {memberships.map((membership) => (
                   <li key={membership.id}>
                     <Link href={`/w/${membership.workspace.id}`} className="flex items-center gap-3 px-4 py-3 hover:bg-[var(--bg-inset)]">
-                      <Avatar name={membership.workspace.name} src={membership.workspace.logoUrl} size={30} />
+                      <Avatar name={membership.workspace.name} src={membership.workspace.logoUrl} size={30} kind="workspace" />
                       <span className="min-w-0 flex-1">
                         <span className="block truncate text-[13px] font-medium">{membership.workspace.name}</span>
                         <span className="block text-[11px] text-[var(--text-muted)]">{ROLE_LABELS[membership.role]}</span>

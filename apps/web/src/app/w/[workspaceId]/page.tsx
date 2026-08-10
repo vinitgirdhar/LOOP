@@ -222,7 +222,7 @@ export default function DashboardPage({ params }: { params: Promise<{ workspaceI
                     {data.recentActivity.slice(0, 8).map((entry) => (
                       <li key={entry.id} className="flex gap-2">
                         {entry.actor ? (
-                          <Avatar name={entry.actor.name} src={entry.actor.avatarUrl} size={20} />
+                          <Avatar seed={entry.actor.id} name={entry.actor.name} src={entry.actor.avatarUrl} size={20} />
                         ) : (
                           <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[var(--accent-soft)] text-[var(--accent)]">
                             <Icon.bolt width={11} height={11} />

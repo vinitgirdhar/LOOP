@@ -115,7 +115,7 @@ export default function AnalyticsPage({ params }: { params: Promise<{ workspaceI
                     .map((row) => (
                       <li key={row.user.id}>
                         <div className="mb-1 flex items-center gap-2">
-                          <Avatar name={row.user.name} src={row.user.avatarUrl} size={22} />
+                          <Avatar seed={row.user.id} name={row.user.name} src={row.user.avatarUrl} size={22} />
                           <span className="min-w-0 flex-1 truncate text-[13px]">{row.user.name}</span>
                           {row.overdue > 0 && <Badge tone="danger">{row.overdue} overdue</Badge>}
                           <span className="text-[11px] tabular-nums text-[var(--text-muted)]">

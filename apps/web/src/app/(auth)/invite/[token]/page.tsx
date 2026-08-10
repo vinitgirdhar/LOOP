@@ -26,11 +26,15 @@ export default function InvitePage({ params }: { params: Promise<{ token: string
   const [joinError, setJoinError] = useState<string | null>(null);
 
   if (loading || !ready) {
+    // AuthCard owns the full viewport, so the placeholder has to as well —
+    // otherwise the loading frame renders unpadded against the bare page.
     return (
-      <div className="space-y-3">
-        <Skeleton className="h-6 w-2/3" />
-        <Skeleton className="h-20 w-full" />
-        <Skeleton className="h-10 w-full" />
+      <div className="flex min-h-dvh items-center justify-center px-5">
+        <div className="w-full max-w-sm space-y-3">
+          <Skeleton className="h-7 w-2/3" />
+          <Skeleton className="h-20 w-full" />
+          <Skeleton className="h-12 w-full" />
+        </div>
       </div>
     );
   }
@@ -48,7 +52,7 @@ export default function InvitePage({ params }: { params: Promise<{ token: string
   return (
     <AuthCard title={`Join ${invite.workspace.name}`} subtitle={`${invite.invitedBy.name} invited ${invite.email} as ${ROLE_LABELS[invite.role]}.`}>
       <div className="card flex items-center gap-3 p-4">
-        <Avatar name={invite.workspace.name} src={invite.workspace.logoUrl} size={40} />
+        <Avatar name={invite.workspace.name} src={invite.workspace.logoUrl} size={40} kind="workspace" />
         <div className="min-w-0">
           <p className="truncate text-sm font-semibold">{invite.workspace.name}</p>
           <p className="text-xs text-[var(--text-muted)]">{ROLE_LABELS[invite.role]}</p>

@@ -157,7 +157,7 @@ function UsersTab({ currentUserId }: { currentUserId: string }) {
         <ul className="divide-y">
           {(data ?? []).map((row) => (
             <li key={row.id} className="flex flex-wrap items-center gap-3 px-4 py-3">
-              <Avatar name={row.name} src={row.avatarUrl} size={32} />
+              <Avatar seed={row.id} name={row.name} src={row.avatarUrl} size={32} />
               <div className="min-w-0 flex-1">
                 <p className="truncate text-[13px] font-medium">
                   {row.name}

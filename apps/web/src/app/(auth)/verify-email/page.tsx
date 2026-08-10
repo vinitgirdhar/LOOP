@@ -50,7 +50,7 @@ function VerifyEmail() {
       footer={<AuthFooterLink href="/login">Back to sign in</AuthFooterLink>}
     >
       <form
-        className="space-y-3"
+        className="space-y-4"
         onSubmit={(event) => {
           event.preventDefault();
           void verify({ email: email.trim().toLowerCase(), otp });
@@ -66,7 +66,7 @@ function VerifyEmail() {
             </Field>
             <Field label="Verification code">
               <input
-                className="input text-center text-lg tracking-[0.4em]"
+                className="input code-input"
                 inputMode="numeric"
                 maxLength={6}
                 value={otp}
@@ -75,12 +75,12 @@ function VerifyEmail() {
                 autoFocus
               />
             </Field>
-            <Button type="submit" variant="primary" className="w-full" loading={loading} disabled={otp.length !== 6}>
+            <Button type="submit" variant="primary" className="btn-hero" loading={loading} disabled={otp.length !== 6}>
               Verify email
             </Button>
             <Button
               type="button"
-              className="w-full"
+              className="btn-hero"
               onClick={async () => {
                 setError(null);
                 try {
@@ -93,7 +93,7 @@ function VerifyEmail() {
             >
               Resend code
             </Button>
-            <p className="text-center text-[11px] text-[var(--text-faint)]">
+            <p className="text-center text-[12px] opacity-60">
               Running locally without an email provider? The code is printed in the API console.
             </p>
           </>

@@ -18,7 +18,7 @@ export default function ForgotPasswordPage() {
       footer={<AuthFooterLink href="/login">Back to sign in</AuthFooterLink>}
     >
       <form
-        className="space-y-3"
+        className="space-y-4"
         onSubmit={async (event) => {
           event.preventDefault();
           setError(null);
@@ -38,7 +38,7 @@ export default function ForgotPasswordPage() {
         <Field label="Email">
           <input className="input" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required autoFocus autoComplete="email" />
         </Field>
-        <Button type="submit" variant="primary" className="w-full" loading={loading}>
+        <Button type="submit" variant="primary" className="btn-hero" loading={loading}>
           Send reset link
         </Button>
         {sent && (

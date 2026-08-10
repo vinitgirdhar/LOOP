@@ -224,7 +224,7 @@ export function ProjectSettings({ project, workspaceId, onChanged }: { project: 
         <ul className="space-y-1.5">
           {project.members.map((member) => (
             <li key={member.id} className="flex items-center gap-2.5 rounded-lg border px-2.5 py-2">
-              <Avatar name={member.user.name} src={member.user.avatarUrl} size={26} />
+              <Avatar seed={member.user.id} name={member.user.name} src={member.user.avatarUrl} size={26} />
               <span className="min-w-0 flex-1">
                 <span className="block truncate text-[13px] font-medium">{member.user.name}</span>
                 <span className="block truncate text-[11px] text-[var(--text-muted)]">{member.user.email}</span>

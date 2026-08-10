@@ -367,7 +367,7 @@ function TaskCard({
         </div>
         <div className="flex items-center gap-1.5">
           {task.dueDate && <span className={cx('text-[10px]', overdue ? 'font-semibold text-[var(--danger)]' : 'text-[var(--text-muted)]')}>{formatShortDate(task.dueDate)}</span>}
-          {task.assignee && <Avatar name={task.assignee.name} src={task.assignee.avatarUrl} size={20} />}
+          {task.assignee && <Avatar seed={task.assignee.id} name={task.assignee.name} src={task.assignee.avatarUrl} size={20} />}
         </div>
       </div>
     </article>

@@ -101,7 +101,7 @@ export function MobileDrawer({
             className="flex min-w-0 flex-1 items-center gap-2.5 rounded-lg px-1 py-1 text-left transition-colors hover:bg-[var(--bg-inset)]"
             aria-expanded={switching}
           >
-            <Avatar name={workspace?.name ?? 'Workspace'} src={workspace?.logoUrl} size={34} />
+            <Avatar name={workspace?.name ?? 'Workspace'} src={workspace?.logoUrl} size={34} kind="workspace" />
             <span className="min-w-0 flex-1">
               <span className="block truncate text-sm font-semibold">{workspace?.name ?? 'Workspace'}</span>
               <span className="block truncate text-[11px] text-[var(--text-muted)]">{role ? ROLE_LABELS[role] : 'Member'}</span>
@@ -127,14 +127,17 @@ export function MobileDrawer({
                     onClose();
                   }}
                   className={cx(
-                    'flex w-full items-center gap-2.5 rounded-lg px-2 py-2.5 text-left text-[13px] transition-colors',
-                    membership.workspace.id === workspaceId ? 'bg-[var(--accent-soft)] text-[var(--accent)]' : 'hover:bg-[var(--bg-inset)]',
+                    'flex w-full items-center gap-2.5 rounded-[var(--radius)] px-2 py-2.5 text-left text-[13px] transition-colors',
+                    membership.workspace.id === workspaceId ? 'bg-[var(--ink)] text-[var(--ink-text)]' : 'hover:bg-[var(--bg-inset)]',
                   )}
                 >
-                  <Avatar name={membership.workspace.name} src={membership.workspace.logoUrl} size={24} />
+                  <Avatar name={membership.workspace.name} src={membership.workspace.logoUrl} size={24} kind="workspace" />
                   <span className="min-w-0 flex-1">
                     <span className="block truncate font-medium">{membership.workspace.name}</span>
-                    <span className="block text-[11px] text-[var(--text-muted)]">{ROLE_LABELS[membership.role]}</span>
+                    {/* Muted grey would disappear once the row turns to ink. */}
+                    <span className={cx('block text-[11px]', membership.workspace.id === workspaceId ? 'opacity-65' : 'text-[var(--text-muted)]')}>
+                      {ROLE_LABELS[membership.role]}
+                    </span>
                   </span>
                   {membership.workspace.id === workspaceId && <Icon.check width={14} height={14} className="shrink-0" />}
                 </button>
@@ -160,23 +163,28 @@ export function MobileDrawer({
                         {rows.map((item) => {
                           const count = badgeFor(item);
                           const ItemIcon = Icon[item.icon];
+                          const active = isActive(item);
                           return (
                             <Link
                               key={item.id}
                               href={item.href}
                               onClick={onClose}
-                              aria-current={isActive(item) ? 'page' : undefined}
+                              aria-current={active ? 'page' : undefined}
                               className={cx(
-                                'flex items-center gap-3 rounded-lg px-2 py-2.5 text-[13px] transition-colors',
-                                isActive(item) ? 'bg-[var(--accent-soft)] font-medium text-[var(--accent)]' : 'text-[var(--text)] hover:bg-[var(--bg-inset)]',
+                                'flex items-center gap-3 rounded-[var(--radius)] px-2.5 py-2.5 text-[13px] transition-colors',
+                                active ? 'bg-[var(--ink)] font-medium text-[var(--ink-text)]' : 'text-[var(--text)] hover:bg-[var(--bg-inset)]',
                               )}
                             >
-                              <ItemIcon width={17} height={17} className="shrink-0 text-[var(--text-muted)]" />
+                              <ItemIcon width={17} height={17} className={cx('shrink-0', !active && 'text-[var(--text-muted)]')} />
                               <span className="min-w-0 flex-1">
                                 <span className="block truncate font-medium">{item.label}</span>
-                                {item.hint && <span className="block truncate text-[11px] font-normal text-[var(--text-muted)]">{item.hint}</span>}
+                                {item.hint && (
+                                  <span className={cx('block truncate text-[11px] font-normal', active ? 'opacity-65' : 'text-[var(--text-muted)]')}>{item.hint}</span>
+                                )}
                               </span>
-                              {count > 0 && <span className="badge-count">{count > 99 ? '99+' : count}</span>}
+                              {count > 0 && (
+                                <span className={cx('badge-count', active && 'bg-[var(--ink-text)] text-[var(--ink)]')}>{count > 99 ? '99+' : count}</span>
+                              )}
                             </Link>
                           );
                         })}
@@ -193,7 +201,7 @@ export function MobileDrawer({
                 <p className="px-2 pb-1 pt-1 text-[10px] font-semibold uppercase tracking-wider text-[var(--text-faint)]">Account</p>
 
                 <div className="mb-1 flex items-center gap-2.5 rounded-lg px-2 py-2">
-                  <Avatar name={user?.name ?? '?'} src={user?.avatarUrl} size={32} />
+                  <Avatar seed={user?.id} name={user?.name ?? "?"} src={user?.avatarUrl} size={32} />
                   <span className="min-w-0 flex-1">
                     <span className="block truncate text-[13px] font-medium">{user?.name}</span>
                     <span className="block truncate text-[11px] text-[var(--text-muted)]">{user?.email}</span>

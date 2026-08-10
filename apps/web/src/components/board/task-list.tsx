@@ -219,7 +219,7 @@ export function TaskListTable({
                     <td className="px-3 py-2">
                       {task.assignee ? (
                         <span className="flex items-center gap-1.5">
-                          <Avatar name={task.assignee.name} src={task.assignee.avatarUrl} size={20} />
+                          <Avatar seed={task.assignee.id} name={task.assignee.name} src={task.assignee.avatarUrl} size={20} />
                           <span className="truncate text-[var(--text-muted)]">{task.assignee.name}</span>
                         </span>
                       ) : (
@@ -251,7 +251,7 @@ export function TaskListTable({
                   <span>· {columns.find((c) => c.key === task.status)?.name ?? task.status}</span>
                   {task.dueDate && <span className={cx(isOverdue(task.dueDate, task.completedAt) && 'font-semibold text-[var(--danger)]')}>· {formatShortDate(task.dueDate)}</span>}
                   {task.isBlocked && <Badge tone="danger">Blocked</Badge>}
-                  {task.assignee && <Avatar name={task.assignee.name} src={task.assignee.avatarUrl} size={18} className="ml-auto" />}
+                  {task.assignee && <Avatar seed={task.assignee.id} name={task.assignee.name} src={task.assignee.avatarUrl} size={18} className="ml-auto" />}
                 </div>
               </Link>
             ))}
