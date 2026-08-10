@@ -11,6 +11,7 @@
     "dev": "concurrently -n api,web -c cyan,magenta \"npm:dev:api\" \"npm:dev:web\"",
     "dev:api": "npm run dev --workspace @loop/api",
     "dev:web": "npm run dev --workspace @loop/web",
+    "postinstall": "npm run db:generate",
     "build": "npm run build --workspace @loop/db && npm run build --workspace @loop/api && npm run build --workspace @loop/web",
     "prisma": "prisma --schema packages/db/prisma/schema.prisma",
     "db:generate": "prisma generate --schema packages/db/prisma/schema.prisma",

@@ -27,7 +27,7 @@ export const requireAuth: RequestHandler = (req, res, next) => {
       where: { id: payload.sid },
       select: { revokedAt: true, expiresAt: true, user: { select: { id: true, email: true, name: true, isPlatformAdmin: true, isSuspended: true } } },
     })
-    .then((session) => {
+    .then((session: { revokedAt: Date | null; expiresAt: Date; user: { id: string; email: string; name: string; isPlatformAdmin: boolean; isSuspended: boolean } } | null) => {
       if (!session || session.revokedAt || session.expiresAt < new Date()) return next(unauthorized('Session revoked'));
       if (session.user.isSuspended) return next(forbidden('This account is suspended'));
       req.user = {
@@ -73,7 +73,7 @@ export function workspaceContext(required = true): RequestHandler {
         where: { workspaceId_userId: { workspaceId, userId: req.user.id } },
         select: { id: true, role: true },
       })
-      .then(async (member) => {
+      .then(async (member: { id: string; role: string } | null) => {
         if (member) {
           req.ws = { workspaceId, role: member.role as Role, memberId: member.id, viaAdmin: false };
           return next();
@@ -122,7 +122,7 @@ export function projectAccess(param = 'projectId'): RequestHandler {
         where: { id: projectId, workspaceId: req.ws.workspaceId },
         select: { id: true, members: { where: { userId: req.user.id }, select: { id: true } } },
       })
-      .then((project) => {
+      .then((project: { id: string; members: Array<{ id: string }> } | null) => {
         if (!project) return next(notFound('Project not found'));
         const privileged = atLeast(req.ws!.role, 'PM');
         if (!privileged && project.members.length === 0) return next(forbidden('You are not on this project'));
