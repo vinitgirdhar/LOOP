@@ -13,6 +13,10 @@ concurrency:
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
+    env:
+      DATABASE_URL: postgresql://loop:loop@127.0.0.1:5432/loop?schema=public
+      JWT_ACCESS_SECRET: ci_dummy_jwt_access_secret_32_chars_long
+      JWT_REFRESH_SECRET: ci_dummy_jwt_refresh_secret_32_chars_long
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
