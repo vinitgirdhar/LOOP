@@ -3,7 +3,7 @@
 import { use, useState } from 'react';
 import Link from 'next/link';
 import { PRIORITIES, PROJECT_STATUSES } from '@loop/shared';
-import { useQuery } from '@/lib/hooks';
+import { useQuery, useUrlIntent, useUrlTab } from '@/lib/hooks';
 import { Page, PageHeader } from '@/components/page';
 import { Avatar, AvatarStack, Badge, Button, Card, Confirm, EmptyState, ErrorState, Field, Modal, Progress, SectionTitle, Skeleton, Tabs } from '@/components/ui';
 import { KanbanBoard, QuickAddTask } from '@/components/board/kanban';
@@ -50,11 +50,15 @@ const TABS = [
 export default function ProjectPage({ params }: { params: Promise<{ workspaceId: string; projectId: string }> }) {
   const { workspaceId, projectId } = use(params);
   const { can } = useAuth();
-  const [tab, setTab] = useState('board');
+  const [tab, setTab] = useUrlTab('board');
+  const [openDocId, setOpenDocId] = useState<string | null>(null);
   const [sprintFilter, setSprintFilter] = useState('');
   const [assigneeFilter, setAssigneeFilter] = useState('');
   const [addingTo, setAddingTo] = useState<string | null>(null);
   const [creating, setCreating] = useState(false);
+
+  // A search hit or a Docs-page link arrives as ?tab=docs&page=<id>.
+  useUrlIntent('page', setOpenDocId);
 
   const { data: project, loading, error, refetch } = useQuery<ProjectDetail>(`/api/projects/${projectId}`, [projectId]);
 
@@ -117,7 +121,7 @@ export default function ProjectPage({ params }: { params: Promise<{ workspaceId:
         }
       />
 
-      <Tabs tabs={TABS} active={tab} onChange={setTab} />
+      <Tabs tabs={TABS.filter((entry) => entry.key !== 'settings' || can('project.update') || can('project.delete'))} active={tab} onChange={setTab} />
 
       <div className="mt-4">
         {tab === 'board' && (
@@ -141,7 +145,7 @@ export default function ProjectPage({ params }: { params: Promise<{ workspaceId:
                   </option>
                 ))}
               </select>
-              <span className="ml-auto hidden text-[11px] text-[var(--text-faint)] sm:block">Drag cards, or use the ⋯ menu on touch</span>
+              <span className="ml-auto hidden text-[11px] text-[var(--text-faint)] lg:block">Drag a card to move it, or use its menu</span>
             </div>
 
             {addingTo && (
@@ -165,7 +169,7 @@ export default function ProjectPage({ params }: { params: Promise<{ workspaceId:
 
         {tab === 'health' && <HealthPanel projectId={projectId} />}
 
-        {tab === 'docs' && <ProjectDocs workspaceId={workspaceId} projectId={projectId} />}
+        {tab === 'docs' && <ProjectDocs workspaceId={workspaceId} projectId={projectId} initialPageId={openDocId} />}
 
         {tab === 'files' && <ProjectFiles workspaceId={workspaceId} projectId={projectId} />}
 

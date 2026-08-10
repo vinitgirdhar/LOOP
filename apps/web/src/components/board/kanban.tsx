@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { SOCKET_EVENTS } from '@loop/shared';
-import { Avatar, Badge, Button, Menu, MenuItem, Skeleton } from '@/components/ui';
+import { Avatar, Badge, Button, Menu, MenuItem, MenuLabel, Skeleton } from '@/components/ui';
 import { Icon } from '@/components/icons';
 import { useQuery } from '@/lib/hooks';
 import { api, apiErrorMessage } from '@/lib/api';
@@ -174,7 +174,7 @@ export function KanbanBoard({
           <section
             key={column.id}
             className={cx(
-              'flex w-[85vw] shrink-0 snap-start flex-col rounded-xl border bg-[var(--bg-subtle)] sm:w-[17.5rem]',
+              'flex w-[min(19rem,82vw)] shrink-0 snap-start flex-col rounded-xl border bg-[var(--bg-subtle)] sm:w-[17.5rem]',
               dropColumn === column.key && 'drop-target',
             )}
             onDragOver={(event) => {
@@ -205,7 +205,10 @@ export function KanbanBoard({
               )}
             </header>
 
-            <div className="scroll-thin flex max-h-[calc(100dvh-19rem)] min-h-24 flex-1 flex-col gap-2 overflow-y-auto px-2 pb-2 sm:max-h-[calc(100dvh-16rem)]">
+            {/* On touch the page itself scrolls: a nested scroller inside a
+                scrolling page is a trap for a thumb. The column only gets its
+                own scrollbar once there is a sidebar to anchor it. */}
+            <div className="scroll-thin flex min-h-24 flex-1 flex-col gap-2 px-2 pb-2 lg:max-h-[calc(100dvh-var(--header-h)-13rem)] lg:overflow-y-auto lg:overscroll-contain">
               {tasks.length === 0 ? (
                 <p className="rounded-lg border border-dashed py-6 text-center text-[11px] text-[var(--text-faint)]">Drop a task here</p>
               ) : (
@@ -277,7 +280,7 @@ function TaskCard({
       onDragEnd={onDragEnd}
       onDragOver={(event) => event.preventDefault()}
       onDrop={onDropOnCard}
-      className={cx('card group cursor-grab p-2.5 transition-shadow hover:shadow-[var(--shadow)] active:cursor-grabbing', dragging && 'dragging')}
+      className={cx('card group p-2.5 transition-shadow hover:shadow-[var(--shadow)] lg:cursor-grab lg:active:cursor-grabbing', dragging && 'dragging')}
     >
       <div className="flex items-start justify-between gap-1.5">
         <Link href={`/w/${workspaceId}/tasks/${task.id}`} className="min-w-0 flex-1">
@@ -292,7 +295,7 @@ function TaskCard({
         >
           {(close) => (
             <>
-              <p className="px-3 pb-1 pt-2 text-[10px] font-semibold uppercase tracking-wider text-[var(--text-faint)]">Move to</p>
+              <MenuLabel>Move to</MenuLabel>
               {columns
                 .filter((column) => column.key !== task.status)
                 .map((column) => (
@@ -308,8 +311,8 @@ function TaskCard({
                   </MenuItem>
                 ))}
               <div className="divider my-1" />
-              <MenuItem onClick={close}>
-                <Link href={`/w/${workspaceId}/tasks/${task.id}`}>Open task</Link>
+              <MenuItem href={`/w/${workspaceId}/tasks/${task.id}`} onClick={close}>
+                <Icon.link width={14} height={14} /> Open task
               </MenuItem>
             </>
           )}
@@ -339,12 +342,23 @@ function TaskCard({
       <div className="mt-2 flex items-center justify-between gap-2 border-t pt-2">
         <div className="flex items-center gap-2 text-[10px] text-[var(--text-muted)]">
           {task.checklistTotal > 0 && (
-            <span className="tabular-nums" title="Checklist">
-              ☑ {task.checklistDone}/{task.checklistTotal}
+            <span className="inline-flex items-center gap-1 tabular-nums" title="Checklist">
+              <Icon.checkSquare width={12} height={12} />
+              {task.checklistDone}/{task.checklistTotal}
             </span>
           )}
-          {task._count.comments > 0 && <span title="Comments">💬 {task._count.comments}</span>}
-          {task._count.attachments > 0 && <span title="Attachments">📎 {task._count.attachments}</span>}
+          {task._count.comments > 0 && (
+            <span className="inline-flex items-center gap-1 tabular-nums" title="Comments">
+              <Icon.chat width={12} height={12} />
+              {task._count.comments}
+            </span>
+          )}
+          {task._count.attachments > 0 && (
+            <span className="inline-flex items-center gap-1 tabular-nums" title="Attachments">
+              <Icon.paperclip width={12} height={12} />
+              {task._count.attachments}
+            </span>
+          )}
           {task.storyPoints !== null && (
             <span className="rounded bg-[var(--bg-inset)] px-1.5 py-0.5 font-semibold tabular-nums" title="Story points">
               {task.storyPoints}

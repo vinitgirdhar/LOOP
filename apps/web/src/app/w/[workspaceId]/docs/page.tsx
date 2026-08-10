@@ -63,7 +63,7 @@ export default function DocsPage({ params }: { params: Promise<{ workspaceId: st
                 <ul className="divide-y">
                   {pages.map((page) => (
                     <li key={page.id}>
-                      <Link href={`/w/${workspaceId}/projects/${page.projectId}?tab=docs`} className="flex items-center gap-2.5 px-4 py-2.5 hover:bg-[var(--bg-inset)]">
+                      <Link href={`/w/${workspaceId}/projects/${page.projectId}?tab=docs&page=${page.id}`} className="flex items-center gap-2.5 px-4 py-2.5 hover:bg-[var(--bg-inset)]">
                         <Icon.doc width={15} height={15} className="shrink-0 text-[var(--text-muted)]" />
                         <span className="min-w-0 flex-1 truncate text-[13px] font-medium">{page.title}</span>
                         {page.isShared && <span className="badge bg-[var(--info-soft)] text-[var(--info)]">shared</span>}

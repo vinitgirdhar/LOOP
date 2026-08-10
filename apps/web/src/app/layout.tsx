@@ -30,15 +30,22 @@ export const metadata: Metadata = {
     description: 'One workspace for projects, docs and chat, with an explainable AI layer.',
   },
   robots: { index: true, follow: true },
+  applicationName: 'Loop',
+  appleWebApp: { capable: true, title: 'Loop', statusBarStyle: 'default' },
+  // Stops iOS Safari from turning task ids and numbers into phone links.
+  formatDetection: { telephone: false, date: false, address: false, email: false },
 };
 
 export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
+  // Pinch-zoom stays available on purpose — capping it fails WCAG 1.4.4.
+  maximumScale: 5,
+  userScalable: true,
   viewportFit: 'cover',
   themeColor: [
     { media: '(prefers-color-scheme: light)', color: '#ffffff' },
-    { media: '(prefers-color-scheme: dark)', color: '#0b0d12' },
+    { media: '(prefers-color-scheme: dark)', color: '#0c0e14' },
   ],
 };
 

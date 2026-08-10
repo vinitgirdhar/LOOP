@@ -48,7 +48,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
     <ToastContext.Provider value={api}>
       {children}
       <div
-        className="pointer-events-none fixed inset-x-3 bottom-3 z-[100] flex flex-col gap-2 sm:inset-x-auto sm:right-4 sm:bottom-4 sm:w-80"
+        className="pointer-events-none fixed inset-x-3 bottom-[calc(var(--bottom-chrome)+0.75rem)] z-[100] flex flex-col gap-2 sm:inset-x-auto sm:right-4 sm:w-80 lg:bottom-4"
         role="status"
         aria-live="polite"
       >
@@ -61,10 +61,12 @@ export function ToastProvider({ children }: { children: ReactNode }) {
             <button
               type="button"
               onClick={() => setToasts((c) => c.filter((t) => t.id !== toast.id))}
-              className="text-[var(--text-faint)] hover:text-[var(--text)]"
-              aria-label="Dismiss"
+              className="-my-1 -mr-1 shrink-0 rounded-md p-1 text-[var(--text-faint)] transition-colors hover:bg-[var(--bg-inset)] hover:text-[var(--text)]"
+              aria-label="Dismiss notification"
             >
-              ✕
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden>
+                <path d="M6 6l12 12M18 6L6 18" />
+              </svg>
             </button>
           </div>
         ))}

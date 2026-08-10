@@ -3,7 +3,7 @@
 import { useRef, useState } from 'react';
 import { useQuery } from '@/lib/hooks';
 import { Avatar, Button, Card, Confirm, EmptyState, Field, Modal, Skeleton } from '@/components/ui';
-import { Icon } from '@/components/icons';
+import { Icon, type IconName } from '@/components/icons';
 import { useAuth } from '@/components/providers/auth';
 import { useToast } from '@/components/providers/toast';
 import { api, apiErrorMessage } from '@/lib/api';
@@ -28,14 +28,14 @@ interface FolderRow {
   _count: { files: number; children: number };
 }
 
-const iconFor = (mime: string) => {
-  if (mime.startsWith('image/')) return '🖼';
-  if (mime.startsWith('video/')) return '🎬';
-  if (mime === 'application/pdf') return '📕';
-  if (mime.includes('zip')) return '🗜';
-  if (mime.includes('sheet') || mime.includes('excel') || mime === 'text/csv') return '📊';
-  if (mime.includes('word') || mime.includes('document')) return '📝';
-  return '📄';
+/** One icon and one tint per family, so a long list stays scannable. */
+const iconFor = (mime: string): { name: IconName; tone: string } => {
+  if (mime.startsWith('image/')) return { name: 'image', tone: 'var(--info)' };
+  if (mime.startsWith('video/')) return { name: 'film', tone: 'var(--accent)' };
+  if (mime === 'application/pdf') return { name: 'doc', tone: 'var(--danger)' };
+  if (mime.includes('zip')) return { name: 'archive', tone: 'var(--warning)' };
+  if (mime.includes('sheet') || mime.includes('excel') || mime === 'text/csv') return { name: 'sheet', tone: 'var(--success)' };
+  return { name: 'doc', tone: 'var(--text-muted)' };
 };
 
 export function ProjectFiles({ workspaceId, projectId }: { workspaceId?: string; projectId?: string }) {
@@ -145,9 +145,19 @@ export function ProjectFiles({ workspaceId, projectId }: { workspaceId?: string;
             <ul className="divide-y">
               {files.map((file) => (
                 <li key={file.id} className="flex items-center gap-3 px-3 py-2.5">
-                  <span className="text-lg" aria-hidden>
-                    {iconFor(file.mime)}
-                  </span>
+                  {(() => {
+                    const kind = iconFor(file.mime);
+                    const FileIcon = Icon[kind.name];
+                    return (
+                      <span
+                        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg"
+                        style={{ background: `color-mix(in oklab, ${kind.tone} 12%, transparent)`, color: kind.tone }}
+                        aria-hidden
+                      >
+                        <FileIcon width={15} height={15} />
+                      </span>
+                    );
+                  })()}
                   <button type="button" onClick={() => setPreview(file)} className="min-w-0 flex-1 text-left">
                     <p className="truncate text-[13px] font-medium">{file.name}</p>
                     <p className="text-[11px] text-[var(--text-muted)]">

@@ -8,6 +8,7 @@ import { useDebounced, useLockScroll } from '@/lib/hooks';
 import { api } from '@/lib/api';
 import { navItems } from './nav-items';
 import { Avatar, Spinner } from '@/components/ui';
+import { Icon, type IconName } from '@/components/icons';
 import { cx } from '@/lib/format';
 
 interface SearchResults {
@@ -25,6 +26,7 @@ interface Row {
   label: string;
   hint?: string;
   colour?: string;
+  icon?: IconName;
   avatar?: { name: string; src: string | null };
   run: () => void;
 }
@@ -82,13 +84,13 @@ export function CommandPalette({ open, onClose }: { open: boolean; onClose: () =
     const navigation: Row[] = navItems(workspaceId)
       .filter((item) => !item.permission || can(item.permission))
       .filter((item) => !term || item.label.toLowerCase().includes(term))
-      .map((item) => ({ id: `nav-${item.href}`, group: 'Go to', label: item.label, run: go(item.href) }));
+      .map((item) => ({ id: `nav-${item.id}`, group: 'Go to', label: item.label, icon: item.icon, run: go(item.href) }));
 
     const actions: Row[] = [
-      { id: 'act-theme', group: 'Actions', label: 'Toggle dark mode', run: () => { toggle(); onClose(); } },
-      { id: 'act-new-project', group: 'Actions', label: 'New project', run: go(`/w/${workspaceId}/projects?new=1`) },
-      { id: 'act-profile', group: 'Actions', label: 'Profile and security', run: go('/profile') },
-      ...(user?.isPlatformAdmin ? [{ id: 'act-admin', group: 'Actions', label: 'Admin panel', run: go('/admin') }] : []),
+      { id: 'act-theme', group: 'Actions', label: 'Toggle dark mode', icon: 'contrast' as IconName, run: () => { toggle(); onClose(); } },
+      { id: 'act-new-project', group: 'Actions', label: 'New project', icon: 'plus' as IconName, run: go(`/w/${workspaceId}/projects?new=1`) },
+      { id: 'act-profile', group: 'Actions', label: 'Profile and security', icon: 'user' as IconName, run: go('/profile') },
+      ...(user?.isPlatformAdmin ? [{ id: 'act-admin', group: 'Actions', label: 'Admin panel', icon: 'shield' as IconName, run: go('/admin') }] : []),
     ].filter((row) => !term || row.label.toLowerCase().includes(term));
 
     const found: Row[] = results
@@ -96,7 +98,7 @@ export function CommandPalette({ open, onClose }: { open: boolean; onClose: () =
           ...results.projects.map((p) => ({ id: `p-${p.id}`, group: 'Projects', label: p.name, hint: p.key, colour: p.color, run: go(`/w/${workspaceId}/projects/${p.id}`) })),
           ...results.tasks.map((t) => ({ id: `t-${t.id}`, group: 'Tasks', label: t.title, hint: `${t.project.key}-${t.number}`, colour: t.project.color, run: go(`/w/${workspaceId}/tasks/${t.id}`) })),
           ...results.members.map((m) => ({ id: `m-${m.user.id}`, group: 'People', label: m.user.name, hint: m.user.email, avatar: { name: m.user.name, src: m.user.avatarUrl }, run: go(`/w/${workspaceId}/settings/members`) })),
-          ...results.docs.map((d) => ({ id: `d-${d.id}`, group: 'Docs', label: d.title, run: go(`/w/${workspaceId}/docs/${d.id}`) })),
+          ...results.docs.map((d) => ({ id: `d-${d.id}`, group: 'Docs', label: d.title, run: go(`/w/${workspaceId}/projects/${d.projectId}?tab=docs&page=${d.id}`) })),
           ...results.messages.map((m) => ({ id: `msg-${m.id}`, group: 'Messages', label: m.body.slice(0, 70), hint: `#${m.channel.name}`, run: go(`/w/${workspaceId}/chat/${m.channelId}`) })),
           ...results.files.map((f) => ({ id: `f-${f.id}`, group: 'Files', label: f.name, run: () => { window.open(f.url, '_blank', 'noopener'); onClose(); } })),
         ]
@@ -133,11 +135,11 @@ export function CommandPalette({ open, onClose }: { open: boolean; onClose: () =
   let lastGroup = '';
 
   return (
-    <div className="fixed inset-0 z-[90] flex items-start justify-center bg-black/45 p-3 pt-[8vh] sm:pt-[12vh]" role="dialog" aria-modal="true" aria-label="Command palette">
+    <div className="overlay fixed inset-0 z-[90] flex items-start justify-center p-3 pt-[max(4vh,env(safe-area-inset-top))] sm:pt-[12vh]" role="dialog" aria-modal="true" aria-label="Command palette">
       <button type="button" className="absolute inset-0 cursor-default" onClick={onClose} tabIndex={-1} aria-label="Close" />
-      <div className="slide-up relative flex max-h-[70vh] w-full max-w-xl flex-col overflow-hidden rounded-2xl border bg-[var(--surface)] shadow-[var(--shadow-lg)]">
+      <div className="slide-up relative flex max-h-[80dvh] w-full max-w-xl flex-col overflow-hidden rounded-2xl border bg-[var(--surface)] shadow-[var(--shadow-lg)] sm:max-h-[70dvh]">
         <div className="flex items-center gap-2 border-b px-3.5">
-          <span className="text-[var(--text-faint)]">⌕</span>
+          <Icon.search width={16} height={16} className="shrink-0 text-[var(--text-faint)]" />
           <input
             autoFocus
             value={query}
@@ -147,7 +149,7 @@ export function CommandPalette({ open, onClose }: { open: boolean; onClose: () =
             aria-label="Search"
           />
           {loading && <Spinner size={14} />}
-          <kbd className="hidden rounded border px-1.5 py-0.5 text-[10px] text-[var(--text-faint)] sm:block">esc</kbd>
+          <kbd className="kbd hidden sm:block">esc</kbd>
         </div>
 
         <div className="scroll-thin flex-1 overflow-y-auto py-1.5">
@@ -170,8 +172,13 @@ export function CommandPalette({ open, onClose }: { open: boolean; onClose: () =
                   >
                     {row.avatar ? (
                       <Avatar name={row.avatar.name} src={row.avatar.src} size={20} />
+                    ) : row.icon ? (
+                      (() => {
+                        const RowIcon = Icon[row.icon];
+                        return <RowIcon width={15} height={15} className="shrink-0 text-[var(--text-muted)]" />;
+                      })()
                     ) : (
-                      <span className="h-2 w-2 shrink-0 rounded-full" style={{ background: row.colour ?? 'var(--border-strong)' }} />
+                      <span className="mx-[3px] h-2 w-2 shrink-0 rounded-full" style={{ background: row.colour ?? 'var(--border-strong)' }} />
                     )}
                     <span className="min-w-0 flex-1 truncate">{row.label}</span>
                     {row.hint && <span className="shrink-0 text-[11px] text-[var(--text-faint)]">{row.hint}</span>}
@@ -183,9 +190,15 @@ export function CommandPalette({ open, onClose }: { open: boolean; onClose: () =
         </div>
 
         <div className="hidden items-center gap-3 border-t px-3.5 py-2 text-[10px] text-[var(--text-faint)] sm:flex">
-          <span>↑↓ navigate</span>
-          <span>↵ open</span>
-          <span>esc close</span>
+          <span>
+            <kbd className="kbd">↑</kbd> <kbd className="kbd">↓</kbd> navigate
+          </span>
+          <span>
+            <kbd className="kbd">enter</kbd> open
+          </span>
+          <span>
+            <kbd className="kbd">esc</kbd> close
+          </span>
         </div>
       </div>
     </div>

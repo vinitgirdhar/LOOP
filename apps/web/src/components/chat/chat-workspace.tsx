@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { SOCKET_EVENTS } from '@loop/shared';
 import { useQuery } from '@/lib/hooks';
-import { Avatar, Button, EmptyState, Field, Modal, Skeleton, Spinner } from '@/components/ui';
+import { Avatar, Button, CloseIcon, EmptyState, Field, Modal, Skeleton, Spinner } from '@/components/ui';
 import { Icon } from '@/components/icons';
 import { useAuth } from '@/components/providers/auth';
 import { useToast } from '@/components/providers/toast';
@@ -95,9 +95,9 @@ export function ChatWorkspace({ workspaceId, channelId }: { workspaceId: string;
     row.type === 'DM' ? row.members.find((m) => m.userId !== user?.id)?.user.name ?? 'Direct message' : `#${row.name}`;
 
   return (
-    <div className="flex h-[calc(100dvh-3.5rem-5rem)] lg:h-[calc(100dvh-3.5rem)]">
+    <div className="flex h-[calc(100dvh-var(--header-h)-var(--safe-top)-var(--bottom-chrome))] lg:h-[calc(100dvh-var(--header-h))]">
       {/* Channel list */}
-      <aside className={cx('w-full shrink-0 border-r bg-[var(--surface)] sm:w-60', showList ? 'block' : 'hidden sm:block')}>
+      <aside className={cx('w-full shrink-0 border-r bg-[var(--surface)] lg:w-64', showList ? 'block' : 'hidden lg:block')}>
         <div className="flex items-center justify-between border-b px-3 py-2.5">
           <p className="text-[13px] font-semibold">Channels</p>
           <button type="button" onClick={() => setCreating(true)} className="btn btn-ghost btn-icon btn-sm" aria-label="New channel">
@@ -127,7 +127,7 @@ export function ChatWorkspace({ workspaceId, channelId }: { workspaceId: string;
                   <span className="text-[var(--text-faint)]">#</span>
                 )}
                 <span className="min-w-0 flex-1 truncate">{row.type === 'DM' ? channelLabel(row) : row.name}</span>
-                {row.unread > 0 && <span className="rounded-full bg-[var(--accent)] px-1.5 text-[10px] font-bold text-white">{row.unread}</span>}
+                {row.unread > 0 && <span className="badge-count">{row.unread > 99 ? '99+' : row.unread}</span>}
               </button>
             ))
           )}
@@ -135,7 +135,7 @@ export function ChatWorkspace({ workspaceId, channelId }: { workspaceId: string;
       </aside>
 
       {/* Conversation */}
-      <section className={cx('flex min-w-0 flex-1 flex-col', showList && 'hidden sm:flex')}>
+      <section className={cx('flex min-w-0 flex-1 flex-col', showList && 'hidden lg:flex')}>
         {!channel ? (
           <div className="flex flex-1 items-center justify-center p-4">
             <EmptyState title="Pick a channel" description="Project channels are created automatically with each project." icon={<Icon.chat width={26} height={26} />} />
@@ -143,7 +143,7 @@ export function ChatWorkspace({ workspaceId, channelId }: { workspaceId: string;
         ) : (
           <>
             <header className="flex items-center gap-2 border-b px-3 py-2.5">
-              <button type="button" onClick={() => setShowList(true)} className="btn btn-ghost btn-icon btn-sm sm:hidden" aria-label="Back to channels">
+              <button type="button" onClick={() => setShowList(true)} className="btn btn-ghost btn-icon btn-sm lg:hidden" aria-label="Back to channels">
                 <Icon.arrowLeft width={15} height={15} />
               </button>
               <div className="min-w-0">
@@ -198,6 +198,7 @@ export function ChatWorkspace({ workspaceId, channelId }: { workspaceId: string;
 
             <Composer
               channelId={channel.id}
+              placeholder={channel.type === 'DM' ? `Message ${channelLabel(channel)}` : `Message #${channel.name}`}
               onTyping={(isTyping) => socket?.emit('typing', { channelId: channel.id, typing: isTyping })}
               onSent={() => requestAnimationFrame(() => scroller.current?.scrollTo({ top: scroller.current.scrollHeight, behavior: 'smooth' }))}
             />
@@ -259,7 +260,7 @@ function MessageRow({
               </a>
             ) : (
               <a key={file.id} href={file.url} target="_blank" rel="noreferrer" className="flex items-center gap-1.5 rounded-lg border px-2 py-1 text-[11px] hover:bg-[var(--bg-inset)]">
-                <Icon.folder width={12} height={12} />
+                <Icon.paperclip width={12} height={12} />
                 {file.name} <span className="text-[var(--text-faint)]">{formatBytes(file.size)}</span>
               </a>
             ),
@@ -279,16 +280,17 @@ function MessageRow({
           </button>
         ))}
 
-        <div className="flex items-center gap-0.5 opacity-0 transition-opacity focus-within:opacity-100 group-hover:opacity-100">
-          <button type="button" onClick={() => setShowEmoji((v) => !v)} className="rounded-md px-1 text-[13px] hover:bg-[var(--bg-inset)]" aria-label="Add reaction">
-            ☺
+        <div className="flex items-center gap-0.5 opacity-100 transition-opacity focus-within:opacity-100 lg:opacity-0 lg:group-hover:opacity-100">
+          <button type="button" onClick={() => setShowEmoji((v) => !v)} className="msg-action" aria-label="Add reaction">
+            <Icon.smile width={14} height={14} />
           </button>
-          <button type="button" onClick={onThread} className="rounded-md px-1 text-[11px] text-[var(--text-muted)] hover:bg-[var(--bg-inset)]">
-            reply{message._count.replies > 0 ? ` (${message._count.replies})` : ''}
+          <button type="button" onClick={onThread} className="msg-action" aria-label="Reply in thread">
+            <Icon.reply width={14} height={14} />
+            {message._count.replies > 0 && <span className="text-[11px] tabular-nums">{message._count.replies}</span>}
           </button>
           {message.author.id === currentUserId && (
-            <button type="button" onClick={onDelete} className="rounded-md px-1 text-[11px] text-[var(--danger)] hover:bg-[var(--bg-inset)]">
-              delete
+            <button type="button" onClick={onDelete} className="msg-action text-[var(--danger)]" aria-label="Delete message">
+              <Icon.trash width={14} height={14} />
             </button>
           )}
         </div>
@@ -315,13 +317,32 @@ function MessageRow({
   );
 }
 
-function Composer({ channelId, onTyping, onSent }: { channelId: string; onTyping: (typing: boolean) => void; onSent: () => void }) {
+function Composer({
+  channelId,
+  placeholder,
+  onTyping,
+  onSent,
+}: {
+  channelId: string;
+  placeholder: string;
+  onTyping: (typing: boolean) => void;
+  onSent: () => void;
+}) {
   const toast = useToast();
   const [body, setBody] = useState('');
   const [files, setFiles] = useState<File[]>([]);
   const [sending, setSending] = useState(false);
   const input = useRef<HTMLInputElement>(null);
+  const box = useRef<HTMLTextAreaElement>(null);
   const typingTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  /** Grow with the message up to five lines, then scroll inside. */
+  const resize = () => {
+    const el = box.current;
+    if (!el) return;
+    el.style.height = 'auto';
+    el.style.height = `${Math.min(el.scrollHeight, 132)}px`;
+  };
 
   const send = async () => {
     if (!body.trim() && files.length === 0) return;
@@ -333,6 +354,7 @@ function Composer({ channelId, onTyping, onSent }: { channelId: string; onTyping
       await api.upload(`/api/chat/channels/${channelId}/messages`, form);
       setBody('');
       setFiles([]);
+      requestAnimationFrame(resize);
       onTyping(false);
       onSent();
     } catch (caught: unknown) {
@@ -343,31 +365,34 @@ function Composer({ channelId, onTyping, onSent }: { channelId: string; onTyping
   };
 
   return (
-    <div className="border-t p-2.5">
+    <div className="border-t bg-[var(--surface)] p-2 sm:p-2.5">
       {files.length > 0 && (
         <div className="mb-1.5 flex flex-wrap gap-1.5">
           {files.map((file, index) => (
             <span key={index} className="flex items-center gap-1 rounded-lg border px-2 py-1 text-[11px]">
               {file.name}
-              <button type="button" onClick={() => setFiles((current) => current.filter((_, i) => i !== index))} aria-label="Remove">
-                ✕
+              <button type="button" onClick={() => setFiles((current) => current.filter((_, i) => i !== index))} aria-label={`Remove ${file.name}`}>
+                <CloseIcon size={12} />
               </button>
             </span>
           ))}
         </div>
       )}
       <div className="flex items-end gap-1.5">
-        <button type="button" onClick={() => input.current?.click()} className="btn btn-ghost btn-icon" aria-label="Attach a file">
-          <Icon.folder width={16} height={16} />
+        <button type="button" onClick={() => input.current?.click()} className="btn btn-ghost btn-icon shrink-0" aria-label="Attach a file">
+          <Icon.paperclip width={17} height={17} />
         </button>
         <input ref={input} type="file" multiple hidden onChange={(e) => setFiles(Array.from(e.target.files ?? []).slice(0, 3))} />
         <textarea
-          className="textarea min-h-10 flex-1 resize-none py-2"
+          ref={box}
+          className="textarea min-h-[2.75rem] flex-1 resize-none py-2.5 leading-snug"
           rows={1}
-          placeholder="Message… use @name to mention someone"
+          placeholder={placeholder}
+          aria-label={placeholder}
           value={body}
           onChange={(e) => {
             setBody(e.target.value);
+            resize();
             onTyping(true);
             if (typingTimer.current) clearTimeout(typingTimer.current);
             typingTimer.current = setTimeout(() => onTyping(false), 2000);
@@ -379,8 +404,8 @@ function Composer({ channelId, onTyping, onSent }: { channelId: string; onTyping
             }
           }}
         />
-        <Button variant="primary" loading={sending} onClick={() => void send()} disabled={!body.trim() && files.length === 0} aria-label="Send">
-          <Icon.chevronRight width={16} height={16} />
+        <Button variant="primary" loading={sending} onClick={() => void send()} disabled={!body.trim() && files.length === 0} aria-label="Send message" className="shrink-0">
+          <Icon.send width={16} height={16} />
         </Button>
       </div>
     </div>

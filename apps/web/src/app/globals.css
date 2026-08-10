@@ -1,68 +1,101 @@
 @import 'tailwindcss';
 
 /*
-  Loop design system — deliberately small.
-  No component library: a handful of CSS variables, one radius scale, one
-  shadow, and Tailwind utilities on top. Mobile first everywhere.
+  Loop design system.
+
+  Small on purpose: a token layer, a handful of primitives, and Tailwind
+  utilities on top. Everything is sized for a 320px phone first and only then
+  allowed to grow, and every fixed edge respects the iOS safe area so nothing
+  ends up under a notch or a home indicator.
 */
 
 @theme {
-  --font-sans: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', ui-sans-serif, system-ui, Roboto, 'Helvetica Neue', Arial, sans-serif;
   --font-mono: ui-monospace, 'SF Mono', SFMono-Regular, Menlo, Consolas, monospace;
 }
 
 :root {
+  /* Surfaces — a cool neutral ramp, not pure grey, so cards read as paper. */
   --bg: #ffffff;
-  --bg-subtle: #f7f8fa;
-  --bg-inset: #f1f3f6;
+  --bg-subtle: #f6f7f9;
+  --bg-inset: #eef0f4;
   --surface: #ffffff;
-  --border: #e4e7ec;
-  --border-strong: #d0d5dd;
-  --text: #101828;
-  --text-muted: #667085;
-  --text-faint: #98a2b3;
-  --accent: #4f46e5;
-  --accent-hover: #4338ca;
-  --accent-soft: #eef2ff;
+  --surface-raised: #ffffff;
+  --border: #e3e6ec;
+  --border-strong: #cbd1dc;
+
+  --text: #0f1522;
+  --text-muted: #5b6577;
+  --text-faint: #8b95a7;
+
+  /* One accent, used sparingly: selection, active nav, primary action. */
+  --accent: #4338ca;
+  --accent-hover: #372cb0;
+  --accent-soft: #eef0ff;
   --accent-text: #ffffff;
-  --success: #059669;
-  --success-soft: #ecfdf5;
-  --warning: #d97706;
-  --warning-soft: #fffbeb;
-  --danger: #dc2626;
-  --danger-soft: #fef2f2;
-  --info: #0284c7;
-  --info-soft: #f0f9ff;
-  --ring: #a5b4fc;
-  --shadow: 0 1px 2px rgb(16 24 40 / 0.06), 0 1px 3px rgb(16 24 40 / 0.1);
-  --shadow-lg: 0 12px 32px -8px rgb(16 24 40 / 0.18);
+
+  --success: #067a55;
+  --success-soft: #e9f8f1;
+  --warning: #b45309;
+  --warning-soft: #fdf5e6;
+  --danger: #c62d3c;
+  --danger-soft: #fdf0f1;
+  --info: #0369a1;
+  --info-soft: #eef7fd;
+
+  --ring: #8b93ee;
+
+  --radius-sm: 7px;
+  --radius: 10px;
+  --radius-lg: 14px;
+
+  --shadow-xs: 0 1px 2px rgb(15 21 34 / 0.05);
+  --shadow: 0 1px 2px rgb(15 21 34 / 0.05), 0 4px 12px -4px rgb(15 21 34 / 0.08);
+  --shadow-lg: 0 8px 24px -6px rgb(15 21 34 / 0.14), 0 20px 48px -20px rgb(15 21 34 / 0.22);
+
+  /* Chrome metrics — shared so panes can size themselves against the shell. */
+  --header-h: 3.25rem;
+  --bottom-bar-h: 3.5rem;
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-left: env(safe-area-inset-left, 0px);
+  --safe-right: env(safe-area-inset-right, 0px);
+  /* Total space the bottom bar occupies, home indicator included. */
+  --bottom-chrome: calc(var(--bottom-bar-h) + var(--safe-bottom));
 }
 
 .dark {
-  --bg: #0b0d12;
-  --bg-subtle: #12151c;
-  --bg-inset: #171b24;
-  --surface: #12151c;
-  --border: #232833;
-  --border-strong: #333a49;
-  --text: #e7eaf0;
-  --text-muted: #98a2b3;
-  --text-faint: #6b7482;
-  --accent: #6366f1;
-  --accent-hover: #7c7ff3;
-  --accent-soft: #1c1f3a;
-  --accent-text: #ffffff;
-  --success: #34d399;
-  --success-soft: #0c2620;
-  --warning: #fbbf24;
-  --warning-soft: #2a2110;
-  --danger: #f87171;
-  --danger-soft: #2c1618;
-  --info: #38bdf8;
-  --info-soft: #0c2231;
-  --ring: #4f46e5;
-  --shadow: 0 1px 2px rgb(0 0 0 / 0.4);
-  --shadow-lg: 0 16px 40px -12px rgb(0 0 0 / 0.6);
+  --bg: #0c0e14;
+  --bg-subtle: #0f1219;
+  --bg-inset: #171b25;
+  --surface: #12151d;
+  --surface-raised: #181c26;
+  --border: #232936;
+  --border-strong: #343c4d;
+
+  --text: #e8ebf2;
+  --text-muted: #9aa4b6;
+  --text-faint: #6b7587;
+
+  --accent: #7f88f5;
+  --accent-hover: #949bf8;
+  --accent-soft: #1b1e38;
+  --accent-text: #0c0e14;
+
+  --success: #3ddba0;
+  --success-soft: #0d2a22;
+  --warning: #f0b429;
+  --warning-soft: #2a2211;
+  --danger: #f8717f;
+  --danger-soft: #2d161a;
+  --info: #4cc2f5;
+  --info-soft: #0d2432;
+
+  --ring: #6c74e0;
+
+  --shadow-xs: 0 1px 2px rgb(0 0 0 / 0.4);
+  --shadow: 0 1px 2px rgb(0 0 0 / 0.4), 0 4px 12px -4px rgb(0 0 0 / 0.5);
+  --shadow-lg: 0 12px 32px -8px rgb(0 0 0 / 0.6), 0 24px 56px -24px rgb(0 0 0 / 0.7);
 }
 
 * {
@@ -71,6 +104,7 @@
 
 html {
   -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
   scroll-behavior: smooth;
 }
 
@@ -78,20 +112,177 @@ body {
   background: var(--bg);
   color: var(--text);
   font-family: var(--font-sans);
+  font-size: 15px;
+  line-height: 1.5;
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
   overscroll-behavior-y: none;
+  /* A stray wide table should scroll inside its own box, never the page. */
+  overflow-x: hidden;
+}
+
+/* Removes the grey flash and the 300ms delay Safari and Chrome add on tap. */
+a,
+button,
+[role='button'],
+label,
+summary {
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+img,
+svg,
+video,
+canvas {
+  max-width: 100%;
+}
+
+h1, h2, h3, h4 {
+  text-wrap: balance;
 }
 
 ::selection {
-  background: var(--accent);
-  color: var(--accent-text);
+  background: color-mix(in oklab, var(--accent) 24%, transparent);
+  color: var(--text);
 }
 
 /* Keyboard users get a visible ring; pointer users do not. */
 :focus-visible {
   outline: 2px solid var(--ring);
   outline-offset: 2px;
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
+}
+
+/*
+  Everything below is a component class, so it lives in Tailwind's `components`
+  layer. Unlayered rules outrank every layered one, which meant a plain
+  `.bottom-bar { display: flex }` quietly beat `lg:hidden` and left the mobile
+  bar on screen at desktop widths. Layering puts utilities back on top.
+*/
+@layer components {
+/* ── shell chrome ─────────────────────────────────────────────────────── */
+
+.app-header {
+  min-height: calc(var(--header-h) + var(--safe-top));
+  padding-top: var(--safe-top);
+  padding-left: max(0.5rem, var(--safe-left));
+  padding-right: max(0.5rem, var(--safe-right));
+}
+
+.app-main {
+  padding-bottom: var(--bottom-chrome);
+}
+
+@media (min-width: 1024px) {
+  .app-main {
+    padding-bottom: 0;
+  }
+}
+
+.bottom-bar {
+  position: fixed;
+  inset-inline: 0;
+  bottom: 0;
+  z-index: 40;
+  display: flex;
+  align-items: stretch;
+  height: var(--bottom-chrome);
+  padding-bottom: var(--safe-bottom);
+  padding-left: var(--safe-left);
+  padding-right: var(--safe-right);
+  border-top: 1px solid var(--border);
+  /* Opaque by default: without backdrop-filter (older Android WebViews) a
+     translucent bar just lets the page bleed through and looks broken. */
+  background: var(--surface);
+}
+
+@supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .bottom-bar,
+  .app-header {
+    background: color-mix(in oklab, var(--surface) 85%, transparent);
+    backdrop-filter: saturate(180%) blur(16px);
+    -webkit-backdrop-filter: saturate(180%) blur(16px);
+  }
+}
+
+.bottom-bar-item {
+  display: flex;
+  flex: 1 1 0;
+  min-width: 0;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.125rem;
+  padding: 0 0.125rem;
+  font-size: 10px;
+  font-weight: 550;
+  letter-spacing: -0.01em;
+  color: var(--text-muted);
+  transition: color 0.15s;
+}
+.bottom-bar-item:active {
+  opacity: 0.6;
+}
+.bottom-bar-item-active {
+  color: var(--accent);
+}
+
+.nav-row {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  border-radius: var(--radius);
+  padding: 0.5rem 0.625rem;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-muted);
+  transition: background-color 0.15s, color 0.15s;
+}
+.nav-row:hover {
+  background: var(--bg-inset);
+  color: var(--text);
+}
+.nav-row-active {
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.drawer-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  border-radius: var(--radius);
+  padding: 0.625rem 0.5rem;
+  font-size: 13px;
+  font-weight: 500;
+  min-height: 44px;
+  transition: background-color 0.15s;
+}
+.drawer-row:hover {
+  background: var(--bg-inset);
+}
+
+.badge-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.125rem;
+  height: 1.125rem;
+  padding: 0 0.3rem;
+  border-radius: 999px;
+  background: var(--accent);
+  color: var(--accent-text);
+  font-size: 10px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.overlay {
+  background: rgb(9 12 20 / 0.5);
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
 }
 
 /* ── primitives ───────────────────────────────────────────────────────── */
@@ -99,7 +290,7 @@ body {
 .card {
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: 12px;
+  border-radius: var(--radius-lg);
 }
 
 .btn {
@@ -107,18 +298,19 @@ body {
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  border-radius: 9px;
+  border-radius: var(--radius);
   font-size: 0.875rem;
   font-weight: 550;
+  letter-spacing: -0.005em;
   padding: 0.5rem 0.875rem;
-  min-height: 2.375rem;
+  min-height: 2.5rem;
   border: 1px solid transparent;
   transition: background-color 0.15s, border-color 0.15s, opacity 0.15s, transform 0.06s;
   cursor: pointer;
   white-space: nowrap;
   user-select: none;
 }
-.btn:active:not(:disabled) { transform: translateY(0.5px); }
+.btn:active:not(:disabled) { transform: scale(0.985); }
 .btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
 .btn-primary { background: var(--accent); color: var(--accent-text); }
@@ -131,10 +323,19 @@ body {
 .btn-ghost:hover:not(:disabled) { background: var(--bg-inset); color: var(--text); }
 
 .btn-danger { background: var(--danger); color: #fff; }
-.btn-danger:hover:not(:disabled) { opacity: 0.9; }
+.btn-danger:hover:not(:disabled) { filter: brightness(1.07); }
 
-.btn-sm { padding: 0.3rem 0.6rem; min-height: 2rem; font-size: 0.8125rem; border-radius: 7px; }
-.btn-icon { padding: 0.5rem; min-width: 2.375rem; }
+.btn-sm { padding: 0.3rem 0.65rem; min-height: 2.125rem; font-size: 0.8125rem; border-radius: var(--radius-sm); }
+.btn-icon { padding: 0.5rem; min-width: 2.5rem; }
+.btn-icon.btn-sm { min-width: 2.125rem; padding: 0.375rem; }
+
+/* Touch pointers get Apple's 44px minimum, mice keep the tighter desktop size. */
+@media (pointer: coarse) {
+  .btn { min-height: 2.75rem; }
+  .btn-icon { min-width: 2.75rem; }
+  .btn-sm { min-height: 2.375rem; }
+  .btn-icon.btn-sm { min-width: 2.375rem; }
+}
 
 .input,
 .select,
@@ -142,21 +343,61 @@ body {
   width: 100%;
   background: var(--bg);
   border: 1px solid var(--border-strong);
-  border-radius: 9px;
+  border-radius: var(--radius);
   padding: 0.5rem 0.75rem;
   font-size: 0.9375rem;
+  font-family: inherit;
   color: var(--text);
   min-height: 2.5rem;
   transition: border-color 0.15s, box-shadow 0.15s;
+  -webkit-appearance: none;
+  appearance: none;
 }
 .input::placeholder, .textarea::placeholder { color: var(--text-faint); }
 .input:focus, .select:focus, .textarea:focus {
   outline: none;
   border-color: var(--accent);
-  box-shadow: 0 0 0 3px color-mix(in oklab, var(--accent) 18%, transparent);
+  box-shadow: 0 0 0 3px color-mix(in oklab, var(--accent) 16%, transparent);
 }
 .textarea { min-height: 6rem; resize: vertical; line-height: 1.55; }
-.select { appearance: none; background-image: none; padding-right: 2rem; cursor: pointer; }
+
+/* Safari zooms the page whenever a focused field is under 16px. */
+@media (pointer: coarse) {
+  .input,
+  .select,
+  .textarea {
+    font-size: 16px;
+    min-height: 2.75rem;
+  }
+}
+
+/* The chevron is drawn in, because appearance:none removes the native one. */
+.select {
+  padding-right: 2.25rem;
+  cursor: pointer;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%238b95a7' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 9l7 7 7-7'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.625rem center;
+  background-size: 15px;
+}
+
+/* iOS renders date and time fields as empty boxes without this. */
+input[type='date'],
+input[type='time'],
+input[type='datetime-local'] {
+  -webkit-appearance: none;
+  appearance: none;
+  min-height: 2.5rem;
+}
+input[type='date']::-webkit-date-and-time-value { text-align: left; }
+
+input[type='checkbox'],
+input[type='radio'] {
+  accent-color: var(--accent);
+  width: 1rem;
+  height: 1rem;
+  flex-shrink: 0;
+}
 
 .label { display: block; font-size: 0.8125rem; font-weight: 550; color: var(--text-muted); margin-bottom: 0.375rem; }
 
@@ -178,31 +419,68 @@ body {
 
 .divider { height: 1px; background: var(--border); }
 
+.kbd {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.25rem;
+  border: 1px solid var(--border-strong);
+  border-bottom-width: 2px;
+  border-radius: 5px;
+  padding: 0 0.3rem;
+  font-family: inherit;
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 1.5;
+  color: var(--text-muted);
+  background: var(--bg-inset);
+}
+
+.menu-panel { overscroll-behavior: contain; }
+
+/* Message hover actions — sized for a fingertip, quiet until wanted. */
+.msg-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  border-radius: var(--radius-sm);
+  padding: 0.25rem 0.375rem;
+  color: var(--text-muted);
+  transition: background-color 0.15s, color 0.15s;
+}
+.msg-action:hover { background: var(--bg-inset); color: var(--text); }
+
 /* Loading skeletons */
 .skeleton {
   background: linear-gradient(90deg, var(--bg-inset) 25%, var(--bg-subtle) 50%, var(--bg-inset) 75%);
   background-size: 200% 100%;
   animation: shimmer 1.4s infinite linear;
-  border-radius: 8px;
+  border-radius: var(--radius);
 }
 @keyframes shimmer {
   from { background-position: 200% 0; }
   to { background-position: -200% 0; }
 }
 
-.fade-in { animation: fadeIn 0.18s ease-out; }
+.fade-in { animation: fadeIn 0.16s ease-out; }
 @keyframes fadeIn { from { opacity: 0; transform: translateY(3px); } to { opacity: 1; transform: none; } }
 
 .slide-up { animation: slideUp 0.22s cubic-bezier(0.16, 1, 0.3, 1); }
 @keyframes slideUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
 
+.sheet-in { animation: sheetIn 0.26s cubic-bezier(0.16, 1, 0.3, 1); }
+@keyframes sheetIn { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: none; } }
+
+.drawer-in { animation: drawerIn 0.24s cubic-bezier(0.16, 1, 0.3, 1); }
+@keyframes drawerIn { from { transform: translateX(-100%); } to { transform: none; } }
+
 /* Thin, unobtrusive scrollbars */
-.scroll-thin { scrollbar-width: thin; scrollbar-color: var(--border-strong) transparent; }
+.scroll-thin { scrollbar-width: thin; scrollbar-color: var(--border-strong) transparent; -webkit-overflow-scrolling: touch; }
 .scroll-thin::-webkit-scrollbar { width: 8px; height: 8px; }
 .scroll-thin::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 999px; }
 .scroll-thin::-webkit-scrollbar-track { background: transparent; }
 
-.no-scrollbar { scrollbar-width: none; }
+.no-scrollbar { scrollbar-width: none; -webkit-overflow-scrolling: touch; }
 .no-scrollbar::-webkit-scrollbar { display: none; }
 
 /* Board card being dragged */
@@ -221,14 +499,16 @@ body {
 .prose-loop li { margin: 0.3rem 0; }
 .prose-loop a { color: var(--accent); text-decoration: underline; }
 .prose-loop code { background: var(--bg-inset); padding: 0.1rem 0.35rem; border-radius: 5px; font-family: var(--font-mono); font-size: 0.85em; }
-.prose-loop pre { background: var(--bg-inset); padding: 0.875rem; border-radius: 10px; overflow-x: auto; margin: 0.875rem 0; border: 1px solid var(--border); }
+.prose-loop pre { background: var(--bg-inset); padding: 0.875rem; border-radius: var(--radius); overflow-x: auto; margin: 0.875rem 0; border: 1px solid var(--border); }
 .prose-loop pre code { background: none; padding: 0; font-size: 0.8125rem; }
 .prose-loop blockquote { border-left: 3px solid var(--accent); padding-left: 0.875rem; color: var(--text-muted); margin: 0.875rem 0; }
 .prose-loop table { width: 100%; border-collapse: collapse; margin: 0.875rem 0; font-size: 0.875rem; display: block; overflow-x: auto; }
 .prose-loop th, .prose-loop td { border: 1px solid var(--border); padding: 0.5rem 0.65rem; text-align: left; }
 .prose-loop th { background: var(--bg-inset); font-weight: 600; }
-.prose-loop img { max-width: 100%; border-radius: 10px; }
+.prose-loop img { max-width: 100%; border-radius: var(--radius); }
 .prose-loop hr { border: none; border-top: 1px solid var(--border); margin: 1.5rem 0; }
+
+}
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {

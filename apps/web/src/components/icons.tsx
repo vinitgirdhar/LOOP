@@ -57,6 +57,7 @@ export const Icon = {
     <svg {...base(p)}><circle cx="5" cy="12" r="1.4" fill="currentColor" /><circle cx="12" cy="12" r="1.4" fill="currentColor" /><circle cx="19" cy="12" r="1.4" fill="currentColor" /></svg>
   ),
   menu: (p: SVGProps<SVGSVGElement>) => <svg {...base(p)}><path d="M4 7h16M4 12h16M4 17h16" /></svg>,
+  close: (p: SVGProps<SVGSVGElement>) => <svg {...base(p)}><path d="M6 6l12 12M18 6L6 18" /></svg>,
   chevronRight: (p: SVGProps<SVGSVGElement>) => <svg {...base(p)}><path d="M9 5l7 7-7 7" /></svg>,
   chevronDown: (p: SVGProps<SVGSVGElement>) => <svg {...base(p)}><path d="M5 9l7 7 7-7" /></svg>,
   arrowLeft: (p: SVGProps<SVGSVGElement>) => <svg {...base(p)}><path d="M19 12H5M11 18l-6-6 6-6" /></svg>,
@@ -84,6 +85,45 @@ export const Icon = {
   filter: (p: SVGProps<SVGSVGElement>) => <svg {...base(p)}><path d="M3 5h18l-7 8v6l-4 2v-8L3 5z" /></svg>,
   alert: (p: SVGProps<SVGSVGElement>) => (
     <svg {...base(p)}><path d="M12 3l9.5 17H2.5L12 3z" /><path d="M12 9v5M12 17.5v.01" /></svg>
+  ),
+  contrast: (p: SVGProps<SVGSVGElement>) => (
+    <svg {...base(p)}><circle cx="12" cy="12" r="9" /><path d="M12 3v18a9 9 0 000-18z" fill="currentColor" stroke="none" /></svg>
+  ),
+  paperclip: (p: SVGProps<SVGSVGElement>) => (
+    <svg {...base(p)}><path d="M21 11.5l-8.6 8.6a5 5 0 01-7.1-7.1l8.6-8.6a3.4 3.4 0 014.8 4.8l-8.6 8.6a1.8 1.8 0 01-2.5-2.5l7.9-7.9" /></svg>
+  ),
+  checkSquare: (p: SVGProps<SVGSVGElement>) => (
+    <svg {...base(p)}><path d="M20 12v7a2 2 0 01-2 2H6a2 2 0 01-2-2V6a2 2 0 012-2h9" /><path d="M8.5 11.5l3 3 8-8.5" /></svg>
+  ),
+  smile: (p: SVGProps<SVGSVGElement>) => (
+    <svg {...base(p)}><circle cx="12" cy="12" r="9" /><path d="M8.5 14.5a4.5 4.5 0 007 0" /><path d="M9 9.5v.01M15 9.5v.01" /></svg>
+  ),
+  send: (p: SVGProps<SVGSVGElement>) => (
+    <svg {...base(p)}><path d="M4.5 12L20 4l-4.5 16-3.5-6-7.5-2z" /></svg>
+  ),
+  reply: (p: SVGProps<SVGSVGElement>) => (
+    <svg {...base(p)}><path d="M9 8L4 12l5 4" /><path d="M4 12h9a6 6 0 016 6v2" /></svg>
+  ),
+  lock: (p: SVGProps<SVGSVGElement>) => (
+    <svg {...base(p)}><rect x="4.5" y="10" width="15" height="11" rx="2" /><path d="M8 10V7a4 4 0 018 0v3" /></svg>
+  ),
+  sheet: (p: SVGProps<SVGSVGElement>) => (
+    <svg {...base(p)}><rect x="3.5" y="4" width="17" height="16" rx="2" /><path d="M3.5 9.5h17M9 9.5V20M15 9.5V20" /></svg>
+  ),
+  image: (p: SVGProps<SVGSVGElement>) => (
+    <svg {...base(p)}><rect x="3" y="4.5" width="18" height="15" rx="2" /><circle cx="8.5" cy="10" r="1.5" /><path d="M4 17l5-4.5 4 3.5 3-2.5 4 3.5" /></svg>
+  ),
+  archive: (p: SVGProps<SVGSVGElement>) => (
+    <svg {...base(p)}><rect x="3" y="4" width="18" height="4.5" rx="1.5" /><path d="M5 8.5V19a1.5 1.5 0 001.5 1.5h11A1.5 1.5 0 0019 19V8.5" /><path d="M10 12.5h4" /></svg>
+  ),
+  film: (p: SVGProps<SVGSVGElement>) => (
+    <svg {...base(p)}><rect x="3" y="4.5" width="18" height="15" rx="2" /><path d="M7.5 4.5v15M16.5 4.5v15M3 12h18M3 8.25h4.5M3 15.75h4.5M16.5 8.25H21M16.5 15.75H21" /></svg>
+  ),
+  eye: (p: SVGProps<SVGSVGElement>) => (
+    <svg {...base(p)}><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z" /><circle cx="12" cy="12" r="3" /></svg>
+  ),
+  target: (p: SVGProps<SVGSVGElement>) => (
+    <svg {...base(p)}><circle cx="12" cy="12" r="9" /><circle cx="12" cy="12" r="5" /><circle cx="12" cy="12" r="1.4" fill="currentColor" stroke="none" /></svg>
   ),
 };
 

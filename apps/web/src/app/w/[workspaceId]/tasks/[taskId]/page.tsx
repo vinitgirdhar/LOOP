@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { PRIORITIES } from '@loop/shared';
 import { useQuery } from '@/lib/hooks';
 import { Page, PageHeader } from '@/components/page';
-import { Avatar, Badge, Button, Card, Confirm, ErrorState, Field, Modal, Progress, SectionTitle, Skeleton } from '@/components/ui';
+import { Avatar, Badge, Button, Card, CloseIcon, Confirm, ErrorState, Field, Modal, Progress, SectionTitle, Skeleton } from '@/components/ui';
 import { Icon } from '@/components/icons';
 import { useAuth } from '@/components/providers/auth';
 import { useToast } from '@/components/providers/toast';
@@ -262,7 +262,7 @@ export default function TaskPage({ params }: { params: Promise<{ workspaceId: st
                                 void refetch();
                               }}
                             >
-                              ✕
+                              <CloseIcon size={13} />
                             </button>
                           )}
                         </li>

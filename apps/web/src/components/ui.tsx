@@ -1,8 +1,9 @@
 'use client';
 
-import { useEffect, useRef, useState, type ButtonHTMLAttributes, type ReactNode } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useRef, useState, type ButtonHTMLAttributes, type ReactNode } from 'react';
+import Link from 'next/link';
 import { cx, initials } from '@/lib/format';
-import { useClickOutside, useLockScroll } from '@/lib/hooks';
+import { useLockScroll } from '@/lib/hooks';
 
 /* ── button ──────────────────────────────────────────────────────────── */
 
@@ -201,65 +202,230 @@ export function Modal({
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/45 p-0 sm:items-center sm:p-4" role="dialog" aria-modal="true" aria-label={title}>
+    <div className="overlay fixed inset-0 z-[80] flex items-end justify-center sm:items-center sm:p-4" role="dialog" aria-modal="true" aria-label={title}>
       <button type="button" className="absolute inset-0 h-full w-full cursor-default" onClick={onClose} aria-label="Close" tabIndex={-1} />
       <div
         className={cx(
-          'slide-up relative flex max-h-[92vh] w-full flex-col rounded-t-2xl border bg-[var(--surface)] shadow-[var(--shadow-lg)] sm:rounded-2xl',
+          'sheet-in relative flex max-h-[90dvh] w-full flex-col rounded-t-2xl border border-b-0 bg-[var(--surface)] shadow-[var(--shadow-lg)] sm:max-h-[85dvh] sm:rounded-2xl sm:border-b',
           wide ? 'sm:max-w-3xl' : 'sm:max-w-lg',
         )}
       >
+        <span className="mx-auto mt-2 h-1 w-9 shrink-0 rounded-full bg-[var(--border-strong)] sm:hidden" aria-hidden />
         <div className="flex items-center justify-between gap-3 border-b px-4 py-3">
-          <h3 className="text-sm font-semibold">{title}</h3>
-          <button type="button" onClick={onClose} className="btn btn-ghost btn-icon btn-sm" aria-label="Close">
-            ✕
+          <h3 className="truncate text-sm font-semibold">{title}</h3>
+          <button type="button" onClick={onClose} className="btn btn-ghost btn-icon btn-sm -mr-1" aria-label="Close">
+            <CloseIcon />
           </button>
         </div>
-        <div className="scroll-thin flex-1 overflow-y-auto px-4 py-4">{children}</div>
-        {footer && <div className="flex justify-end gap-2 border-t px-4 py-3">{footer}</div>}
+        <div className="scroll-thin flex-1 overflow-y-auto overscroll-contain px-4 py-4">{children}</div>
+        {footer && <div className="flex justify-end gap-2 border-t px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:pb-3">{footer}</div>}
       </div>
     </div>
   );
 }
 
-export function Menu({ trigger, children, align = 'right' }: { trigger: ReactNode; children: (close: () => void) => ReactNode; align?: 'left' | 'right' }) {
-  const [open, setOpen] = useState(false);
-  const ref = useClickOutside<HTMLDivElement>(() => setOpen(false));
+/**
+ * Bottom sheet for touch. Used for the surfaces a thumb reaches for — the
+ * navigation drawer's siblings, quick actions — where a centred dialog would
+ * sit under the notch on a small phone.
+ */
+export function Sheet({
+  open,
+  onClose,
+  title,
+  description,
+  children,
+}: {
+  open: boolean;
+  onClose: () => void;
+  title: string;
+  description?: string;
+  children: ReactNode;
+}) {
+  useLockScroll(open);
+
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [open, onClose]);
+
+  if (!open) return null;
 
   return (
-    <div className="relative" ref={ref}>
-      <div onClick={() => setOpen((v) => !v)}>{trigger}</div>
-      {open && (
-        <div
-          className={cx(
-            'fade-in absolute z-40 mt-1 min-w-44 overflow-hidden rounded-xl border bg-[var(--surface)] py-1 shadow-[var(--shadow-lg)]',
-            align === 'right' ? 'right-0' : 'left-0',
-          )}
-          role="menu"
-        >
-          {children(() => setOpen(false))}
+    <div className="overlay fixed inset-0 z-[80] flex items-end justify-center sm:items-center sm:p-4" role="dialog" aria-modal="true" aria-label={title}>
+      <button type="button" className="absolute inset-0 h-full w-full cursor-default" onClick={onClose} aria-label="Close" tabIndex={-1} />
+      <div className="sheet-in relative flex max-h-[85dvh] w-full flex-col rounded-t-2xl border border-b-0 bg-[var(--surface)] shadow-[var(--shadow-lg)] sm:max-w-sm sm:rounded-2xl sm:border-b">
+        <span className="mx-auto mt-2 h-1 w-9 shrink-0 rounded-full bg-[var(--border-strong)] sm:hidden" aria-hidden />
+        <div className="px-4 pb-1 pt-3">
+          <h3 className="text-sm font-semibold">{title}</h3>
+          {description && <p className="mt-0.5 text-xs text-[var(--text-muted)]">{description}</p>}
         </div>
-      )}
+        <div className="scroll-thin flex-1 overflow-y-auto overscroll-contain p-2 pb-[max(0.75rem,env(safe-area-inset-bottom))]">{children}</div>
+      </div>
     </div>
   );
 }
 
-export function MenuItem({ children, onClick, danger, disabled }: { children: ReactNode; onClick?: () => void; danger?: boolean; disabled?: boolean }) {
+export const CloseIcon = ({ size = 15 }: { size?: number }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden>
+    <path d="M6 6l12 12M18 6L6 18" />
+  </svg>
+);
+
+type MenuPlacement = { top?: number; bottom?: number; left?: number; right?: number; maxHeight: number };
+
+/**
+ * Dropdown menu.
+ *
+ * Positioned `fixed` against the trigger rather than absolutely inside it: the
+ * account menu lives at the very bottom of the sidebar, and an absolutely
+ * positioned panel there opened *below* the fold where Sign out could never be
+ * clicked. Measuring the trigger lets the panel flip above when there is no room
+ * below, and escape the `overflow: hidden` of any ancestor.
+ */
+export function Menu({
+  trigger,
+  children,
+  align = 'right',
+  className,
+  label,
+}: {
+  trigger: ReactNode;
+  children: (close: () => void) => ReactNode;
+  align?: 'left' | 'right';
+  className?: string;
+  label?: string;
+}) {
+  const [open, setOpen] = useState(false);
+  const [placement, setPlacement] = useState<MenuPlacement | null>(null);
+  const anchor = useRef<HTMLDivElement>(null);
+  const panel = useRef<HTMLDivElement>(null);
+
+  const position = useCallback(() => {
+    const rect = anchor.current?.getBoundingClientRect();
+    if (!rect) return;
+
+    const margin = 8;
+    const gap = 6;
+    const below = window.innerHeight - rect.bottom - margin;
+    const above = rect.top - margin;
+    // Flip up only when below genuinely cannot hold a usable menu.
+    const dropUp = below < 200 && above > below;
+
+    setPlacement({
+      ...(dropUp ? { bottom: window.innerHeight - rect.top + gap } : { top: rect.bottom + gap }),
+      ...(align === 'right'
+        ? { right: Math.max(margin, window.innerWidth - rect.right) }
+        : { left: Math.min(Math.max(margin, rect.left), window.innerWidth - margin) }),
+      maxHeight: Math.max(160, (dropUp ? above : below) - gap),
+    });
+  }, [align]);
+
+  useLayoutEffect(() => {
+    if (!open) return;
+    position();
+    const onChange = () => position();
+    window.addEventListener('resize', onChange);
+    window.addEventListener('scroll', onChange, true);
+    return () => {
+      window.removeEventListener('resize', onChange);
+      window.removeEventListener('scroll', onChange, true);
+    };
+  }, [open, position]);
+
+  useEffect(() => {
+    if (!open) return;
+    const onPointer = (event: MouseEvent | TouchEvent) => {
+      const target = event.target as Node;
+      if (anchor.current?.contains(target) || panel.current?.contains(target)) return;
+      setOpen(false);
+    };
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape') return;
+      setOpen(false);
+      anchor.current?.querySelector('button')?.focus();
+    };
+    document.addEventListener('mousedown', onPointer);
+    document.addEventListener('touchstart', onPointer);
+    document.addEventListener('keydown', onKey);
+    return () => {
+      document.removeEventListener('mousedown', onPointer);
+      document.removeEventListener('touchstart', onPointer);
+      document.removeEventListener('keydown', onKey);
+    };
+  }, [open]);
+
   return (
-    <button
-      type="button"
-      role="menuitem"
-      disabled={disabled}
-      onClick={onClick}
-      className={cx(
-        'flex w-full items-center gap-2 px-3 py-2 text-left text-[13px] transition-colors disabled:opacity-40',
-        danger ? 'text-[var(--danger)] hover:bg-[var(--danger-soft)]' : 'hover:bg-[var(--bg-inset)]',
+    <>
+      <div
+        ref={anchor}
+        className={cx('inline-flex', className)}
+        onClick={() => setOpen((v) => !v)}
+        aria-haspopup="menu"
+        aria-expanded={open}
+        aria-label={label}
+      >
+        {trigger}
+      </div>
+      {open && (
+        <div
+          ref={panel}
+          role="menu"
+          style={{ ...placement, visibility: placement ? 'visible' : 'hidden' }}
+          className="menu-panel fade-in scroll-thin fixed z-[70] min-w-48 max-w-[min(20rem,calc(100vw-1rem))] overflow-y-auto overflow-x-hidden rounded-xl border bg-[var(--surface)] py-1 shadow-[var(--shadow-lg)]"
+        >
+          {children(() => setOpen(false))}
+        </div>
       )}
-    >
+    </>
+  );
+}
+
+export function MenuItem({
+  children,
+  onClick,
+  href,
+  danger,
+  disabled,
+  selected,
+}: {
+  children: ReactNode;
+  onClick?: () => void;
+  href?: string;
+  danger?: boolean;
+  disabled?: boolean;
+  selected?: boolean;
+}) {
+  const className = cx(
+    'flex w-full items-center gap-2.5 px-3 py-2 text-left text-[13px] transition-colors disabled:opacity-40',
+    danger ? 'text-[var(--danger)] hover:bg-[var(--danger-soft)]' : 'hover:bg-[var(--bg-inset)]',
+    selected && 'font-medium text-[var(--accent)]',
+  );
+
+  // A link inside a button is invalid markup and swallows the navigation, so
+  // menu rows that navigate render as anchors instead.
+  if (href) {
+    return (
+      <Link href={href} role="menuitem" className={className} onClick={onClick}>
+        {children}
+      </Link>
+    );
+  }
+
+  return (
+    <button type="button" role="menuitem" disabled={disabled} onClick={onClick} className={className}>
       {children}
     </button>
   );
 }
+
+export const MenuLabel = ({ children }: { children: ReactNode }) => (
+  <p className="px-3 pb-1 pt-2 text-[10px] font-semibold uppercase tracking-wider text-[var(--text-faint)]">{children}</p>
+);
 
 export function Tabs({ tabs, active, onChange }: { tabs: { key: string; label: string; count?: number }[]; active: string; onChange: (key: string) => void }) {
   return (

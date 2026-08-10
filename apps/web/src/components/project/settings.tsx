@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { PRIORITIES, PROJECT_STATUSES } from '@loop/shared';
-import { Avatar, Button, Card, Confirm, EmptyState, Field, SectionTitle, Skeleton } from '@/components/ui';
+import { Avatar, Button, Card, CloseIcon, Confirm, EmptyState, Field, SectionTitle, Skeleton } from '@/components/ui';
 import { Icon } from '@/components/icons';
 import { useQuery } from '@/lib/hooks';
 import { useAuth } from '@/components/providers/auth';
@@ -343,8 +343,9 @@ export function ProjectSettings({ project, workspaceId, onChanged }: { project: 
                     onChanged();
                   }}
                   aria-label={`Delete ${label.name}`}
+                  className="rounded-full p-0.5 transition-colors hover:bg-[var(--bg-inset)]"
                 >
-                  ✕
+                  <CloseIcon size={11} />
                 </button>
               )}
             </span>

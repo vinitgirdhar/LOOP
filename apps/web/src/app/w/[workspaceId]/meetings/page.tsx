@@ -1,7 +1,7 @@
 'use client';
 
 import { use, useState } from 'react';
-import { useQuery } from '@/lib/hooks';
+import { useQuery, useUrlIntent } from '@/lib/hooks';
 import { Page, PageHeader } from '@/components/page';
 import { Avatar, AvatarStack, Badge, Button, Card, EmptyState, Field, Modal, SectionTitle, Skeleton } from '@/components/ui';
 import { Icon } from '@/components/icons';
@@ -31,6 +31,8 @@ export default function MeetingsPage({ params }: { params: Promise<{ workspaceId
   const [creating, setCreating] = useState(false);
   const [open, setOpen] = useState<Meeting | null>(null);
   const [actionItem, setActionItem] = useState('');
+
+  useUrlIntent('new', () => can('meeting.manage') && setCreating(true));
 
   const { data, loading, refetch } = useQuery<Meeting[]>('/api/meetings', [workspaceId]);
   const { data: members } = useQuery<{ user: { id: string; name: string; avatarUrl: string | null } }[]>(`/api/workspaces/${workspaceId}/members`, [workspaceId]);

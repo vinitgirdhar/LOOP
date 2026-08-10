@@ -1,22 +1,28 @@
 'use client';
 
 import Link from 'next/link';
+import { Icon } from '@/components/icons';
 import { useState } from 'react';
 import { ThemeToggle } from '@/components/providers/theme';
 import { useAuth } from '@/components/providers/auth';
 import { cx } from '@/lib/format';
 
+/**
+ * The mark is drawn rather than typed: a text arrow glyph rendered as a
+ * different shape on every platform, and turned into an emoji on iOS.
+ */
 export function Logo({ size = 'md' }: { size?: 'sm' | 'md' }) {
+  const box = size === 'sm' ? 24 : 28;
   return (
     <span className="flex items-center gap-2">
       <span
-        className={cx(
-          'inline-flex items-center justify-center rounded-[9px] bg-[var(--accent)] font-bold text-white',
-          size === 'sm' ? 'h-6 w-6 text-[11px]' : 'h-7 w-7 text-xs',
-        )}
+        className="inline-flex shrink-0 items-center justify-center rounded-[9px] bg-[var(--accent)] text-[var(--accent-text)]"
+        style={{ width: box, height: box }}
         aria-hidden
       >
-        ↻
+        <svg width={box * 0.62} height={box * 0.62} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M7.5 8.5a4.5 4.5 0 100 7h9a4.5 4.5 0 100-7h-9z" />
+        </svg>
       </span>
       <span className={cx('font-semibold tracking-[-0.02em]', size === 'sm' ? 'text-sm' : 'text-[15px]')}>Loop</span>
     </span>
@@ -68,7 +74,7 @@ export function MarketingNav() {
             </>
           )}
           <button type="button" className="btn btn-ghost btn-icon btn-sm lg:hidden" onClick={() => setOpen((v) => !v)} aria-expanded={open} aria-label="Toggle menu">
-            {open ? '✕' : '☰'}
+            {open ? <Icon.close width={16} height={16} /> : <Icon.menu width={17} height={17} />}
           </button>
         </div>
       </nav>
