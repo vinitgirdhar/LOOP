@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import type { Metadata } from 'next';
 import { ContactForm, Faq, MarketingFooter, MarketingNav } from '@/components/marketing';
+import { Icon, type IconName } from '@/components/icons';
 
 export const metadata: Metadata = {
   title: 'Loop — the project tool that keeps itself updated',
@@ -9,29 +10,29 @@ export const metadata: Metadata = {
 
 const FEATURES = [
   {
-    icon: '⚡',
+    icon: 'bolt' as IconName,
     title: 'Auto-Pilot board',
     body: 'GitHub events, chat and task activity feed a rules engine. Open a PR on a branch named PAY-12 and Loop proposes moving PAY-12 to Code Review — with the pull request attached as evidence.',
     tag: 'Differentiator',
   },
   {
-    icon: '📊',
+    icon: 'chart' as IconName,
     title: 'Explainable health score',
     body: 'A 0–100 score per project from five weighted signals: overdue ratio, blocked chains, velocity trend, WIP overload and silent tasks. The maths is deterministic; AI only writes the summary.',
     tag: 'Differentiator',
   },
   {
-    icon: '🔎',
+    icon: 'search' as IconName,
     title: 'Ask the Workspace',
     body: 'Ask "what is blocking the release?" and get an answer with citations. Retrieval is filtered by your role first, so a client account can never pull internal chat into the answer.',
     tag: 'Differentiator',
   },
-  { icon: '🗂', title: 'Kanban that bends', body: 'Six columns out of the box, fully editable per project. Drag on desktop, tap to move on mobile. Subtasks, dependencies, checklists, story points and bulk actions.' },
-  { icon: '🏃', title: 'Sprints and burndown', body: 'Capacity planning, real burndown history written nightly, burnup, velocity across ten sprints, and blockers surfaced at the top of the sprint page.' },
-  { icon: '📄', title: 'Docs with history', body: 'Rich text and markdown, code blocks, tables, nested pages, full version history and one-click restore. Mark a page shared to expose it to clients.' },
-  { icon: '💬', title: 'Real-time chat', body: 'Project channels, DMs, threads, @mentions, reactions and file sharing over WebSocket, with presence and typing indicators.' },
-  { icon: '⏱', title: 'Time tracking', body: 'Start-stop timers, manual entries, daily logs, hours by project and utilisation against each person’s weekly capacity.' },
-  { icon: '🔐', title: 'Security you can audit', body: 'Google OAuth, verified email, rotating refresh tokens with reuse detection, RBAC in one middleware layer, rate limiting and an audit log for every privileged action.' },
+  { icon: 'board' as IconName, title: 'Kanban that bends', body: 'Six columns out of the box, fully editable per project. Drag on desktop, tap to move on mobile. Subtasks, dependencies, checklists, story points and bulk actions.' },
+  { icon: 'sprint' as IconName, title: 'Sprints and burndown', body: 'Capacity planning, real burndown history written nightly, burnup, velocity across ten sprints, and blockers surfaced at the top of the sprint page.' },
+  { icon: 'doc' as IconName, title: 'Docs with history', body: 'Rich text and markdown, code blocks, tables, nested pages, full version history and one-click restore. Mark a page shared to expose it to clients.' },
+  { icon: 'chat' as IconName, title: 'Real-time chat', body: 'Project channels, DMs, threads, @mentions, reactions and file sharing over WebSocket, with presence and typing indicators.' },
+  { icon: 'clock' as IconName, title: 'Time tracking', body: 'Start-stop timers, manual entries, daily logs, hours by project and utilisation against each person’s weekly capacity.' },
+  { icon: 'shield' as IconName, title: 'Security you can audit', body: 'Google OAuth, verified email, rotating refresh tokens with reuse detection, RBAC in one middleware layer, rate limiting and an audit log for every privileged action.' },
 ];
 
 const PLANS = [
@@ -139,18 +140,21 @@ export default function LandingPage() {
               </p>
             </div>
             <div className="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-              {FEATURES.map((feature) => (
+              {FEATURES.map((feature) => {
+                const FeatureIcon = Icon[feature.icon];
+                return (
                 <div key={feature.title} className="card p-4 transition-colors hover:border-[var(--border-strong)]">
                   <div className="flex items-start justify-between gap-2">
-                    <span className="text-xl" aria-hidden>
-                      {feature.icon}
+                    <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-[var(--accent-soft)] text-[var(--accent)]" aria-hidden>
+                      <FeatureIcon width={18} height={18} />
                     </span>
                     {feature.tag && <span className="badge bg-[var(--accent-soft)] text-[var(--accent)]">{feature.tag}</span>}
                   </div>
                   <h3 className="mt-2.5 text-sm font-semibold">{feature.title}</h3>
                   <p className="mt-1.5 text-[13px] leading-relaxed text-[var(--text-muted)]">{feature.body}</p>
                 </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         </section>
@@ -180,9 +184,9 @@ export default function LandingPage() {
                   <ul className="mt-4 flex-1 space-y-2">
                     {plan.features.map((feature) => (
                       <li key={feature} className="flex items-start gap-2 text-[13px] text-[var(--text-muted)]">
-                        <span className="mt-0.5 text-[var(--success)]" aria-hidden>
-                          ✓
-                        </span>
+                        <svg className="mt-1 shrink-0 text-[var(--success)]" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                          <path d="M4 12.5l5 5L20 6.5" />
+                        </svg>
                         {feature}
                       </li>
                     ))}

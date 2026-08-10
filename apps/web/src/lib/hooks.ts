@@ -76,6 +76,53 @@ export function useDebounced<T>(value: T, delay = 300): T {
   return debounced;
 }
 
+/**
+ * Reads a one-shot intent flag out of the URL (`?new=1`) after hydration, then
+ * strips it — so a refresh, a share or a back-navigation does not reopen the
+ * dialog it triggered. Reading `window.location` rather than `useSearchParams`
+ * keeps the page out of a Suspense boundary it does not otherwise need.
+ */
+export function useUrlIntent(key: string, onIntent: (value: string) => void) {
+  const saved = useRef(onIntent);
+  saved.current = onIntent;
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const value = params.get(key);
+    if (value === null) return;
+
+    params.delete(key);
+    const query = params.toString();
+    window.history.replaceState(null, '', `${window.location.pathname}${query ? `?${query}` : ''}`);
+    saved.current(value);
+  }, [key]);
+}
+
+/**
+ * Keeps a tab selection in the URL, so a deep link (a search hit, a shared
+ * link) opens the pane it means to instead of dropping you on the first tab.
+ */
+export function useUrlTab(fallback: string, key = 'tab'): [string, (next: string) => void] {
+  const [tab, setTab] = useState(fallback);
+
+  useEffect(() => {
+    const value = new URLSearchParams(window.location.search).get(key);
+    if (value) setTab(value);
+  }, [key]);
+
+  const select = useCallback(
+    (next: string) => {
+      setTab(next);
+      const params = new URLSearchParams(window.location.search);
+      params.set(key, next);
+      window.history.replaceState(null, '', `${window.location.pathname}?${params.toString()}`);
+    },
+    [key],
+  );
+
+  return [tab, select];
+}
+
 /** Fires when a click lands outside the referenced element. */
 export function useClickOutside<T extends HTMLElement>(onOutside: () => void) {
   const ref = useRef<T>(null);

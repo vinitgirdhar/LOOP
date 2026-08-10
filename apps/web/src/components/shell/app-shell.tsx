@@ -1,8 +1,8 @@
 'use client';
 
-import { useCallback, useEffect, useState, type ReactNode } from 'react';
+import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
 import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 import { ROLE_LABELS } from '@loop/shared';
 import { useAuth } from '@/components/providers/auth';
 import { useSocket, useSocketEvent } from '@/components/providers/socket';
@@ -12,29 +12,44 @@ import { Icon } from '@/components/icons';
 import { Logo } from '@/components/marketing';
 import { cx } from '@/lib/format';
 import { api } from '@/lib/api';
-import { navItems, type NavItem } from './nav-items';
+import { NAV_GROUP_LABELS, bottomNavItems, navItems, quickActions, type NavGroup, type NavItem } from './nav-items';
 import { CommandPalette } from './command-palette';
 import { NotificationBell } from './notifications';
 import { WorkspaceSwitcher } from './workspace-switcher';
+import { MobileDrawer } from './mobile-drawer';
+import { QuickCreate } from './quick-create';
+
+const GROUP_ORDER: NavGroup[] = ['work', 'knowledge', 'insights', 'workspace'];
 
 export function AppShell({ workspaceId, children }: { workspaceId: string; children: ReactNode }) {
   const pathname = usePathname();
-  const router = useRouter();
   const { user, role, can, logout, memberships } = useAuth();
   const { connected } = useSocket();
 
   const [paletteOpen, setPaletteOpen] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [createOpen, setCreateOpen] = useState(false);
   const [suggestionCount, setSuggestionCount] = useState(0);
   const [chatUnread, setChatUnread] = useState(0);
 
-  const items = navItems(workspaceId).filter((item) => !item.permission || can(item.permission));
+  const items = useMemo(
+    () => navItems(workspaceId).filter((item) => !item.permission || can(item.permission)),
+    [workspaceId, can],
+  );
+
+  /** The four the bottom bar carries — excluded from the drawer so nothing repeats. */
+  const barItems = useMemo(() => bottomNavItems(items, role), [items, role]);
+  // Workspace settings stays in the list: the drawer renders it under Account,
+  // not among the navigation groups.
+  const drawerItems = useMemo(() => items.filter((item) => !barItems.includes(item)), [items, barItems]);
+  const hasQuickActions = quickActions(workspaceId).some((action) => !action.permission || can(action.permission));
   const workspace = memberships.find((m) => m.workspace.id === workspaceId)?.workspace;
 
   // Cmd/Ctrl+K anywhere, plus "/" when not typing.
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
-      const typing = ['INPUT', 'TEXTAREA'].includes((event.target as HTMLElement)?.tagName) || (event.target as HTMLElement)?.isContentEditable;
+      const target = event.target as HTMLElement | null;
+      const typing = ['INPUT', 'TEXTAREA', 'SELECT'].includes(target?.tagName ?? '') || target?.isContentEditable;
       if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k') {
         event.preventDefault();
         setPaletteOpen(true);
@@ -48,7 +63,10 @@ export function AppShell({ workspaceId, children }: { workspaceId: string; child
     return () => window.removeEventListener('keydown', onKey);
   }, []);
 
-  useEffect(() => setDrawerOpen(false), [pathname]);
+  useEffect(() => {
+    setDrawerOpen(false);
+    setCreateOpen(false);
+  }, [pathname]);
 
   const loadBadges = useCallback(async () => {
     try {
@@ -68,58 +86,63 @@ export function AppShell({ workspaceId, children }: { workspaceId: string; child
   }, [loadBadges, workspaceId, pathname]);
 
   useSocketEvent('suggestion:new', () => setSuggestionCount((n) => n + 1));
-  useSocketEvent('message:new', () => setChatUnread((n) => n + 1));
+  useSocketEvent<{ author?: { id: string }; channelId?: string }>('message:new', (message) => {
+    // Your own messages, and the channel already on screen, are not unread.
+    if (message?.author?.id === user?.id) return;
+    if (pathname.startsWith(`/w/${workspaceId}/chat`)) return;
+    setChatUnread((n) => n + 1);
+  });
 
-  const badgeFor = (item: NavItem) =>
-    item.badge === 'suggestions' ? suggestionCount : item.badge === 'chat' ? chatUnread : 0;
+  const badgeFor = useCallback(
+    (item: NavItem) => (item.badge === 'suggestions' ? suggestionCount : item.badge === 'chat' ? chatUnread : 0),
+    [suggestionCount, chatUnread],
+  );
 
-  const isActive = (item: NavItem) => (item.exact ? pathname === item.href : pathname === item.href || pathname.startsWith(`${item.href}/`));
-
-  const primary = items.filter((item) => item.primary).slice(0, 4);
+  const isActive = useCallback(
+    (item: NavItem) => (item.exact ? pathname === item.href : pathname === item.href || pathname.startsWith(`${item.href}/`)),
+    [pathname],
+  );
 
   return (
-    <div className="flex min-h-dvh flex-col bg-[var(--bg-subtle)] lg:flex-row">
+    <div className="app-shell flex min-h-dvh flex-col bg-[var(--bg-subtle)] lg:flex-row">
       {/* ── desktop sidebar ─────────────────────────────────────────── */}
       <aside className="sticky top-0 hidden h-dvh w-60 shrink-0 flex-col border-r bg-[var(--surface)] lg:flex xl:w-64">
         <div className="px-3 py-3">
           <WorkspaceSwitcher workspaceId={workspaceId} />
         </div>
 
-        <nav className="scroll-thin flex-1 space-y-0.5 overflow-y-auto px-2 pb-3" aria-label="Workspace">
-          {items.map((item) => {
-            const count = badgeFor(item);
+        <nav className="scroll-thin flex-1 overflow-y-auto px-2 pb-3" aria-label="Workspace">
+          {GROUP_ORDER.map((group) => {
+            const rows = items.filter((item) => item.group === group);
+            if (rows.length === 0) return null;
             return (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={cx(
-                  'flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-[13px] font-medium transition-colors',
-                  isActive(item) ? 'bg-[var(--accent-soft)] text-[var(--accent)]' : 'text-[var(--text-muted)] hover:bg-[var(--bg-inset)] hover:text-[var(--text)]',
-                )}
-                aria-current={isActive(item) ? 'page' : undefined}
-              >
-                {(() => {
-                  const IconComponent = Icon[item.icon];
-                  return <IconComponent width={17} height={17} />;
-                })()}
-                <span className="flex-1 truncate">{item.label}</span>
-                {count > 0 && (
-                  <span className="rounded-full bg-[var(--accent)] px-1.5 text-[10px] font-bold text-white">{count > 99 ? '99+' : count}</span>
-                )}
-              </Link>
+              <div key={group} className="mb-2">
+                <p className="px-2.5 pb-1 pt-2 text-[10px] font-semibold uppercase tracking-wider text-[var(--text-faint)]">{NAV_GROUP_LABELS[group]}</p>
+                {rows.map((item) => {
+                  const count = badgeFor(item);
+                  const ItemIcon = Icon[item.icon];
+                  const active = isActive(item);
+                  return (
+                    <Link
+                      key={item.id}
+                      href={item.href}
+                      aria-current={active ? 'page' : undefined}
+                      className={cx('nav-row', active && 'nav-row-active')}
+                    >
+                      <ItemIcon width={17} height={17} className="shrink-0" />
+                      <span className="flex-1 truncate">{item.label}</span>
+                      {count > 0 && <span className="badge-count">{count > 99 ? '99+' : count}</span>}
+                    </Link>
+                  );
+                })}
+              </div>
             );
           })}
 
           {user?.isPlatformAdmin && (
-            <Link
-              href="/admin"
-              className={cx(
-                'mt-1 flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-[13px] font-medium transition-colors',
-                pathname.startsWith('/admin') ? 'bg-[var(--accent-soft)] text-[var(--accent)]' : 'text-[var(--text-muted)] hover:bg-[var(--bg-inset)] hover:text-[var(--text)]',
-              )}
-            >
-              <Icon.shield width={17} height={17} />
-              Admin panel
+            <Link href="/admin" className={cx('nav-row', pathname.startsWith('/admin') && 'nav-row-active')}>
+              <Icon.shield width={17} height={17} className="shrink-0" />
+              <span className="flex-1 truncate">Admin panel</span>
             </Link>
           )}
         </nav>
@@ -127,27 +150,44 @@ export function AppShell({ workspaceId, children }: { workspaceId: string; child
         <div className="border-t p-2">
           <Menu
             align="left"
+            className="w-full"
+            label="Account menu"
             trigger={
               <button type="button" className="flex w-full items-center gap-2.5 rounded-lg px-2 py-2 text-left transition-colors hover:bg-[var(--bg-inset)]">
-                <Avatar name={user?.name ?? '?'} src={user?.avatarUrl} size={28} />
+                <Avatar name={user?.name ?? '?'} src={user?.avatarUrl} size={30} />
                 <span className="min-w-0 flex-1">
                   <span className="block truncate text-[13px] font-medium">{user?.name}</span>
                   <span className="block truncate text-[11px] text-[var(--text-muted)]">{role ? ROLE_LABELS[role] : ''}</span>
                 </span>
-                <Icon.chevronDown width={14} height={14} className="text-[var(--text-faint)]" />
+                <Icon.chevronDown width={14} height={14} className="shrink-0 text-[var(--text-faint)]" />
               </button>
             }
           >
             {(close) => (
               <>
-                <MenuItem onClick={() => { close(); router.push('/profile'); }}>
+                <div className="border-b px-3 pb-2 pt-1.5">
+                  <p className="truncate text-[13px] font-medium">{user?.name}</p>
+                  <p className="truncate text-[11px] text-[var(--text-muted)]">{user?.email}</p>
+                </div>
+                <MenuItem href="/profile" onClick={close}>
                   <Icon.user width={15} height={15} /> Profile and security
                 </MenuItem>
-                <MenuItem onClick={() => { close(); router.push('/app'); }}>
-                  <Icon.board width={15} height={15} /> Switch workspace
+                <MenuItem href="/app" onClick={close}>
+                  <Icon.board width={15} height={15} /> All workspaces
                 </MenuItem>
+                {user?.isPlatformAdmin && (
+                  <MenuItem href="/admin" onClick={close}>
+                    <Icon.shield width={15} height={15} /> Admin panel
+                  </MenuItem>
+                )}
                 <div className="divider my-1" />
-                <MenuItem danger onClick={() => { close(); void logout(); }}>
+                <MenuItem
+                  danger
+                  onClick={() => {
+                    close();
+                    void logout();
+                  }}
+                >
                   <Icon.logout width={15} height={15} /> Sign out
                 </MenuItem>
               </>
@@ -158,22 +198,24 @@ export function AppShell({ workspaceId, children }: { workspaceId: string; child
 
       {/* ── main column ─────────────────────────────────────────────── */}
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="sticky top-0 z-30 flex h-14 items-center gap-2 border-b bg-[var(--surface)]/90 px-3 backdrop-blur-md sm:px-4">
-          <button type="button" className="btn btn-ghost btn-icon lg:hidden" onClick={() => setDrawerOpen(true)} aria-label="Open menu">
+        <header className="app-header sticky top-0 z-40 flex items-center gap-1.5 border-b bg-[var(--surface)] sm:px-4">
+          <button type="button" className="btn btn-ghost btn-icon lg:hidden" onClick={() => setDrawerOpen(true)} aria-label="Open workspace menu" aria-expanded={drawerOpen}>
             <Icon.menu />
           </button>
-          <Link href={`/w/${workspaceId}`} className="lg:hidden">
+
+          <Link href={`/w/${workspaceId}`} className="flex min-h-11 min-w-0 items-center gap-2 rounded-lg px-1 lg:hidden" aria-label="Dashboard">
             <Logo size="sm" />
           </Link>
 
           <button
             type="button"
             onClick={() => setPaletteOpen(true)}
-            className="ml-auto flex items-center gap-2 rounded-lg border px-2.5 py-1.5 text-[13px] text-[var(--text-faint)] transition-colors hover:border-[var(--border-strong)] lg:ml-0 lg:w-72"
+            className="ml-auto flex h-11 min-w-11 items-center justify-center gap-2 rounded-lg border px-2.5 text-[13px] text-[var(--text-faint)] transition-colors hover:border-[var(--border-strong)] hover:text-[var(--text-muted)] lg:ml-0 lg:h-9 lg:w-72 lg:justify-start"
+            aria-label="Search"
           >
-            <Icon.search width={15} height={15} />
-            <span className="hidden lg:inline">Search…</span>
-            <kbd className="ml-auto hidden rounded border px-1.5 py-0.5 text-[10px] lg:block">⌘K</kbd>
+            <Icon.search width={16} height={16} />
+            <span className="hidden lg:inline">Search tasks, docs, people…</span>
+            <kbd className="kbd ml-auto hidden lg:inline-flex">⌘K</kbd>
           </button>
 
           <div className="ml-auto flex items-center gap-0.5">
@@ -181,110 +223,72 @@ export function AppShell({ workspaceId, children }: { workspaceId: string; child
               className={cx('mr-1 hidden h-1.5 w-1.5 rounded-full sm:block', connected ? 'bg-[var(--success)]' : 'bg-[var(--text-faint)]')}
               title={connected ? 'Live updates connected' : 'Reconnecting…'}
             />
-            <ThemeToggle />
+            <span className="hidden sm:block">
+              <ThemeToggle />
+            </span>
             <NotificationBell workspaceId={workspaceId} />
-            <div className="lg:hidden">
-              <Menu
-                trigger={
-                  <button type="button" className="btn btn-ghost btn-icon" aria-label="Account">
-                    <Avatar name={user?.name ?? '?'} src={user?.avatarUrl} size={24} />
-                  </button>
-                }
-              >
-                {(close) => (
-                  <>
-                    <MenuItem onClick={() => { close(); router.push('/profile'); }}>Profile and security</MenuItem>
-                    <MenuItem onClick={() => { close(); router.push('/app'); }}>Switch workspace</MenuItem>
-                    {user?.isPlatformAdmin && <MenuItem onClick={() => { close(); router.push('/admin'); }}>Admin panel</MenuItem>}
-                    <div className="divider my-1" />
-                    <MenuItem danger onClick={() => { close(); void logout(); }}>Sign out</MenuItem>
-                  </>
-                )}
-              </Menu>
-            </div>
           </div>
         </header>
 
-        <main id="main" className="min-w-0 flex-1 pb-20 lg:pb-0">
+        <main id="main" className="app-main min-w-0 flex-1">
           {children}
         </main>
       </div>
 
-      {/* ── mobile bottom bar ───────────────────────────────────────── */}
-      <nav
-        className="fixed inset-x-0 bottom-0 z-30 flex border-t bg-[var(--surface)]/95 pb-[env(safe-area-inset-bottom)] backdrop-blur-md lg:hidden"
-        aria-label="Primary"
-      >
-        {primary.map((item) => {
+      {/* ── mobile bottom bar: this role's four places, plus its one action ── */}
+      <nav className="bottom-bar flex lg:hidden" aria-label="Primary">
+        {barItems.map((item) => {
           const count = badgeFor(item);
-          const IconComponent = Icon[item.icon];
+          const ItemIcon = Icon[item.icon];
+          const active = isActive(item);
           return (
             <Link
-              key={item.href}
+              key={item.id}
               href={item.href}
-              className={cx('relative flex flex-1 flex-col items-center gap-0.5 py-2 text-[10px] font-medium', isActive(item) ? 'text-[var(--accent)]' : 'text-[var(--text-muted)]')}
+              aria-current={active ? 'page' : undefined}
+              className={cx('bottom-bar-item', active && 'bottom-bar-item-active')}
             >
-              <IconComponent width={19} height={19} />
-              {item.label.split(' ')[0]}
-              {count > 0 && <span className="absolute right-[22%] top-1 h-1.5 w-1.5 rounded-full bg-[var(--danger)]" />}
+              <span className="relative">
+                <ItemIcon width={21} height={21} />
+                {count > 0 && <span className="absolute -right-1.5 -top-0.5 h-1.5 w-1.5 rounded-full bg-[var(--danger)]" />}
+              </span>
+              <span className="truncate">{item.short}</span>
             </Link>
           );
         })}
-        <button type="button" onClick={() => setDrawerOpen(true)} className="flex flex-1 flex-col items-center gap-0.5 py-2 text-[10px] font-medium text-[var(--text-muted)]">
-          <Icon.more width={19} height={19} />
-          More
-        </button>
+
+        {hasQuickActions && (
+          <button type="button" onClick={() => setCreateOpen(true)} className="bottom-bar-item" aria-label="Create">
+            <span className="flex h-[26px] w-[26px] items-center justify-center rounded-full bg-[var(--accent)] text-[var(--accent-text)]">
+              <Icon.plus width={16} height={16} />
+            </span>
+            <span className="truncate">Create</span>
+          </button>
+        )}
       </nav>
 
-      {/* ── mobile drawer ───────────────────────────────────────────── */}
-      {drawerOpen && (
-        <div className="fixed inset-0 z-50 lg:hidden" role="dialog" aria-modal="true" aria-label="Menu">
-          <button type="button" className="absolute inset-0 bg-black/45" onClick={() => setDrawerOpen(false)} aria-label="Close menu" />
-          <div className="slide-up absolute inset-x-0 bottom-0 max-h-[85vh] overflow-hidden rounded-t-2xl border-t bg-[var(--surface)]">
-            <div className="mx-auto my-2 h-1 w-9 rounded-full bg-[var(--border-strong)]" />
-            <div className="px-3 pb-2">
-              <WorkspaceSwitcher workspaceId={workspaceId} />
-            </div>
-            <div className="scroll-thin grid max-h-[60vh] grid-cols-2 gap-1 overflow-y-auto p-3 pb-[calc(1rem+env(safe-area-inset-bottom))]">
-              {items.map((item) => {
-                const IconComponent = Icon[item.icon];
-                const count = badgeFor(item);
-                return (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    className={cx(
-                      'flex items-center gap-2.5 rounded-xl border px-3 py-3 text-[13px] font-medium',
-                      isActive(item) ? 'border-[var(--accent)] bg-[var(--accent-soft)] text-[var(--accent)]' : 'text-[var(--text-muted)]',
-                    )}
-                  >
-                    <IconComponent width={17} height={17} />
-                    <span className="flex-1 truncate">{item.label}</span>
-                    {count > 0 && <span className="rounded-full bg-[var(--accent)] px-1.5 text-[10px] font-bold text-white">{count}</span>}
-                  </Link>
-                );
-              })}
-              {user?.isPlatformAdmin && (
-                <Link href="/admin" className="flex items-center gap-2.5 rounded-xl border px-3 py-3 text-[13px] font-medium text-[var(--text-muted)]">
-                  <Icon.shield width={17} height={17} /> Admin
-                </Link>
-              )}
-              <button type="button" onClick={() => void logout()} className="flex items-center gap-2.5 rounded-xl border px-3 py-3 text-[13px] font-medium text-[var(--danger)]">
-                <Icon.logout width={17} height={17} /> Sign out
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <MobileDrawer
+        open={drawerOpen}
+        onClose={() => setDrawerOpen(false)}
+        workspaceId={workspaceId}
+        items={drawerItems}
+        badgeFor={badgeFor}
+        isActive={isActive}
+      />
 
+      <QuickCreate open={createOpen} onClose={() => setCreateOpen(false)} workspaceId={workspaceId} />
       <CommandPalette open={paletteOpen} onClose={() => setPaletteOpen(false)} />
+
+      <span className="sr-only" aria-live="polite">
+        {workspace ? `${workspace.name} workspace` : ''}
+      </span>
     </div>
   );
 }
 
 export function ShellLoading() {
   return (
-    <div className="flex min-h-dvh items-center justify-center">
+    <div className="flex min-h-dvh items-center justify-center bg-[var(--bg-subtle)]">
       <Spinner size={24} />
     </div>
   );

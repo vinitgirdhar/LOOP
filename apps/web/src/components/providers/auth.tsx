@@ -106,11 +106,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [refresh]);
 
   useEffect(() => {
+    // A 401 means the access token expired. Try to renew it once; if the
+    // refresh cookie is gone too the session is genuinely over, so send the
+    // user to sign in rather than leaving them on a page that cannot load.
     setUnauthorizedHandler(() => {
-      void refresh();
+      void refresh().then((renewed) => {
+        if (renewed) return;
+        const here = window.location.pathname + window.location.search;
+        if (here.startsWith('/login')) return;
+        router.replace(`/login?next=${encodeURIComponent(here)}`);
+      });
     });
     return () => setUnauthorizedHandler(null);
-  }, [refresh]);
+  }, [refresh, router]);
 
   const login: AuthContextValue['login'] = useCallback(
     async (email, password) => {
@@ -133,11 +141,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   );
 
   const logout = useCallback(async () => {
+    // Clear locally first: even if the network call fails, the session must not
+    // survive the click that ended it.
     try {
       await api.post('/api/auth/logout');
+    } catch {
+      /* the cookie is cleared server-side on the next refresh attempt anyway */
     } finally {
       clearSession();
-      router.push('/login');
+      if (typeof window !== 'undefined') localStorage.removeItem(WORKSPACE_KEY);
+      setWorkspace(null);
+      router.replace('/login');
     }
   }, [clearSession, router]);
 

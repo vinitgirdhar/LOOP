@@ -2,7 +2,7 @@
 
 import { use, useEffect, useState } from 'react';
 import Link from 'next/link';
-import { useQuery } from '@/lib/hooks';
+import { useQuery, useUrlIntent } from '@/lib/hooks';
 import { Page, PageHeader, StatTile } from '@/components/page';
 import { Avatar, Badge, Button, Card, EmptyState, Field, Modal, Progress, SectionTitle, Skeleton, Tabs } from '@/components/ui';
 import { BarChart, CHART_COLORS, StackedBar } from '@/components/charts';
@@ -52,6 +52,8 @@ export default function TimePage({ params }: { params: Promise<{ workspaceId: st
   const [tab, setTab] = useState('mine');
   const [logging, setLogging] = useState(false);
   const [elapsed, setElapsed] = useState(0);
+
+  useUrlIntent('new', () => setLogging(true));
 
   const { data: running, refetch: refetchRunning } = useQuery<Running | null>('/api/time/running', [workspaceId]);
   const { data, loading, refetch } = useQuery<TimeData>(`/api/time?scope=${tab === 'team' ? 'team' : 'mine'}`, [tab, workspaceId]);

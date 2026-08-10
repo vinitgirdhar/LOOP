@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useQuery } from '@/lib/hooks';
 import { Button, Card, EmptyState, Field, Modal, Skeleton } from '@/components/ui';
 import { Icon } from '@/components/icons';
@@ -27,13 +27,18 @@ interface PageDetail extends PageRow {
   _count: { versions: number };
 }
 
-export function ProjectDocs({ workspaceId, projectId }: { workspaceId: string; projectId: string }) {
+export function ProjectDocs({ workspaceId, projectId, initialPageId }: { workspaceId: string; projectId: string; initialPageId?: string | null }) {
   const { can } = useAuth();
   const toast = useToast();
-  const [selected, setSelected] = useState<string | null>(null);
+  const [selected, setSelected] = useState<string | null>(initialPageId ?? null);
   const [creating, setCreating] = useState(false);
   const [editing, setEditing] = useState(false);
   const [showVersions, setShowVersions] = useState(false);
+
+  // The id can arrive after mount, once the URL has been read.
+  useEffect(() => {
+    if (initialPageId) setSelected(initialPageId);
+  }, [initialPageId]);
 
   const { data: pages, loading, refetch } = useQuery<PageRow[]>(`/api/wiki?projectId=${projectId}`, [projectId]);
   const { data: page, refetch: refetchPage } = useQuery<PageDetail>(selected ? `/api/wiki/${selected}` : null, [selected]);

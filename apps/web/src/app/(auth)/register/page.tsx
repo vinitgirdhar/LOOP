@@ -62,7 +62,17 @@ export default function RegisterPage() {
             const passed = rule.test(password);
             return (
               <li key={rule.label} className={`flex items-center gap-1.5 text-[11px] ${passed ? 'text-[var(--success)]' : 'text-[var(--text-faint)]'}`}>
-                <span aria-hidden>{passed ? '✓' : '○'}</span>
+                <span aria-hidden className="shrink-0">
+                  {passed ? (
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M4 12.5l5 5L20 6.5" />
+                    </svg>
+                  ) : (
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <circle cx="12" cy="12" r="8" />
+                    </svg>
+                  )}
+                </span>
                 {rule.label}
               </li>
             );
