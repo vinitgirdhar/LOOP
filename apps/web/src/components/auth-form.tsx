@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import type { ReactNode } from 'react';
-import { API_URL } from '@/lib/api';
+import { supabase } from '@/lib/supabase/client';
 import { Icon } from '@/components/icons';
 import { Mascot, mascotFor } from '@/components/mascots';
 import { ThemeToggle } from '@/components/providers/theme';
@@ -123,9 +123,19 @@ function ConstellationMark() {
   );
 }
 
-export function GoogleButton({ label = 'Continue with Google' }: { label?: string }) {
+export function GoogleButton({ label = 'Continue with Google', next }: { label?: string; next?: string }) {
+  // Supabase owns the OAuth handshake now. It returns to /auth/callback, which
+  // exchanges the code for a session cookie and then forwards to `next`.
+  const signIn = async () => {
+    const target = next ? `?next=${encodeURIComponent(next)}` : '';
+    await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: { redirectTo: `${window.location.origin}/auth/callback${target}` },
+    });
+  };
+
   return (
-    <a href={`${API_URL}/api/auth/google`} className="btn btn-secondary btn-hero">
+    <button type="button" onClick={signIn} className="btn btn-secondary btn-hero">
       <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-white">
         <svg width="14" height="14" viewBox="0 0 24 24" aria-hidden>
           <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.76h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
@@ -135,7 +145,7 @@ export function GoogleButton({ label = 'Continue with Google' }: { label?: strin
         </svg>
       </span>
       {label}
-    </a>
+    </button>
   );
 }
 

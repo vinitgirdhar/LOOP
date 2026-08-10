@@ -118,8 +118,7 @@ export function MarketingFooter() {
         <FooterColumn
           title="Developers"
           links={[
-            { href: `${process.env.NEXT_PUBLIC_API_URL ?? ''}/api/docs`, label: 'API docs', external: true },
-            { href: `${process.env.NEXT_PUBLIC_API_URL ?? ''}/api/health`, label: 'Status', external: true },
+            { href: '/api/health', label: 'Status', external: true },
             { href: '/blog/explainable-health-score', label: 'How the health score works' },
           ]}
         />

@@ -7,7 +7,7 @@ import { Avatar, AvatarStack, Badge, Button, Card, EmptyState, Field, Modal, Sec
 import { Icon } from '@/components/icons';
 import { useAuth } from '@/components/providers/auth';
 import { useToast } from '@/components/providers/toast';
-import { api, apiErrorMessage, API_URL, getAccessToken } from '@/lib/api';
+import { api, apiErrorMessage, API_URL } from '@/lib/api';
 import { formatDateTime, relativeTime } from '@/lib/format';
 
 interface Meeting {
@@ -107,10 +107,10 @@ export default function MeetingsPage({ params }: { params: Promise<{ workspaceId
               {open.location && <span>· {open.location}</span>}
               <span>· created by {open.createdBy.name}</span>
               <a
-                href={`${API_URL}/api/meetings/${open.id}/invite.ics?workspaceId=${workspaceId}&access_token=${getAccessToken() ?? ''}`}
+                href={`${API_URL}/api/meetings/${open.id}/invite.ics?workspaceId=${workspaceId}`}
                 className="btn btn-secondary btn-sm ml-auto"
                 onClick={async (event) => {
-                  // The ICS route needs the bearer header, so fetch it and hand the browser a blob.
+                  // Fetch it so a failure surfaces as a toast rather than a broken download.
                   event.preventDefault();
                   try {
                     const { data: ics } = await api.raw<string>(`/api/meetings/${open.id}/invite.ics`, { raw: true });

@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { AuthCard, AuthFooterLink, FormError, FormSuccess } from '@/components/auth-form';
 import { Button, Field } from '@/components/ui';
 import { api, apiErrorMessage } from '@/lib/api';
+import { supabase } from '@/lib/supabase/client';
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState('');
@@ -24,7 +25,12 @@ export default function ForgotPasswordPage() {
           setError(null);
           setLoading(true);
           try {
-            await api.post('/api/auth/forgot-password', { email: email.trim().toLowerCase() });
+            const { error: failed } = await supabase.auth.resetPasswordForEmail(email.trim().toLowerCase(), {
+              redirectTo: `${window.location.origin}/reset-password`,
+            });
+            // A wrong address must look identical to a right one, otherwise this
+            // form becomes a way to test which emails have accounts.
+            if (failed) throw new Error(failed.message);
             setSent(true);
           } catch (caught: unknown) {
             setError(apiErrorMessage(caught));

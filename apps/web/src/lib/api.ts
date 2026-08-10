@@ -1,4 +1,11 @@
-export const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000';
+/**
+ * Same-origin by default: the API now lives in this app's own route handlers
+ * (`src/app/api/**`), which talk to Supabase. An empty base means `fetch` hits
+ * the deployment it was served from, so there is no CORS surface and no second
+ * host to configure. The variable stays overridable only for pointing a local
+ * web dev server at a deployed preview.
+ */
+export const API_URL = process.env.NEXT_PUBLIC_API_URL ?? '';
 
 export interface ApiMeta {
   total: number;
@@ -28,19 +35,14 @@ export class ApiError extends Error {
 }
 
 /**
- * Access tokens live in memory only — never localStorage, so an XSS cannot
- * read them. The refresh token is an httpOnly cookie the browser attaches by
- * itself, and `x-loop-client` forces a CORS preflight which is what stops
- * cross-site requests from reaching the cookie endpoints.
+ * The session is a Supabase httpOnly cookie the browser attaches by itself and
+ * JavaScript cannot read, so there is no access token held in memory here any
+ * more. `x-loop-client` still forces a CORS preflight on any cross-site attempt
+ * to reach these routes.
  */
-let accessToken: string | null = null;
 let workspaceId: string | null = null;
 let onUnauthorized: (() => void) | null = null;
 
-export const setAccessToken = (token: string | null) => {
-  accessToken = token;
-};
-export const getAccessToken = () => accessToken;
 export const setWorkspaceId = (id: string | null) => {
   workspaceId = id;
 };
@@ -61,7 +63,6 @@ interface RequestOptions {
 
 async function request<T>(path: string, options: RequestOptions = {}): Promise<{ data: T; meta?: ApiMeta }> {
   const headers: Record<string, string> = { 'x-loop-client': 'web' };
-  if (accessToken) headers.Authorization = `Bearer ${accessToken}`;
 
   const ws = options.workspace === undefined ? workspaceId : options.workspace;
   if (ws) headers['x-workspace-id'] = ws;

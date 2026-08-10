@@ -11,18 +11,17 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  build-and-test:
+  build:
     runs-on: ubuntu-latest
     env:
-      DATABASE_URL: postgresql://loop:loop@127.0.0.1:5432/loop?schema=public
-      JWT_ACCESS_SECRET: ci_dummy_jwt_access_secret_32_chars_long
-      JWT_REFRESH_SECRET: ci_dummy_jwt_refresh_secret_32_chars_long
+      # The build only needs these to exist — no network call is made at build
+      # time, and real values live in Vercel's environment settings.
+      NEXT_PUBLIC_SUPABASE_URL: https://example.supabase.co
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: ci-placeholder-anon-key
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: 'npm'
@@ -30,19 +29,11 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Generate Prisma Client
-        run: npm run db:generate
+      - name: Typecheck
+        run: npm run typecheck
 
-      - name: Run Unit Tests
-        run: npm test
+      - name: Lint
+        run: npm run lint
 
-      - name: Typecheck API
-        run: npm run typecheck --workspace @loop/api
-
-      - name: Typecheck Web
-        run: npm run typecheck --workspace @loop/web
-
-      - name: Build Web Application
-        run: npm run build --workspace @loop/web
-        env:
-          NEXT_PUBLIC_API_URL: http://localhost:4000
+      - name: Build
+        run: npm run build

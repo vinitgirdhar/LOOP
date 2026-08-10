@@ -575,7 +575,7 @@ function IntegrationsTab({ workspaceId }: { workspaceId: string }) {
               <p className="font-semibold text-[var(--text)]">Webhook setup</p>
               <p className="mt-1">
                 In the repository settings add a webhook pointing at{' '}
-                <span className="font-mono">{process.env.NEXT_PUBLIC_API_URL}/api/webhooks/github</span>, content type{' '}
+                <span className="font-mono">{typeof window === 'undefined' ? '' : window.location.origin}/api/webhooks/github</span>, content type{' '}
                 <span className="font-mono">application/json</span>, and set the same secret as <span className="font-mono">GITHUB_WEBHOOK_SECRET</span>. Send
                 push, create and pull_request events. Signatures are verified with HMAC SHA-256.
               </p>

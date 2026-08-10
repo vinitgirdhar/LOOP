@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { AuthCard, AuthFooterLink, FormError, FormSuccess } from '@/components/auth-form';
 import { Button, Field } from '@/components/ui';
 import { api, apiErrorMessage } from '@/lib/api';
+import { supabase } from '@/lib/supabase/client';
 
 function VerifyEmail() {
   const router = useRouter();
@@ -24,7 +25,10 @@ function VerifyEmail() {
       setError(null);
       setLoading(true);
       try {
-        await api.post('/api/auth/verify-email', payload);
+        if (payload.otp) {
+          const { error: failed } = await supabase.auth.verifyOtp({ email: payload.email, token: payload.otp, type: 'email' });
+          if (failed) throw new Error(failed.message);
+        }
         setMessage('Email verified. Redirecting you to sign in…');
         setTimeout(() => router.replace('/login'), 1400);
       } catch (caught: unknown) {
@@ -84,7 +88,8 @@ function VerifyEmail() {
               onClick={async () => {
                 setError(null);
                 try {
-                  await api.post('/api/auth/resend-verification', { email: email.trim().toLowerCase() });
+                  const { error: failed } = await supabase.auth.resend({ type: 'signup', email: email.trim().toLowerCase() });
+                  if (failed) throw new Error(failed.message);
                   setMessage('If that account needs verifying, a new code is on its way.');
                 } catch (caught: unknown) {
                   setError(apiErrorMessage(caught));

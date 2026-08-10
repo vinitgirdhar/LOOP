@@ -7,7 +7,7 @@ import { Page, PageHeader, StatTile } from '@/components/page';
 import { Avatar, Badge, Button, Card, EmptyState, Progress, SectionTitle, Skeleton } from '@/components/ui';
 import { BarChart, LineChart } from '@/components/charts';
 import { Icon } from '@/components/icons';
-import { API_URL, api, apiErrorMessage } from '@/lib/api';
+import { api, apiErrorMessage } from '@/lib/api';
 import { useToast } from '@/components/providers/toast';
 import { healthTone } from '@/lib/format';
 
@@ -195,9 +195,9 @@ export default function AnalyticsPage({ params }: { params: Promise<{ workspaceI
           </Card>
 
           <p className="text-center text-[11px] text-[var(--text-faint)]">
-            Raw data is also available through the{' '}
-            <a href={`${API_URL}/api/docs`} target="_blank" rel="noreferrer" className="link">
-              REST API
+            Raw data is also available as a CSV export above, or through the{' '}
+            <a href="/api/health" target="_blank" rel="noreferrer" className="link">
+              workspace API
             </a>
             .
           </p>

@@ -2,9 +2,11 @@
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
+import type { Session as SupabaseSession, User as SupabaseUser } from '@supabase/supabase-js';
 import type { Permission, Role } from '@loop/shared';
 import { can as canWithRole } from '@loop/shared';
-import { api, setAccessToken, setUnauthorizedHandler, setWorkspaceId } from '@/lib/api';
+import { setUnauthorizedHandler, setWorkspaceId } from '@/lib/api';
+import { supabase } from '@/lib/supabase/client';
 
 export interface AuthUser {
   id: string;
@@ -21,12 +23,6 @@ export interface Membership {
   id: string;
   role: Role;
   workspace: { id: string; name: string; slug: string; logoUrl: string | null };
-}
-
-interface Session {
-  accessToken: string;
-  user: AuthUser;
-  memberships: Membership[];
 }
 
 interface AuthContextValue {
@@ -54,16 +50,66 @@ export function useAuth(): AuthContextValue {
 
 const WORKSPACE_KEY = 'loop-workspace';
 
+interface MembershipRow {
+  id: string;
+  role: Role;
+  workspace: { id: string; name: string; slug: string; logo_url: string | null } | null;
+}
+
+/**
+ * Reads the profile row and workspace list for a signed-in user.
+ *
+ * Both queries run under row level security with this person's own session, so
+ * they return exactly what that person is allowed to see — the browser is never
+ * trusted to scope itself.
+ */
+async function loadSession(authUser: SupabaseUser): Promise<{ user: AuthUser; memberships: Membership[] }> {
+  const [{ data: profile }, { data: rows }, factors] = await Promise.all([
+    supabase.from('profiles').select('id, email, name, avatar_url, is_platform_admin, timezone').eq('id', authUser.id).single(),
+    supabase
+      .from('workspace_members')
+      .select('id, role, workspace:workspaces (id, name, slug, logo_url)')
+      .eq('user_id', authUser.id),
+    supabase.auth.mfa.listFactors(),
+  ]);
+
+  const memberships: Membership[] = ((rows ?? []) as unknown as MembershipRow[])
+    .filter((row): row is MembershipRow & { workspace: NonNullable<MembershipRow['workspace']> } => row.workspace !== null)
+    .map((row) => ({
+      id: row.id,
+      role: row.role,
+      workspace: {
+        id: row.workspace.id,
+        name: row.workspace.name,
+        slug: row.workspace.slug,
+        logoUrl: row.workspace.logo_url,
+      },
+    }));
+
+  return {
+    user: {
+      id: authUser.id,
+      email: profile?.email ?? authUser.email ?? '',
+      name: profile?.name ?? (authUser.user_metadata?.name as string | undefined) ?? '',
+      avatarUrl: profile?.avatar_url ?? null,
+      emailVerifiedAt: authUser.email_confirmed_at ?? null,
+      isPlatformAdmin: profile?.is_platform_admin ?? false,
+      twoFactorOn: (factors.data?.totp ?? []).some((factor) => factor.status === 'verified'),
+      timezone: profile?.timezone ?? 'UTC',
+    },
+    memberships,
+  };
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const router = useRouter();
   const [user, setUser] = useState<AuthUser | null>(null);
   const [memberships, setMemberships] = useState<Membership[]>([]);
   const [workspace, setWorkspace] = useState<string | null>(null);
   const [ready, setReady] = useState(false);
-  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const alive = useRef(true);
 
-  const applySession = useCallback((session: Session) => {
-    setAccessToken(session.accessToken);
+  const applySession = useCallback((session: { user: AuthUser; memberships: Membership[] }) => {
     setUser(session.user);
     setMemberships(session.memberships);
 
@@ -77,38 +123,62 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const clearSession = useCallback(() => {
-    setAccessToken(null);
     setWorkspaceId(null);
     setUser(null);
     setMemberships([]);
-    if (timer.current) clearTimeout(timer.current);
   }, []);
 
+  /**
+   * Supabase renews the access token on its own timer, and the middleware does
+   * the same for server requests, so this only has to re-read what is already
+   * there — there is no manual renewal clock to keep any more.
+   */
   const refresh = useCallback(async (): Promise<boolean> => {
-    try {
-      const { data } = await api.post<Session>('/api/auth/refresh');
-      applySession(data);
-      // Access tokens last 15 minutes; renew a couple of minutes early.
-      if (timer.current) clearTimeout(timer.current);
-      timer.current = setTimeout(() => void refresh(), 13 * 60 * 1000);
-      return true;
-    } catch {
+    const { data } = await supabase.auth.getSession();
+    if (!data.session) {
       clearSession();
       return false;
     }
+    applySession(await loadSession(data.session.user));
+    return true;
   }, [applySession, clearSession]);
 
   useEffect(() => {
-    void refresh().finally(() => setReady(true));
-    return () => {
-      if (timer.current) clearTimeout(timer.current);
+    alive.current = true;
+
+    const hydrate = async (session: SupabaseSession | null) => {
+      if (!session) {
+        clearSession();
+        return;
+      }
+      const loaded = await loadSession(session.user);
+      if (alive.current) applySession(loaded);
     };
-  }, [refresh]);
+
+    void supabase.auth
+      .getSession()
+      .then(({ data }) => hydrate(data.session))
+      .finally(() => {
+        if (alive.current) setReady(true);
+      });
+
+    const { data: listener } = supabase.auth.onAuthStateChange((event, session) => {
+      // TOKEN_REFRESHED fires on every silent renewal. Re-reading the profile
+      // each time would be a query storm carrying no new information.
+      if (event === 'TOKEN_REFRESHED') return;
+      void hydrate(session);
+    });
+
+    return () => {
+      alive.current = false;
+      listener.subscription.unsubscribe();
+    };
+  }, [applySession, clearSession]);
 
   useEffect(() => {
-    // A 401 means the access token expired. Try to renew it once; if the
-    // refresh cookie is gone too the session is genuinely over, so send the
-    // user to sign in rather than leaving them on a page that cannot load.
+    // A 401 from a route handler means the cookie is gone or no longer valid.
+    // Check once more, and if there is genuinely no session left send the user
+    // to sign in rather than leaving them on a page that cannot load.
     setUnauthorizedHandler(() => {
       void refresh().then((renewed) => {
         if (renewed) return;
@@ -122,20 +192,32 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login: AuthContextValue['login'] = useCallback(
     async (email, password) => {
-      const { data } = await api.post<Session & { twoFactorRequired?: boolean; ticket?: string }>('/api/auth/login', { email, password });
-      if (data.twoFactorRequired) return { twoFactorRequired: true, ticket: data.ticket };
-      applySession(data);
-      if (timer.current) clearTimeout(timer.current);
-      timer.current = setTimeout(() => void refresh(), 13 * 60 * 1000);
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) throw new Error(error.message);
+
+      // With MFA enrolled the password alone only reaches aal1. The session
+      // cannot read protected data until a TOTP code lifts it to aal2.
+      const { data: levels } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+      if (levels && levels.nextLevel === 'aal2' && levels.nextLevel !== levels.currentLevel) {
+        const { data: factors } = await supabase.auth.mfa.listFactors();
+        const factorId = (factors?.totp ?? []).find((factor) => factor.status === 'verified')?.id;
+        if (factorId) return { twoFactorRequired: true, ticket: factorId };
+      }
+
+      const { data } = await supabase.auth.getSession();
+      if (data.session) applySession(await loadSession(data.session.user));
       return {};
     },
-    [applySession, refresh],
+    [applySession],
   );
 
   const loginWith2fa: AuthContextValue['loginWith2fa'] = useCallback(
     async (ticket, code) => {
-      const { data } = await api.post<Session>('/api/auth/login/2fa', { ticket, code });
-      applySession(data);
+      const { error } = await supabase.auth.mfa.challengeAndVerify({ factorId: ticket, code });
+      if (error) throw new Error(error.message);
+
+      const { data } = await supabase.auth.getSession();
+      if (data.session) applySession(await loadSession(data.session.user));
     },
     [applySession],
   );
@@ -144,9 +226,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Clear locally first: even if the network call fails, the session must not
     // survive the click that ended it.
     try {
-      await api.post('/api/auth/logout');
+      await supabase.auth.signOut();
     } catch {
-      /* the cookie is cleared server-side on the next refresh attempt anyway */
+      /* the cookie is dropped locally regardless */
     } finally {
       clearSession();
       if (typeof window !== 'undefined') localStorage.removeItem(WORKSPACE_KEY);
@@ -165,9 +247,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const reloadMemberships = useCallback(async () => {
-    const { data } = await api.get<{ user: AuthUser; memberships: Membership[] }>('/api/auth/me');
-    setUser(data.user);
-    setMemberships(data.memberships);
+    const { data } = await supabase.auth.getUser();
+    if (!data.user) return;
+    const loaded = await loadSession(data.user);
+    setUser(loaded.user);
+    setMemberships(loaded.memberships);
   }, []);
 
   const role = useMemo(() => memberships.find((m) => m.workspace.id === workspace)?.role ?? null, [memberships, workspace]);
@@ -179,7 +263,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       workspaceId: workspace,
       role,
       ready,
-      // Mirrors the API's matrix so the UI hides what the server would reject.
+      // Mirrors the database's permission matrix so the UI hides what row level
+      // security would reject anyway.
       can: (permission: Permission) => (user?.isPlatformAdmin ? true : canWithRole(role, permission)),
       login,
       loginWith2fa,

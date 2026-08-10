@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { AuthCard, AuthFooterLink, FormError, FormSuccess } from '@/components/auth-form';
 import { Button, Field } from '@/components/ui';
 import { api, apiErrorMessage } from '@/lib/api';
+import { supabase } from '@/lib/supabase/client';
 
 function ResetPassword() {
   const router = useRouter();
@@ -33,7 +34,21 @@ function ResetPassword() {
           setError(null);
           setLoading(true);
           try {
-            await api.post('/api/auth/reset-password', token ? { token, password } : { email: email.trim().toLowerCase(), otp, password });
+            // Arriving from the emailed link, the browser client has already
+            // swapped the code for a session, so the password can be set
+            // directly. Arriving with a typed code, the OTP establishes one first.
+            if (!token) {
+              const { error: badCode } = await supabase.auth.verifyOtp({
+                email: email.trim().toLowerCase(),
+                token: otp,
+                type: 'recovery',
+              });
+              if (badCode) throw new Error(badCode.message);
+            }
+
+            const { error: failed } = await supabase.auth.updateUser({ password });
+            if (failed) throw new Error(failed.message);
+            await supabase.auth.signOut();
             setDone(true);
             setTimeout(() => router.replace('/login'), 1400);
           } catch (caught: unknown) {

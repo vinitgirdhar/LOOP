@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { AuthCard, AuthDivider, AuthFooterLink, FormError, GoogleButton } from '@/components/auth-form';
 import { Button, Field } from '@/components/ui';
 import { api, apiErrorMessage } from '@/lib/api';
+import { supabase } from '@/lib/supabase/client';
 
 const RULES = [
   { test: (v: string) => v.length >= 8, label: 'At least 8 characters' },
@@ -28,8 +29,16 @@ export default function RegisterPage() {
     setError(null);
     setLoading(true);
     try {
-      await api.post('/api/auth/register', { name: name.trim(), email: email.trim().toLowerCase(), password });
-      router.push(`/verify-email?email=${encodeURIComponent(email.trim().toLowerCase())}`);
+      const address = email.trim().toLowerCase();
+      // `name` rides along as user metadata; the handle_new_user trigger copies
+      // it into profiles when Supabase creates the auth row.
+      const { error: failed } = await supabase.auth.signUp({
+        email: address,
+        password,
+        options: { data: { name: name.trim() }, emailRedirectTo: `${window.location.origin}/auth/callback` },
+      });
+      if (failed) throw new Error(failed.message);
+      router.push(`/verify-email?email=${encodeURIComponent(address)}`);
     } catch (caught: unknown) {
       setError(apiErrorMessage(caught));
     } finally {

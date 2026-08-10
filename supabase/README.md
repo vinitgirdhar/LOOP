@@ -96,20 +96,51 @@ database keeps: one running timer per person (`time_logs_one_running_per_user`),
 and per-project task numbering (advisory lock in `assign_task_number`, so two
 simultaneous creates cannot both claim PAY-7).
 
-## Not done yet
+## How the web app reaches it
 
-This is the backend. **The web app still calls the Express API** — nothing in
-`apps/web/src/lib/api.ts` has been repointed. Remaining work, roughly in order:
+`apps/web` is the only deployable. It talks to Supabase two ways:
 
-1. `@supabase/supabase-js` client + `@supabase/ssr` for cookie sessions in Next.
-2. Replace `lib/api.ts` and `providers/auth.tsx` with Supabase Auth.
-3. Repoint ~40 components from REST calls to `supabase.from(...)`, mapping
-   camelCase → snake_case.
-4. Swap `providers/socket.tsx` for realtime channel subscriptions.
-5. Port the three service modules that are real logic, not CRUD, to Edge
-   Functions: `autopilot.ts`, `rag.ts`, `sprintMetrics.ts` / `health.ts`.
-6. Move the two cron jobs (nightly burndown, health snapshots) to
-   `pg_cron` or scheduled Edge Functions.
-7. Delete `apps/api` and `packages/db`.
+- **Directly from the browser** for auth (`supabase.auth.*`) and realtime
+  subscriptions. Both are RLS-filtered, so the anon key is safe there.
+- **Through its own route handlers** in `apps/web/src/app/api/**` for data.
+  These use the caller's session cookie, never the service role, so every query
+  is still filtered by the policies in 0009 and 0010.
 
-Steps 5 and 6 need the `service_role` key and must never run in the browser.
+The service role is used in exactly two places, both of which have no session to
+act on behalf of yet:
+
+| Where | Why |
+|-------|-----|
+| `POST /api/workspaces` | The first OWNER row cannot be inserted by someone who is not yet a member |
+| `POST /api/invites/[token]/accept` | Same problem, from the other side — plus the invite token is the authorisation |
+
+`apps/web/src/lib/supabase/admin.ts` imports `server-only`, so reaching for it
+from a client component is a build error rather than a leak.
+
+## Permission vocabulary
+
+The seeded `permissions` table and the RLS policies use coarser keys
+(`workspace.manage`, `task.update`) than `packages/shared`
+(`workspace.audit.view`, `task.update.own`). The policy SQL hard-codes the
+database spelling, so that is the one that cannot move;
+`apps/web/src/lib/server/permissions.ts` translates on the way in. Change one
+and you must change the other.
+
+## Known fixes waiting to be applied
+
+`migrations/0013_fix_project_visibility_and_pm_grants.sql` corrects two real
+defects found by driving the API against this database:
+
+1. `app_can_see_project` is `STABLE` and re-reads `public.projects`, so it
+   cannot see a row being inserted. Postgres requires the SELECT policy to pass
+   whenever an INSERT carries a RETURNING clause, which meant **no client could
+   create a project at all** — it failed as "new row violates row-level security
+   policy". The route handler works around it by inserting and reading back in
+   two statements; 0013 fixes the cause.
+2. 0012 granted PM all 21 permissions, identical to OWNER, so a project manager
+   could rename or delete the workspace, change roles and delete projects. 0013
+   withdraws those three and gives CLIENT the two read permissions the client
+   portal needs.
+
+Until 0013 is applied the app runs, but PM is over-privileged relative to what
+every screen implies.
