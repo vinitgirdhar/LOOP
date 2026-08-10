@@ -17,7 +17,9 @@
     "db:reset": "supabase db reset",
     "db:types": "supabase gen types typescript --linked > apps/web/src/lib/supabase/types.ts",
     "supabase:start": "supabase start",
-    "supabase:stop": "supabase stop"
+    "supabase:stop": "supabase stop",
+    "db:seed": "node supabase/seed.mjs",
+    "db:seed:reset": "node supabase/seed.mjs --reset"
   },
   "devDependencies": {
     "tsx": "^4.19.2",
