@@ -300,14 +300,27 @@ h1, h2, h3, h4 {
   background: var(--bg-inset);
   color: var(--text);
 }
+/* A tint and a marker rule, not a filled ink block: a solid black row in a
+   light sidebar reads as a rendering fault and buries the icon inside it. */
 .nav-row-active {
-  background: var(--ink);
-  color: var(--ink-text);
+  position: relative;
+  background: var(--bg-inset);
+  color: var(--text);
   font-weight: 600;
 }
+.nav-row-active::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0.375rem;
+  bottom: 0.375rem;
+  width: 3px;
+  border-radius: 999px;
+  background: var(--accent);
+}
 .nav-row-active:hover {
-  background: var(--ink);
-  color: var(--ink-text);
+  background: var(--bg-inset);
+  color: var(--text);
 }
 
 .drawer-row {

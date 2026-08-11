@@ -8,9 +8,12 @@ export const GET = route(async () => {
   const groq = Boolean(process.env.GROQ_API_KEY);
   const gemini = Boolean(process.env.GEMINI_API_KEY);
 
+  // Field names match what the Ask page renders; `available` and `providers`
+  // were read by nothing.
   return ok({
-    available: groq || gemini,
-    providers: { groq, gemini },
-    model: process.env.GROQ_MODEL ?? null,
+    enabled: groq || gemini,
+    frontier: groq ? process.env.GROQ_MODEL ?? 'groq' : null,
+    fallback: gemini ? process.env.GEMINI_MODEL ?? 'gemini' : null,
+    embeddings: gemini ? process.env.GEMINI_EMBED_MODEL ?? 'text-embedding-004' : null,
   });
 });

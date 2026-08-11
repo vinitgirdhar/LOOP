@@ -171,15 +171,17 @@ export function MobileDrawer({
                               onClick={onClose}
                               aria-current={active ? 'page' : undefined}
                               className={cx(
-                                'flex items-center gap-3 rounded-[var(--radius)] px-2.5 py-2.5 text-[13px] transition-colors',
-                                active ? 'bg-[var(--ink)] font-medium text-[var(--ink-text)]' : 'text-[var(--text)] hover:bg-[var(--bg-inset)]',
+                                'relative flex items-center gap-3 rounded-[var(--radius)] px-2.5 py-2.5 text-[13px] transition-colors',
+                                active
+                                  ? 'bg-[var(--bg-inset)] font-medium text-[var(--text)] before:absolute before:inset-y-1.5 before:left-0 before:w-[3px] before:rounded-full before:bg-[var(--accent)] before:content-[""]'
+                                  : 'text-[var(--text)] hover:bg-[var(--bg-inset)]',
                               )}
                             >
-                              <ItemIcon width={17} height={17} className={cx('shrink-0', !active && 'text-[var(--text-muted)]')} />
+                              <ItemIcon width={17} height={17} className={cx('shrink-0', active ? 'text-[var(--accent)]' : 'text-[var(--text-muted)]')} />
                               <span className="min-w-0 flex-1">
                                 <span className="block truncate font-medium">{item.label}</span>
                                 {item.hint && (
-                                  <span className={cx('block truncate text-[11px] font-normal', active ? 'opacity-65' : 'text-[var(--text-muted)]')}>{item.hint}</span>
+                                  <span className="block truncate text-[11px] font-normal text-[var(--text-muted)]">{item.hint}</span>
                                 )}
                               </span>
                               {count > 0 && (

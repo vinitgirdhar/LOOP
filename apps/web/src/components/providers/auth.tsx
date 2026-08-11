@@ -6,6 +6,7 @@ import type { Session as SupabaseSession, User as SupabaseUser } from '@supabase
 import type { Permission, Role } from '@loop/shared';
 import { can as canWithRole } from '@loop/shared';
 import { setUnauthorizedHandler, setWorkspaceId } from '@/lib/api';
+import { clearQueryCache } from '@/lib/hooks';
 import { supabase } from '@/lib/supabase/client';
 
 export interface AuthUser {
@@ -15,7 +16,6 @@ export interface AuthUser {
   avatarUrl: string | null;
   emailVerifiedAt: string | null;
   isPlatformAdmin: boolean;
-  twoFactorOn: boolean;
   timezone: string;
 }
 
@@ -64,13 +64,15 @@ interface MembershipRow {
  * trusted to scope itself.
  */
 async function loadSession(authUser: SupabaseUser): Promise<{ user: AuthUser; memberships: Membership[] }> {
-  const [{ data: profile }, { data: rows }, factors] = await Promise.all([
+  // listFactors() is deliberately absent: it only decides whether a "2FA on"
+  // badge appears on the profile page, and awaiting it here put a third
+  // network call in front of the first paint of every page in the app.
+  const [{ data: profile }, { data: rows }] = await Promise.all([
     supabase.from('profiles').select('id, email, name, avatar_url, is_platform_admin, timezone').eq('id', authUser.id).single(),
     supabase
       .from('workspace_members')
       .select('id, role, workspace:workspaces (id, name, slug, logo_url)')
       .eq('user_id', authUser.id),
-    supabase.auth.mfa.listFactors(),
   ]);
 
   const memberships: Membership[] = ((rows ?? []) as unknown as MembershipRow[])
@@ -94,7 +96,6 @@ async function loadSession(authUser: SupabaseUser): Promise<{ user: AuthUser; me
       avatarUrl: profile?.avatar_url ?? null,
       emailVerifiedAt: authUser.email_confirmed_at ?? null,
       isPlatformAdmin: profile?.is_platform_admin ?? false,
-      twoFactorOn: (factors.data?.totp ?? []).some((factor) => factor.status === 'verified'),
       timezone: profile?.timezone ?? 'UTC',
     },
     memberships,
@@ -126,6 +127,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setWorkspaceId(null);
     setUser(null);
     setMemberships([]);
+    // Cached responses belong to the account that fetched them.
+    clearQueryCache();
   }, []);
 
   /**
