@@ -6,7 +6,7 @@ import { useSearchParams } from 'next/navigation';
 import { PRIORITIES, PROJECT_STATUSES } from '@loop/shared';
 import { useQuery } from '@/lib/hooks';
 import { Page, PageHeader } from '@/components/page';
-import { AvatarStack, Badge, Button, Card, EmptyState, ErrorState, Field, Modal, Progress, Skeleton } from '@/components/ui';
+import { AvatarStack, Badge, Button, EmptyState, ErrorState, Field, Modal, Progress, Skeleton } from '@/components/ui';
 import { FormError } from '@/components/auth-form';
 import { Icon } from '@/components/icons';
 import { useAuth } from '@/components/providers/auth';

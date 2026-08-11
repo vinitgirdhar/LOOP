@@ -152,13 +152,12 @@ export function MarketingNav() {
 export function MarketingFooter() {
   return (
     <footer className="border-t bg-[var(--bg-subtle)]">
-      <div className="mx-auto grid max-w-6xl 2xl:max-w-7xl 3xl:max-w-[88rem] gap-8 px-4 py-10 sm:grid-cols-2 sm:px-6 lg:grid-cols-4">
-        <div className="sm:col-span-2 lg:col-span-1">
-          <Logo />
-          <p className="mt-3 max-w-xs text-xs leading-relaxed text-[var(--text-muted)]">
-            One workspace for projects, docs and chat — with an AI layer that shows its evidence every time.
-          </p>
-        </div>
+      {/*
+        Three columns at every width. Stacking them on a phone turned the footer
+        into a third of the page for six links, and the mark and blurb above
+        them repeated what the top of the page already said.
+      */}
+      <div className="mx-auto grid max-w-6xl 2xl:max-w-7xl 3xl:max-w-[88rem] grid-cols-3 gap-x-4 gap-y-8 px-4 py-8 sm:gap-x-8 sm:px-6 sm:py-10">
         <FooterColumn
           title="Product"
           links={[
@@ -172,7 +171,9 @@ export function MarketingFooter() {
           title="Developers"
           links={[
             { href: '/api/health', label: 'Status', external: true },
-            { href: '/blog/explainable-health-score', label: 'How the health score works' },
+            // Short enough to survive a third of a phone's width.
+            { href: '/blog/explainable-health-score', label: 'Health score' },
+            { href: '/blog/permission-aware-rag', label: 'Permission-aware RAG' },
           ]}
         />
         <FooterColumn
@@ -184,8 +185,9 @@ export function MarketingFooter() {
           ]}
         />
       </div>
-      <div className="border-t px-4 py-4 text-center text-[11px] text-[var(--text-faint)] sm:px-6">
+      <div className="border-t px-4 py-4 text-center text-[11px] leading-relaxed text-[var(--text-faint)] sm:px-6">
         © {new Date().getFullYear()} Loop. Built for DevFusion 4.0 · Problem Statement 5.
+        <span className="block sm:inline"> Built by <span className="font-medium text-[var(--text-muted)]">Vinit Girdhar</span>.</span>
       </div>
     </footer>
   );

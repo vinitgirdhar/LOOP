@@ -3,7 +3,7 @@
 import { use, useState } from 'react';
 import { useQuery, useUrlIntent } from '@/lib/hooks';
 import { Page, PageHeader } from '@/components/page';
-import { Avatar, AvatarStack, Badge, Button, Card, EmptyState, Field, Modal, SectionTitle, Skeleton } from '@/components/ui';
+import { Avatar, AvatarStack, Badge, Button, EmptyState, Field, Modal, SectionTitle, Skeleton } from '@/components/ui';
 import { Icon } from '@/components/icons';
 import { useAuth } from '@/components/providers/auth';
 import { useToast } from '@/components/providers/toast';

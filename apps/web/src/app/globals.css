@@ -592,46 +592,60 @@ input[type='radio'] {
   margin-bottom: 0.4375rem;
 }
 
-/*
-  The auth sheet — the paper card that lifts over the dark hero.
+.auth-sheet {
+  overflow: hidden !important;
+  -ms-overflow-style: none !important;
+  scrollbar-width: none !important;
+}
+.auth-sheet::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
 
-  Fields inside it drop to a single rule underneath, the way the reference
-  does. Scoping it here rather than adding a modifier class means the six auth
-  screens keep passing a plain `.input` and still get the right treatment.
-*/
 .auth-sheet .input,
 .auth-sheet .select,
 .auth-sheet .textarea {
-  background: transparent;
-  border: none;
-  border-bottom: 1.5px solid var(--border-strong);
-  border-radius: 0;
-  padding-inline: 0;
-  padding-block: 0.4rem;
-  min-height: 2.5rem;
+  background: var(--bg-inset);
+  border: 1px solid var(--border-strong);
+  border-radius: 14px;
+  padding-inline: 0.9375rem;
+  padding-block: 0.625rem;
+  min-height: 2.875rem;
+  font-size: 0.9375rem;
+  color: var(--text);
+  transition: all 0.15s ease;
 }
 @media (min-width: 640px) {
   .auth-sheet .input,
   .auth-sheet .select,
   .auth-sheet .textarea {
-    padding-block: 0.5rem;
-    min-height: 2.75rem;
+    padding-inline: 1.125rem;
+    padding-block: 0.75rem;
+    min-height: 3.125rem;
+    font-size: 1rem;
+    border-radius: 16px;
   }
 }
 .auth-sheet .input:focus,
 .auth-sheet .select:focus,
 .auth-sheet .textarea:focus {
-  background: transparent;
-  border-bottom-color: var(--text);
-  box-shadow: none;
+  background: var(--surface);
+  border-color: var(--text);
+  box-shadow: 0 0 0 3px color-mix(in oklab, var(--text) 10%, transparent);
 }
 .auth-sheet .label {
-  font-size: 0.6875rem;
+  font-size: 0.75rem;
   font-weight: 600;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--text-faint);
-  margin-bottom: 0.125rem;
+  letter-spacing: 0.02em;
+  color: var(--text-muted);
+  margin-bottom: 0.35rem;
+}
+@media (min-width: 640px) {
+  .auth-sheet .label {
+    font-size: 0.8125rem;
+    margin-bottom: 0.4rem;
+  }
 }
 /* The underline is the field's own edge, so a code entry keeps its centring. */
 .auth-sheet .code-input {
@@ -813,11 +827,27 @@ input[type='radio'] {
 }
 .msg-action:hover { background: var(--bg-inset); color: var(--text); }
 
-/* Loading skeletons */
+/*
+  Loading placeholders that only appear if the wait is real.
+
+  A skeleton drawn at 0ms for a response that lands at 120ms is not feedback,
+  it is a flicker — it makes a fast page change look slower than doing nothing
+  would have. `backwards` fill holds the element at opacity 0 through the
+  delay, so anything that resolves inside that window is never painted at all.
+  Everything slower still gets its placeholder, a beat later.
+*/
+.defer-visible {
+  animation: deferReveal 0.18s ease-out 0.22s backwards;
+}
+@keyframes deferReveal {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
 .skeleton {
   background: linear-gradient(90deg, var(--bg-inset) 25%, var(--bg-subtle) 50%, var(--bg-inset) 75%);
   background-size: 200% 100%;
-  animation: shimmer 1.4s infinite linear;
+  animation: shimmer 1.4s infinite linear, deferReveal 0.18s ease-out 0.22s backwards;
   border-radius: var(--radius);
 }
 @keyframes shimmer {

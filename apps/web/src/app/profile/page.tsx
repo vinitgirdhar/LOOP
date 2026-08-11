@@ -27,7 +27,6 @@ interface SessionRow {
 
 export default function ProfilePage() {
   const router = useRouter();
-  const toast = useToast();
   const { user, memberships, ready, logout, reloadMemberships } = useAuth();
   const [tab, setTab] = useState('profile');
 

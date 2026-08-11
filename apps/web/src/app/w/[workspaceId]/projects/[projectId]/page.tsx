@@ -2,10 +2,10 @@
 
 import { use, useState } from 'react';
 import Link from 'next/link';
-import { PRIORITIES, PROJECT_STATUSES } from '@loop/shared';
+import { PRIORITIES } from '@loop/shared';
 import { useQuery, useUrlIntent, useUrlTab } from '@/lib/hooks';
 import { Page, PageHeader } from '@/components/page';
-import { Avatar, AvatarStack, Badge, Button, Card, Confirm, EmptyState, ErrorState, Field, Modal, Progress, SectionTitle, Skeleton, Tabs } from '@/components/ui';
+import { Avatar, AvatarStack, Button, Card, EmptyState, ErrorState, Field, Modal, Skeleton, Tabs } from '@/components/ui';
 import { KanbanBoard, QuickAddTask } from '@/components/board/kanban';
 import { HealthPanel } from '@/components/health-panel';
 import { Icon } from '@/components/icons';

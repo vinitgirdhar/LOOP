@@ -302,7 +302,9 @@ export function AppShell({ workspaceId, children }: { workspaceId: string; child
 export function ShellLoading() {
   return (
     <div className="flex min-h-dvh items-center justify-center bg-[var(--bg-subtle)]">
-      <Spinner size={24} />
+      <span className="defer-visible">
+        <Spinner size={24} />
+      </span>
     </div>
   );
 }

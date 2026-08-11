@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Icon, IconName } from '@/components/icons';
+import { Icon } from '@/components/icons';
 import { cx } from '@/lib/format';
 
 export function FeaturesInfographic() {
@@ -11,8 +11,6 @@ export function FeaturesInfographic() {
   // Interactive state for Ask Workspace RAG perspective
   const [ragRole, setRagRole] = useState<'internal' | 'client'>('internal');
 
-  // Interactive state for Platform Essentials tab selection
-  const [activeFeature, setActiveFeature] = useState<string>('kanban');
 
   return (
     <div className="space-y-12">
@@ -60,21 +58,21 @@ export function FeaturesInfographic() {
               <div className="flex-1 truncate rounded-lg bg-[var(--surface)] p-2 text-center border border-[var(--border)] font-semibold text-[var(--accent)]">
                 {activeTrigger === 'pr' ? 'github: PAY-12' : 'slack: #proj-pay'}
               </div>
-              <span className="text-[var(--text-faint)]">➔</span>
-              <div className="flex-1 rounded-lg bg-emerald-500/10 p-2 text-center border border-emerald-500/30 text-emerald-600 font-bold dark:text-emerald-400">
+              <Icon.chevronRight width={13} height={13} className="shrink-0 text-[var(--text-faint)]" />
+              <div className="flex-1 rounded-lg bg-[var(--success-soft)] p-2 text-center border border-[var(--success)] text-[var(--success)] font-bold ">
                 Rules: 94%
               </div>
-              <span className="text-[var(--text-faint)]">➔</span>
+              <Icon.chevronRight width={13} height={13} className="shrink-0 text-[var(--text-faint)]" />
               <div className="flex-1 rounded-lg bg-[var(--surface)] p-2 text-center border border-[var(--border)] font-semibold">
                 Audit Log
               </div>
             </div>
 
             {/* Proposal Inbox Mini Card */}
-            <div className="rounded-xl border border-emerald-500/40 bg-[var(--surface)] p-2.5 text-xs shadow-sm">
+            <div className="rounded-xl border border-[var(--success)] bg-[var(--surface)] p-2.5 text-xs shadow-sm">
               <div className="flex items-center justify-between font-semibold">
-                <span className="text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
-                  <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+                <span className="text-[var(--success)] flex items-center gap-1">
+                  <span className="h-2 w-2 rounded-full bg-[var(--success)] animate-pulse" />
                   Proposal #{activeTrigger === 'pr' ? 'PAY-12' : 'PAY-6'}
                 </span>
                 <span className="text-[10px] text-[var(--text-faint)]">94% Confidence</span>
@@ -85,7 +83,7 @@ export function FeaturesInfographic() {
                   : 'Flag PAY-6 as Blocked ("stuck on API rate limit")'}
               </p>
               <div className="mt-2 flex gap-1.5">
-                <span className="rounded bg-emerald-500/15 px-2 py-0.5 text-[10px] font-bold text-emerald-600 dark:text-emerald-400">
+                <span className="rounded bg-[var(--success-soft)] px-2 py-0.5 text-[10px] font-bold text-[var(--success)]">
                   Accept & Update
                 </span>
                 <span className="rounded bg-[var(--bg-inset)] px-2 py-0.5 text-[10px] font-medium text-[var(--text-muted)]">
@@ -99,10 +97,10 @@ export function FeaturesInfographic() {
         {/* DIFFERENTIATOR 2: Explainable Project Health */}
         <div className="group relative overflow-hidden rounded-[24px] border border-[var(--border)] bg-gradient-to-b from-[var(--surface)] to-[var(--bg-subtle)] p-6 shadow-sm transition-all duration-300 hover:border-[var(--accent)] hover:shadow-md">
           <div className="flex items-center justify-between">
-            <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-blue-500/10 text-blue-600 dark:text-blue-400">
+            <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[var(--accent-soft)] text-[var(--accent)]">
               <Icon.chart width={22} height={22} />
             </span>
-            <span className="badge bg-blue-500/10 text-blue-600 dark:text-blue-400 text-xs font-semibold">
+            <span className="badge bg-[var(--accent-soft)] text-[var(--accent)] text-xs font-semibold">
               Deterministic Math
             </span>
           </div>
@@ -116,7 +114,7 @@ export function FeaturesInfographic() {
           <div className="mt-5 space-y-3 rounded-2xl border border-[var(--border-subtle)] bg-[var(--bg-inset)] p-3.5">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="relative flex h-14 w-14 items-center justify-center rounded-full bg-emerald-500/10 border-4 border-emerald-500 text-emerald-600 font-extrabold text-lg dark:text-emerald-400">
+                <div className="relative flex h-14 w-14 items-center justify-center rounded-full bg-[var(--success-soft)] border-4 border-[var(--success)] text-[var(--success)] font-extrabold text-lg ">
                   88
                 </div>
                 <div>
@@ -129,11 +127,11 @@ export function FeaturesInfographic() {
             {/* Signal Breakdown Bars */}
             <div className="space-y-1.5 text-[11px]">
               {[
-                { label: 'Overdue Ratio (25%)', val: '92%', color: 'bg-emerald-500' },
-                { label: 'Blocked Chains (20%)', val: '100%', color: 'bg-emerald-500' },
-                { label: 'Velocity Trend (25%)', val: '84%', color: 'bg-blue-500' },
-                { label: 'WIP Overload (15%)', val: '75%', color: 'bg-amber-500' },
-                { label: 'Silent Tasks (15%)', val: '90%', color: 'bg-emerald-500' },
+                { label: 'Overdue Ratio (25%)', val: '92%', color: 'bg-[var(--success)]' },
+                { label: 'Blocked Chains (20%)', val: '100%', color: 'bg-[var(--success)]' },
+                { label: 'Velocity Trend (25%)', val: '84%', color: 'bg-[var(--accent)]' },
+                { label: 'WIP Overload (15%)', val: '75%', color: 'bg-[var(--warning)]' },
+                { label: 'Silent Tasks (15%)', val: '90%', color: 'bg-[var(--success)]' },
               ].map((s) => (
                 <div key={s.label} className="flex items-center justify-between gap-2">
                   <span className="text-[var(--text-muted)] truncate w-32">{s.label}</span>
@@ -150,10 +148,10 @@ export function FeaturesInfographic() {
         {/* DIFFERENTIATOR 3: Permission-Aware Ask the Workspace RAG */}
         <div className="group relative overflow-hidden rounded-[24px] border border-[var(--border)] bg-gradient-to-b from-[var(--surface)] to-[var(--bg-subtle)] p-6 shadow-sm transition-all duration-300 hover:border-[var(--accent)] hover:shadow-md">
           <div className="flex items-center justify-between">
-            <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-purple-500/10 text-purple-600 dark:text-purple-400">
+            <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[var(--accent-soft)] text-[var(--accent)]">
               <Icon.search width={22} height={22} />
             </span>
-            <span className="badge bg-purple-500/10 text-purple-600 dark:text-purple-400 text-xs font-semibold">
+            <span className="badge bg-[var(--accent-soft)] text-[var(--accent)] text-xs font-semibold">
               RBAC AI RAG
             </span>
           </div>
@@ -170,13 +168,13 @@ export function FeaturesInfographic() {
               <div className="flex gap-1">
                 <button
                   onClick={() => setRagRole('internal')}
-                  className={cx('rounded-md px-2 py-0.5 font-semibold transition-all', ragRole === 'internal' ? 'bg-purple-600 text-white' : 'bg-[var(--surface)] text-[var(--text-muted)]')}
+                  className={cx('rounded-md px-2 py-0.5 font-semibold transition-all', ragRole === 'internal' ? 'bg-[var(--accent)] text-white' : 'bg-[var(--surface)] text-[var(--text-muted)]')}
                 >
                   PM / Dev View
                 </button>
                 <button
                   onClick={() => setRagRole('client')}
-                  className={cx('rounded-md px-2 py-0.5 font-semibold transition-all', ragRole === 'client' ? 'bg-purple-600 text-white' : 'bg-[var(--surface)] text-[var(--text-muted)]')}
+                  className={cx('rounded-md px-2 py-0.5 font-semibold transition-all', ragRole === 'client' ? 'bg-[var(--accent)] text-white' : 'bg-[var(--surface)] text-[var(--text-muted)]')}
                 >
                   Client View
                 </button>
@@ -185,24 +183,26 @@ export function FeaturesInfographic() {
 
             {/* Prompt & Citation Result */}
             <div className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-3 text-xs space-y-2">
-              <p className="font-semibold text-[var(--text-muted)]">Q: "What is blocking sprint release?"</p>
+              <p className="font-semibold text-[var(--text-muted)]">Q: &quot;What is blocking sprint release?&quot;</p>
               
               {ragRole === 'internal' ? (
                 <div className="space-y-1.5 text-[11px] text-[var(--text)]">
-                  <p className="text-purple-600 dark:text-purple-400 font-medium">
-                    ✓ Full internal access: Found 2 sources (Chat + Commits)
+                  <p className="flex items-center gap-1.5 font-medium text-[var(--accent)]">
+                    <Icon.check width={12} height={12} className="shrink-0" />
+                    Full internal access: found 2 sources (chat + commits)
                   </p>
-                  <div className="rounded bg-purple-500/10 p-2 font-mono text-[10px] text-purple-700 dark:text-purple-300">
-                    [Cited #proj-pay]: "Stuck on PAY-6 rate limit" (Internal Slack)
+                  <div className="rounded bg-[var(--accent-soft)] p-2 font-mono text-[10px] text-[var(--accent)]">
+                    [Cited #proj-pay]: &quot;Stuck on PAY-6 rate limit&quot; (Internal Slack)
                   </div>
                 </div>
               ) : (
                 <div className="space-y-1.5 text-[11px] text-[var(--text)]">
-                  <p className="text-emerald-600 dark:text-emerald-400 font-medium">
-                    🔒 Client Security Guard: Internal chat filtered out
+                  <p className="flex items-center gap-1.5 font-medium text-[var(--success)]">
+                    <Icon.lock width={12} height={12} className="shrink-0" />
+                    Client security guard: internal chat filtered out
                   </p>
-                  <div className="rounded bg-emerald-500/10 p-2 font-mono text-[10px] text-emerald-700 dark:text-emerald-300">
-                    [Cited Shared Wiki]: "Sprint 4 Roadmap & Release Schedule"
+                  <div className="rounded bg-[var(--success-soft)] p-2 font-mono text-[10px] text-[var(--success)]">
+                    [Cited Shared Wiki]: &quot;Sprint 4 Roadmap &amp; Release Schedule&quot;
                   </div>
                 </div>
               )}
@@ -226,7 +226,7 @@ export function FeaturesInfographic() {
           {/* Card 1: Kanban Board */}
           <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-sm hover:border-[var(--border-strong)] transition-all">
             <div className="flex items-center gap-3">
-              <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400">
+              <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[var(--warning-soft)] text-[var(--warning)]">
                 <Icon.board width={20} height={20} />
               </span>
               <div>
@@ -238,15 +238,15 @@ export function FeaturesInfographic() {
             <div className="mt-3.5 grid grid-cols-3 gap-1.5 rounded-xl border border-[var(--border)] bg-[var(--bg-subtle)] p-2 text-[10px]">
               <div className="rounded-lg bg-[var(--surface)] p-1.5 border border-[var(--border-subtle)] text-center">
                 <span className="font-bold text-[var(--text-muted)]">To Do</span>
-                <span className="block text-xs font-bold text-amber-600">4</span>
+                <span className="block text-xs font-bold text-[var(--warning)]">4</span>
               </div>
               <div className="rounded-lg bg-[var(--surface)] p-1.5 border border-[var(--border-subtle)] text-center">
                 <span className="font-bold text-[var(--text-muted)]">In Progress</span>
-                <span className="block text-xs font-bold text-blue-600">2</span>
+                <span className="block text-xs font-bold text-[var(--accent)]">2</span>
               </div>
               <div className="rounded-lg bg-[var(--surface)] p-1.5 border border-[var(--border-subtle)] text-center">
                 <span className="font-bold text-[var(--text-muted)]">Done</span>
-                <span className="block text-xs font-bold text-emerald-600">12</span>
+                <span className="block text-xs font-bold text-[var(--success)]">12</span>
               </div>
             </div>
           </div>
@@ -254,7 +254,7 @@ export function FeaturesInfographic() {
           {/* Card 2: Sprints and Burndown */}
           <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-sm hover:border-[var(--border-strong)] transition-all">
             <div className="flex items-center gap-3">
-              <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-rose-500/10 text-rose-600 dark:text-rose-400">
+              <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[var(--danger-soft)] text-[var(--danger)]">
                 <Icon.sprint width={20} height={20} />
               </span>
               <div>
@@ -266,13 +266,13 @@ export function FeaturesInfographic() {
             <div className="mt-3.5 flex items-center justify-between rounded-xl border border-[var(--border)] bg-[var(--bg-subtle)] p-2.5 text-[11px]">
               <div className="space-y-0.5">
                 <span className="font-bold text-[var(--text)]">Sprint 14 Velocity</span>
-                <span className="block text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold">+18% vs last sprint</span>
+                <span className="block text-[10px] text-[var(--success)] font-semibold">+18% vs last sprint</span>
               </div>
               <div className="flex items-end gap-1 h-7">
-                <span className="w-2 rounded-t bg-rose-400 h-6" />
-                <span className="w-2 rounded-t bg-rose-400 h-5" />
-                <span className="w-2 rounded-t bg-emerald-500 h-4" />
-                <span className="w-2 rounded-t bg-emerald-500 h-2" />
+                <span className="w-2 rounded-t bg-[var(--danger)] h-6" />
+                <span className="w-2 rounded-t bg-[var(--danger)] h-5" />
+                <span className="w-2 rounded-t bg-[var(--success)] h-4" />
+                <span className="w-2 rounded-t bg-[var(--success)] h-2" />
               </div>
             </div>
           </div>
@@ -311,7 +311,7 @@ export function FeaturesInfographic() {
             {/* Visual Mini Chat Pill */}
             <div className="mt-3.5 flex items-center justify-between rounded-xl border border-[var(--border)] bg-[var(--bg-subtle)] p-2.5 text-[11px]">
               <div className="flex items-center gap-1.5">
-                <span className="h-2 w-2 rounded-full bg-emerald-500 animate-ping" />
+                <span className="h-2 w-2 rounded-full bg-[var(--success)] animate-ping" />
                 <span className="font-semibold">#proj-payments</span>
               </div>
               <span className="text-[10px] font-mono text-[var(--text-muted)]">4 typing...</span>
@@ -341,7 +341,7 @@ export function FeaturesInfographic() {
           {/* Card 6: Security You Can Audit */}
           <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-sm hover:border-[var(--border-strong)] transition-all">
             <div className="flex items-center gap-3">
-              <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
+              <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[var(--success-soft)] text-[var(--success)]">
                 <Icon.shield width={20} height={20} />
               </span>
               <div>
@@ -352,7 +352,7 @@ export function FeaturesInfographic() {
             {/* Visual Mini Audit Pill */}
             <div className="mt-3.5 flex items-center justify-between rounded-xl border border-[var(--border)] bg-[var(--bg-subtle)] p-2.5 text-[11px]">
               <span className="font-mono text-[10px] font-semibold text-[var(--text-muted)]">AUDIT_LOG_EXPORT</span>
-              <span className="rounded bg-emerald-500/10 px-2 py-0.5 text-[10px] font-bold text-emerald-600 dark:text-emerald-400">
+              <span className="rounded bg-[var(--success-soft)] px-2 py-0.5 text-[10px] font-bold text-[var(--success)]">
                 256-Bit Encrypted
               </span>
             </div>

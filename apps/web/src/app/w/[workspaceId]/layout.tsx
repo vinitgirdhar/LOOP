@@ -9,7 +9,7 @@ import { setWorkspaceId } from '@/lib/api';
 export default function WorkspaceLayout({ children, params }: { children: React.ReactNode; params: Promise<{ workspaceId: string }> }) {
   const { workspaceId } = use(params);
   const router = useRouter();
-  const { ready, user, memberships, selectWorkspace } = useAuth();
+  const { ready, membershipsReady, user, memberships, selectWorkspace } = useAuth();
 
   // Synchronously update the API module's workspace ID so fetch calls from child components
   // immediately include the correct x-workspace-id header without waiting for a re-render.
@@ -20,15 +20,21 @@ export default function WorkspaceLayout({ children, params }: { children: React.
   useEffect(() => {
     if (!ready) return;
     if (!user) {
-      router.replace(`/login?next=/w/${workspaceId}`);
+      // The whole location, not just the workspace: sending someone who asked
+      // for /projects?new=1 back to the workspace root after they sign in
+      // silently loses the thing they clicked.
+      const here = window.location.pathname + window.location.search;
+      router.replace(`/login?next=${encodeURIComponent(here)}`);
       return;
     }
-    if (!isMember && !user.isPlatformAdmin) {
+    // `memberships` is legitimately empty while the workspace list is still in
+    // flight, so this bounce has to wait for it or it fires on every load.
+    if (membershipsReady && !isMember && !user.isPlatformAdmin) {
       router.replace('/app');
       return;
     }
     selectWorkspace(workspaceId);
-  }, [ready, user, isMember, workspaceId, router, selectWorkspace]);
+  }, [ready, membershipsReady, user, isMember, workspaceId, router, selectWorkspace]);
 
   // Wait until initial auth hydration completes before rendering the shell.
   // Once ready and user are present, keep AppShell mounted across page transitions.

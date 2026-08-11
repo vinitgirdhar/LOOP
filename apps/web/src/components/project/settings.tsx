@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { PRIORITIES, PROJECT_STATUSES } from '@loop/shared';
-import { Avatar, Button, Card, CloseIcon, Confirm, EmptyState, Field, SectionTitle, Skeleton } from '@/components/ui';
+import { Avatar, Button, Card, CloseIcon, Confirm, EmptyState, Field, SectionTitle } from '@/components/ui';
 import { Icon } from '@/components/icons';
 import { useQuery } from '@/lib/hooks';
 import { useAuth } from '@/components/providers/auth';

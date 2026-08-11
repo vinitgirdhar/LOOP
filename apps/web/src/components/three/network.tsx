@@ -3,7 +3,7 @@
 import { useFrame, useThree } from '@react-three/fiber';
 import { useCallback, useMemo, useRef } from 'react';
 import * as THREE from 'three';
-import { SceneFrame, useSceneColors, useSettleFrames } from './frame';
+import { SceneFrame, useSceneColors, useSettleFrames, type SceneSurface } from './frame';
 import { buildGraph } from './graph';
 
 /*
@@ -21,8 +21,8 @@ import { buildGraph } from './graph';
 
 const PULSE_COUNT = 7;
 
-function Constellation() {
-  const colors = useSceneColors();
+function Constellation({ surface }: { surface: SceneSurface }) {
+  const colors = useSceneColors(surface);
   const { nodes, edges, peopleCount, toolCount } = useMemo(() => buildGraph(), []);
 
   const group = useRef<THREE.Group>(null);
@@ -178,8 +178,8 @@ function Constellation() {
 
 const CAMERA_CONFIG = { position: [0, 0, 8.0] as [number, number, number], fov: 45 };
 
-export default function NetworkScene() {
-  const colors = useSceneColors();
+export default function NetworkScene({ surface = 'page' }: { surface?: SceneSurface } = {}) {
+  const colors = useSceneColors(surface);
   // The camera sits back far enough that the shell still clears the frustum on
   // a portrait canvas, where the horizontal field is narrower than the vertical
   // one the fov describes.
@@ -188,7 +188,7 @@ export default function NetworkScene() {
       {/* Fog in the page's own background colour: distant nodes recede
           instead of stacking into a flat cloud of dots. */}
       <fog attach="fog" args={[`#${colors.ground.getHexString()}`, 7.5, 15]} />
-      <Constellation />
+      <Constellation surface={surface} />
     </SceneFrame>
   );
 }

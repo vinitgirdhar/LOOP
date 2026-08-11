@@ -4,7 +4,7 @@ import { use, useState } from 'react';
 import Link from 'next/link';
 import { useQuery } from '@/lib/hooks';
 import { Page, PageHeader } from '@/components/page';
-import { Badge, Button, Card, EmptyState, Field, Modal, Skeleton } from '@/components/ui';
+import { Badge, Button, EmptyState, Field, Modal, Skeleton } from '@/components/ui';
 import { Icon } from '@/components/icons';
 import { useAuth } from '@/components/providers/auth';
 import { useToast } from '@/components/providers/toast';

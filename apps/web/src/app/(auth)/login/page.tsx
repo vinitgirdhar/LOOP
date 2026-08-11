@@ -83,7 +83,7 @@ function LoginForm() {
       subtitle="Sign in to pick up exactly where your team left off."
       footer={<>Don&apos;t have an account? <AuthFooterLink href="/register">Sign up</AuthFooterLink></>}
     >
-      <form onSubmit={submit} className="space-y-3.5 sm:space-y-4">
+      <form onSubmit={submit} className="space-y-4 sm:space-y-5 lg:space-y-6">
         <FormError message={error} />
         <Field label="Email">
           <input className="input" type="email" placeholder="you@company.com" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} required autoFocus />
@@ -94,8 +94,8 @@ function LoginForm() {
         <Button type="submit" variant="primary" className="btn-hero" loading={loading}>
           Sign in
         </Button>
-        <div className="text-center">
-          <Link href="/forgot-password" className="text-[13px] font-medium underline underline-offset-4 opacity-80">
+        <div className="text-center pt-0.5">
+          <Link href="/forgot-password" className="text-[13px] font-medium underline underline-offset-4 opacity-80 hover:opacity-100 sm:text-[14px]">
             Forgot the password?
           </Link>
         </div>

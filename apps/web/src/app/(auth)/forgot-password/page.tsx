@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { AuthCard, AuthFooterLink, FormError, FormSuccess } from '@/components/auth-form';
 import { Button, Field } from '@/components/ui';
-import { api, apiErrorMessage } from '@/lib/api';
+import { apiErrorMessage } from '@/lib/api';
 import { supabase } from '@/lib/supabase/client';
 
 export default function ForgotPasswordPage() {

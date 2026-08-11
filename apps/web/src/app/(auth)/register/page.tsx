@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { AuthCard, AuthDivider, AuthFooterLink, FormError, GoogleButton } from '@/components/auth-form';
 import { Button, Field } from '@/components/ui';
-import { api, apiErrorMessage } from '@/lib/api';
+import { apiErrorMessage } from '@/lib/api';
 import { supabase } from '@/lib/supabase/client';
 
 const RULES = [

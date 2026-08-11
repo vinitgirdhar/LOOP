@@ -31,6 +31,14 @@ interface AuthContextValue {
   workspaceId: string | null;
   role: Role | null;
   ready: boolean;
+  /**
+   * The workspace list has actually been read.
+   *
+   * `ready` only means "we know whether somebody is signed in". Between the two
+   * flags `memberships` is legitimately empty, so anything that treats an empty
+   * list as "not a member of this workspace" has to wait for this one instead.
+   */
+  membershipsReady: boolean;
   can: (permission: Permission) => boolean;
   login: (email: string, password: string) => Promise<{ twoFactorRequired?: boolean; ticket?: string }>;
   loginWith2fa: (ticket: string, code: string) => Promise<void>;
@@ -108,11 +116,34 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [memberships, setMemberships] = useState<Membership[]>([]);
   const [workspace, setWorkspace] = useState<string | null>(null);
   const [ready, setReady] = useState(false);
+  const [membershipsReady, setMembershipsReady] = useState(false);
   const alive = useRef(true);
+
+  /**
+   * Paints the signed-in state straight off the access token.
+   *
+   * Everything here is already inside the JWT the browser is holding, so it
+   * costs no network call. Waiting for the profile row before letting the app
+   * render put a whole round trip in front of the shell, and the page below it
+   * could not even begin its own fetch until that finished. Now the two run at
+   * the same time and `applySession` fills in the rest when it lands.
+   */
+  const applyToken = useCallback((authUser: SupabaseUser) => {
+    setUser((current) => current ?? {
+      id: authUser.id,
+      email: authUser.email ?? '',
+      name: (authUser.user_metadata?.name as string | undefined) ?? authUser.email?.split('@')[0] ?? '',
+      avatarUrl: null,
+      emailVerifiedAt: authUser.email_confirmed_at ?? null,
+      isPlatformAdmin: false,
+      timezone: 'UTC',
+    });
+  }, []);
 
   const applySession = useCallback((session: { user: AuthUser; memberships: Membership[] }) => {
     setUser(session.user);
     setMemberships(session.memberships);
+    setMembershipsReady(true);
 
     setWorkspace((current) => {
       const stored = current ?? (typeof window === 'undefined' ? null : localStorage.getItem(WORKSPACE_KEY));
@@ -127,6 +158,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setWorkspaceId(null);
     setUser(null);
     setMemberships([]);
+    setMembershipsReady(true);
     // Cached responses belong to the account that fetched them.
     clearQueryCache();
   }, []);
@@ -154,16 +186,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         clearSession();
         return;
       }
+      // Synchronous, before the await: the caller below relies on the signed-in
+      // state landing in the same tick as `ready`.
+      applyToken(session.user);
       const loaded = await loadSession(session.user);
       if (alive.current) applySession(loaded);
     };
 
-    void supabase.auth
-      .getSession()
-      .then(({ data }) => hydrate(data.session))
-      .finally(() => {
-        if (alive.current) setReady(true);
-      });
+    void supabase.auth.getSession().then(({ data }) => {
+      if (!alive.current) return;
+      // The gate lifts on the token, not on the profile query behind it.
+      void hydrate(data.session);
+      setReady(true);
+    });
 
     const { data: listener } = supabase.auth.onAuthStateChange((event, session) => {
       // TOKEN_REFRESHED fires on every silent renewal. Re-reading the profile
@@ -176,7 +211,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       alive.current = false;
       listener.subscription.unsubscribe();
     };
-  }, [applySession, clearSession]);
+  }, [applySession, applyToken, clearSession]);
 
   useEffect(() => {
     // A 401 from a route handler means the cookie is gone or no longer valid.
@@ -266,6 +301,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       workspaceId: workspace,
       role,
       ready,
+      membershipsReady,
       // Mirrors the database's permission matrix so the UI hides what row level
       // security would reject anyway.
       can: (permission: Permission) => (user?.isPlatformAdmin ? true : canWithRole(role, permission)),
@@ -276,7 +312,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       selectWorkspace,
       reloadMemberships,
     }),
-    [user, memberships, workspace, role, ready, login, loginWith2fa, logout, refresh, selectWorkspace, reloadMemberships],
+    [user, memberships, workspace, role, ready, membershipsReady, login, loginWith2fa, logout, refresh, selectWorkspace, reloadMemberships],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

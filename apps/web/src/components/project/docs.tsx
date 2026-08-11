@@ -27,7 +27,7 @@ interface PageDetail extends PageRow {
   _count: { versions: number };
 }
 
-export function ProjectDocs({ workspaceId, projectId, initialPageId }: { workspaceId: string; projectId: string; initialPageId?: string | null }) {
+export function ProjectDocs({ projectId, initialPageId }: { workspaceId: string; projectId: string; initialPageId?: string | null }) {
   const { can } = useAuth();
   const toast = useToast();
   const [selected, setSelected] = useState<string | null>(initialPageId ?? null);

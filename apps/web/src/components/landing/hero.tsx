@@ -49,7 +49,7 @@ export function Hero() {
 
   return (
     <section ref={root} className="relative overflow-hidden border-b">
-      <div className="mx-auto grid max-w-6xl 2xl:max-w-7xl 3xl:max-w-[88rem] items-center gap-6 px-4 pb-10 pt-8 sm:px-6 sm:pb-16 sm:pt-12 lg:grid-cols-[1.05fr_1fr] lg:gap-8 2xl:gap-14 lg:pb-24 lg:pt-20">
+      <div className="mx-auto grid max-w-6xl 2xl:max-w-7xl 3xl:max-w-[88rem] items-center gap-5 px-4 pb-8 pt-6 sm:gap-6 sm:px-6 sm:pb-16 sm:pt-12 lg:grid-cols-[1.05fr_1fr] lg:gap-8 2xl:gap-14 lg:pb-24 lg:pt-20">
         <div className="lg:pr-4">
           <span data-hero-badge className="badge bg-[var(--accent-soft)] text-[var(--accent)] 2xl:text-xs">
             Jira + Notion + Slack + GitHub, in one place
@@ -57,7 +57,7 @@ export function Hero() {
 
           {/* Each line clips its own overflow so the rise reads as type
               coming up from behind a mask rather than sliding on the page. */}
-          <h1 className="mt-4 text-[34px] font-bold leading-[1.05] sm:text-5xl lg:text-6xl 2xl:text-7xl">
+          <h1 className="mt-4 text-[29px] font-bold leading-[1.05] min-[390px]:text-[34px] sm:text-5xl lg:text-6xl 2xl:text-7xl">
             <span className="block overflow-hidden pb-[0.08em]">
               <span data-hero-line className="block">
                 The project tool
@@ -96,7 +96,7 @@ export function Hero() {
 
         {/* The graph. Aspect-ratio optimized on mobile so there's no huge vertical whitespace gap. */}
         <div data-hero-scene className="relative mt-2 lg:mt-0">
-          <div className="relative mx-auto aspect-[4/3] w-full max-w-[26rem] sm:aspect-square lg:max-w-none lg:aspect-[4/5]">
+          <div className="relative mx-auto aspect-[5/4] w-full max-w-[26rem] sm:aspect-square lg:max-w-none lg:aspect-[4/5]">
             <NetworkScene />
           </div>
           <p className="mt-1 text-center text-[11px] leading-relaxed text-[var(--text-faint)] lg:text-left 2xl:text-xs">

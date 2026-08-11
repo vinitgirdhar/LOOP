@@ -64,7 +64,7 @@ function WorkspacePicker() {
         <div className="flex items-center gap-3.5">
           <Avatar seed={user.id} name={user.name} src={user.avatarUrl} size={52} />
           <div className="min-w-0">
-            <p className="text-[13px] text-[var(--text-muted)]">{greeting()} 👋</p>
+            <p className="text-[13px] text-[var(--text-muted)]">{greeting()}</p>
             <h1 className="truncate text-[22px] font-bold leading-tight">{user.name.split(' ')[0]}</h1>
           </div>
         </div>

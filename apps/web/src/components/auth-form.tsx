@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import dynamic from 'next/dynamic';
 import { useRouter } from 'next/navigation';
 import type { ReactNode } from 'react';
 import { supabase } from '@/lib/supabase/client';
@@ -8,6 +9,15 @@ import { Icon } from '@/components/icons';
 import { Mascot, mascotFor } from '@/components/mascots';
 import { ThemeToggle } from '@/components/providers/theme';
 import { Logo } from '@/components/marketing';
+import { useMediaQuery } from '@/lib/hooks';
+
+/*
+  The hero scene is the landing page's workspace graph, re-lit for the inverted
+  auth panel. It is mounted only past `lg`, and the import is dynamic, so a
+  phone never downloads three.js to look at a password field — which is the
+  reason the still SVG below exists at all.
+*/
+const AuthScene = dynamic(() => import('@/components/three/network'), { ssr: false, loading: () => null });
 
 /**
  * The auth screen shape.
@@ -34,17 +44,27 @@ export function AuthCard({
   tagline?: string;
 }) {
   const router = useRouter();
+  // Matches the `lg` breakpoint the layout switches on. Gating the mount rather
+  // than hiding it with a class is the point: a hidden canvas still ships its
+  // library and still holds a WebGL context.
+  const wide = useMediaQuery('(min-width: 1024px)');
 
+  /*
+    On a phone the whole screen is the card: fixed to the viewport, nothing
+    scrolls behind it. Any overflow is handled inside the sheet, so a short
+    handset degrades to a small internal scroll instead of the page itself
+    sliding around under a floating hero.
+  */
   return (
-    <div className="flex min-h-dvh flex-col bg-[var(--ink)] text-[var(--ink-text)] lg:flex-row">
+    <div className="flex h-dvh flex-col overflow-hidden bg-[var(--ink)] text-[var(--ink-text)] lg:h-auto lg:min-h-dvh lg:flex-row lg:overflow-visible">
       {/* ── hero ──────────────────────────────────────────────────────── */}
       <div
-        className="relative overflow-hidden px-5 pb-8 pt-3 sm:px-8 sm:pb-12 lg:flex lg:w-[44%] lg:shrink-0 lg:flex-col lg:pb-8 lg:pt-8"
+        className="relative flex h-[38vh] min-h-[250px] shrink-0 flex-col justify-between overflow-hidden px-5 pb-6 pt-3 sm:h-[40vh] sm:min-h-[280px] sm:px-8 lg:h-auto lg:w-[44%] lg:min-h-0 lg:justify-start lg:pb-8 lg:pt-8"
         style={{ paddingTop: 'max(0.75rem, env(safe-area-inset-top))' }}
       >
         <ConstellationMark />
 
-        <header className="relative flex items-center justify-between">
+        <header className="relative flex items-center justify-between z-10">
           <button
             type="button"
             onClick={() => router.back()}
@@ -54,30 +74,37 @@ export function AuthCard({
             <Icon.arrowLeft width={19} height={19} />
           </button>
 
-          {/* On mobile screens, show Logo in top header bar */}
-          <div className="lg:hidden">
-            <Logo size="md" />
-          </div>
-
           <ThemeToggle className="text-[var(--ink-text)] hover:bg-[color-mix(in_oklab,var(--ink-text)_10%,transparent)] hover:text-[var(--ink-text)]" />
         </header>
 
-        <div className="relative mt-2 hidden sm:block lg:mt-auto">
+        {/* Dynamic ThreeJS Scene on Desktop */}
+        {wide && (
+          <div className="relative my-2 min-h-0 flex-1">
+            <AuthScene surface="ink" />
+          </div>
+        )}
+
+        {/* Logo and software information inside the black hero space */}
+        <div className="relative z-10 my-auto pb-2 pt-1 lg:my-0 lg:pb-0">
           <AuthMark />
-          <p className="mt-2 text-[13px] leading-relaxed text-[var(--ink-muted)] sm:mt-3">{tagline}</p>
+          <p className="mt-2 text-[12.5px] font-medium leading-relaxed text-[var(--ink-muted)] opacity-90 sm:text-[13.5px] lg:mt-3 lg:text-[14px]">
+            {tagline} — Unified software engineering & project management platform.
+          </p>
         </div>
       </div>
 
       {/* ── sheet ─────────────────────────────────────────────────────── */}
       <div
-        className="auth-sheet fade-in relative -mt-6 flex flex-1 flex-col rounded-t-[2.5rem] bg-[var(--bg)] px-5 pb-6 pt-6 text-[var(--text)] sm:-mt-9 sm:px-8 sm:pb-8 sm:pt-9 lg:-ml-9 lg:mt-0 lg:justify-center lg:rounded-l-[3.5rem] lg:rounded-tr-none lg:px-12 lg:py-12"
+        className="auth-sheet fade-in relative -mt-6 flex min-h-0 flex-1 flex-col overflow-hidden rounded-tl-none rounded-tr-[6rem] sm:rounded-tr-[7.5rem] bg-[var(--bg)] px-5 pb-5 pt-6 text-[var(--text)] sm:-mt-8 sm:px-8 sm:pb-8 sm:pt-8 lg:-ml-9 lg:mt-0 lg:justify-center lg:rounded-l-[3.5rem] lg:rounded-tr-none lg:px-12 lg:py-12 xl:px-16"
         style={{ paddingBottom: 'max(1.5rem, env(safe-area-inset-bottom))' }}
       >
-        <div className="mx-auto w-full max-w-sm flex-1 flex flex-col justify-start pt-1 sm:justify-center sm:pt-0">
-          <h1 className="text-[26px] font-bold leading-tight sm:text-[32px] sm:leading-[1.1]">{title}</h1>
-          {subtitle && <p className="mt-1.5 text-[14px] leading-relaxed text-[var(--text-muted)]">{subtitle}</p>}
-          <div className="mt-5 sm:mt-7">{children}</div>
-          {footer && <div className="mt-5 text-center text-[14px] text-[var(--text-muted)] sm:mt-7">{footer}</div>}
+        <div className="mx-auto flex w-full max-w-sm flex-1 flex-col justify-between py-1 lg:max-w-md lg:justify-center lg:py-0 xl:max-w-lg">
+          <div>
+            <h1 className="text-[25px] font-bold leading-tight sm:text-[30px] lg:text-[36px] xl:text-[40px]">{title}</h1>
+            {subtitle && <p className="mt-1 text-[13px] leading-relaxed text-[var(--text-muted)] sm:mt-1.5 sm:text-[14.5px] lg:text-[16px]">{subtitle}</p>}
+            <div className="mt-3.5 sm:mt-5 lg:mt-7">{children}</div>
+          </div>
+          {footer && <div className="mt-3.5 pt-1 text-center text-[13px] text-[var(--text-muted)] sm:mt-5 sm:text-[14px] lg:text-[15px]">{footer}</div>}
         </div>
       </div>
     </div>
@@ -108,7 +135,7 @@ function ConstellationMark() {
     <svg
       viewBox="0 0 100 86"
       aria-hidden
-      className="pointer-events-none absolute -right-6 -top-4 h-52 w-52 text-[var(--ink-text)] opacity-[0.13] sm:h-64 sm:w-64 lg:-right-10 lg:h-80 lg:w-80"
+      className="pointer-events-none absolute -right-6 -top-4 h-44 w-44 text-[var(--ink-text)] opacity-[0.13] sm:h-64 sm:w-64 lg:hidden"
     >
       {links.map(([a, b]) => (
         <line key={`${a}-${b}`} x1={nodes[a][0]} y1={nodes[a][1]} x2={nodes[b][0]} y2={nodes[b][1]} stroke="currentColor" strokeWidth="0.6" />
@@ -150,9 +177,9 @@ export function GoogleButton({ label = 'Continue with Google', next }: { label?:
 
 export function AuthDivider({ label = 'or' }: { label?: string }) {
   return (
-    <div className="my-4 flex items-center gap-3 sm:my-5">
+    <div className="my-4 flex items-center gap-3 sm:my-6 lg:my-7">
       <div className="h-px flex-1 bg-current opacity-15" />
-      <span className="text-[11px] font-semibold uppercase tracking-[0.14em] opacity-50">{label}</span>
+      <span className="text-[11px] font-semibold uppercase tracking-[0.14em] opacity-50 sm:text-[12px]">{label}</span>
       <div className="h-px flex-1 bg-current opacity-15" />
     </div>
   );
@@ -186,15 +213,20 @@ export function DemoAccounts({ onPick }: { onPick: (email: string) => void }) {
     { email: 'admin@loop.dev', role: 'Admin' },
   ];
   return (
-    <div className="mt-4 sm:mt-5">
-      <p className="text-center text-[11px] font-semibold uppercase tracking-[0.14em] opacity-55">
+    <div className="mt-4 sm:mt-6 lg:mt-7">
+      <p className="text-center text-[11px] font-semibold uppercase tracking-[0.14em] opacity-60 sm:text-[12px]">
         Demo accounts · password Password123
       </p>
-      <div className="no-scrollbar -mx-5 mt-2.5 flex gap-2 overflow-x-auto px-5">
+      <div className="mt-2.5 flex flex-wrap justify-center gap-2 sm:gap-2.5">
         {accounts.map((account) => (
-          <button key={account.email} type="button" onClick={() => onPick(account.email)} className="chip pl-1.5 text-xs">
+          <button
+            key={account.email}
+            type="button"
+            onClick={() => onPick(account.email)}
+            className="chip pl-2 pr-3 py-1.5 text-xs sm:text-sm font-medium hover:border-[var(--border-strong)] transition-colors"
+          >
             <span
-              className="inline-flex h-5.5 w-5.5 items-end justify-center overflow-hidden rounded-full bg-[var(--bg-inset)] text-[var(--text)] sm:h-6 sm:w-6"
+              className="inline-flex h-6 w-6 items-end justify-center overflow-hidden rounded-full bg-[var(--bg-inset)] text-[var(--text)] sm:h-6.5 sm:w-6.5"
               style={{ ['--mascot-paper' as string]: 'var(--surface)' }}
             >
               <Mascot id={mascotFor(account.email)} crop="bust" size="100%" />

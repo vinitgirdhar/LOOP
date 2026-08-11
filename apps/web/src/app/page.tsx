@@ -7,7 +7,6 @@ import { FeaturesInfographic } from '@/components/landing/features-infographic';
 import { PricingSection } from '@/components/landing/pricing-section';
 import { ScrollMotion } from '@/components/landing/motion';
 import { Avatar } from '@/components/ui';
-import { Icon, type IconName } from '@/components/icons';
 
 export const metadata: Metadata = {
   title: 'Loop — the project tool that keeps itself updated',
@@ -59,9 +58,9 @@ export default function LandingPage() {
 
         {/* Features — Transformed into Infographic Visual Layout */}
         <section id="features" className="scroll-mt-16 border-b">
-          <div className="mx-auto max-w-6xl 2xl:max-w-7xl 3xl:max-w-[88rem] px-4 py-14 sm:px-6 sm:py-20">
+          <div className="mx-auto max-w-6xl 2xl:max-w-7xl 3xl:max-w-[88rem] px-4 py-10 sm:px-6 sm:py-20">
             <div className="max-w-2xl 2xl:max-w-3xl mb-10">
-              <h2 data-reveal className="text-[26px] font-bold sm:text-4xl 2xl:text-5xl">
+              <h2 data-reveal className="text-[22px] font-bold leading-tight sm:text-[26px] sm:leading-normal md:text-4xl 2xl:text-5xl">
                 Everything a team needs, and three things nobody else ships
               </h2>
               <p data-reveal className="mt-3 text-[14px] leading-relaxed text-[var(--text-muted)] sm:text-[15px] 2xl:text-lg">
@@ -75,8 +74,8 @@ export default function LandingPage() {
 
         {/* Proof — what a suggestion actually looks like */}
         <section className="border-b bg-[var(--bg-subtle)]">
-          <div className="mx-auto max-w-3xl 2xl:max-w-4xl 3xl:max-w-[64rem] px-4 py-14 sm:px-6 sm:py-20">
-            <h2 data-reveal className="text-[26px] font-bold sm:text-4xl 2xl:text-5xl">
+          <div className="mx-auto max-w-3xl 2xl:max-w-4xl 3xl:max-w-[64rem] px-4 py-10 sm:px-6 sm:py-20">
+            <h2 data-reveal className="text-[22px] font-bold leading-tight sm:text-[26px] sm:leading-normal md:text-4xl 2xl:text-5xl">
               Nothing moves without evidence
             </h2>
             <p data-reveal className="mt-3 text-[14px] leading-relaxed text-[var(--text-muted)] sm:text-[15px] 2xl:text-lg">
@@ -114,8 +113,8 @@ export default function LandingPage() {
 
         {/* Testimonials */}
         <section id="testimonials" className="scroll-mt-16 border-b bg-[var(--bg-subtle)]">
-          <div className="mx-auto max-w-6xl 2xl:max-w-7xl 3xl:max-w-[88rem] px-4 py-14 sm:px-6 sm:py-20">
-            <h2 data-reveal className="text-[26px] font-bold sm:text-4xl 2xl:text-5xl">
+          <div className="mx-auto max-w-6xl 2xl:max-w-7xl 3xl:max-w-[88rem] px-4 py-10 sm:px-6 sm:py-20">
+            <h2 data-reveal className="text-[22px] font-bold leading-tight sm:text-[26px] sm:leading-normal md:text-4xl 2xl:text-5xl">
               Teams that stopped chasing status
             </h2>
             <div data-reveal-group className="mt-8 grid gap-4 lg:grid-cols-3 2xl:gap-6">
@@ -137,8 +136,8 @@ export default function LandingPage() {
 
         {/* FAQ */}
         <section id="faq" className="scroll-mt-16 border-b">
-          <div className="mx-auto max-w-3xl 2xl:max-w-4xl 3xl:max-w-[64rem] px-4 py-14 sm:px-6 sm:py-20">
-            <h2 data-reveal className="text-[26px] font-bold sm:text-4xl 2xl:text-5xl">
+          <div className="mx-auto max-w-3xl 2xl:max-w-4xl 3xl:max-w-[64rem] px-4 py-10 sm:px-6 sm:py-20">
+            <h2 data-reveal className="text-[22px] font-bold leading-tight sm:text-[26px] sm:leading-normal md:text-4xl 2xl:text-5xl">
               Questions worth asking
             </h2>
             <div data-reveal className="mt-6">
@@ -149,8 +148,8 @@ export default function LandingPage() {
 
         {/* Contact */}
         <section id="contact" className="scroll-mt-16 bg-[var(--bg-subtle)]">
-          <div className="mx-auto max-w-3xl 2xl:max-w-4xl 3xl:max-w-[64rem] px-4 py-14 sm:px-6 sm:py-20">
-            <h2 data-reveal className="text-[26px] font-bold sm:text-4xl 2xl:text-5xl">
+          <div className="mx-auto max-w-3xl 2xl:max-w-4xl 3xl:max-w-[64rem] px-4 py-10 sm:px-6 sm:py-20">
+            <h2 data-reveal className="text-[22px] font-bold leading-tight sm:text-[26px] sm:leading-normal md:text-4xl 2xl:text-5xl">
               Talk to us
             </h2>
             <p data-reveal className="mt-2 text-[14px] text-[var(--text-muted)] sm:text-[15px] 2xl:text-lg">

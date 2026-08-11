@@ -38,7 +38,7 @@ const iconFor = (mime: string): { name: IconName; tone: string } => {
   return { name: 'doc', tone: 'var(--text-muted)' };
 };
 
-export function ProjectFiles({ workspaceId, projectId }: { workspaceId?: string; projectId?: string }) {
+export function ProjectFiles({ projectId }: { workspaceId?: string; projectId?: string }) {
   const { can } = useAuth();
   const toast = useToast();
   const input = useRef<HTMLInputElement>(null);

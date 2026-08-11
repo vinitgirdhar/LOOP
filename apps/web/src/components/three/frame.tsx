@@ -53,25 +53,51 @@ export function useSettleFrames(layout: () => void) {
   }, [invalidate]);
 }
 
+/**
+ * The two grounds a scene can sit on.
+ *
+ * `page` is the ordinary document surface. `ink` is the inverted panel the auth
+ * screens use, where the page tokens would draw dark geometry on a dark field
+ * and disappear — so the whole palette flips with the surface rather than each
+ * scene hard-coding a colour for it.
+ */
+export type SceneSurface = 'page' | 'ink';
+
+const SURFACE_TOKENS: Record<SceneSurface, { ink: [string, string]; ground: [string, string]; line: [string, string]; faint: [string, string] }> = {
+  page: {
+    ink: ['--text', '#101011'],
+    ground: ['--bg', '#ffffff'],
+    line: ['--border-strong', '#d3d3d7'],
+    faint: ['--text-faint', '#9b9ba1'],
+  },
+  ink: {
+    ink: ['--ink-text', '#f6f6f7'],
+    ground: ['--ink', '#131314'],
+    line: ['--ink-muted', '#a0a0a6'],
+    faint: ['--ink-faint', '#77777d'],
+  },
+};
+
 /** Reads the palette out of the token layer so 3D matches the DOM around it. */
-export function useSceneColors() {
+export function useSceneColors(surface: SceneSurface = 'page') {
   const { theme } = useTheme();
 
   return useMemo(() => {
-    const read = (token: string, fallback: string) => {
+    const read = ([token, fallback]: [string, string]) => {
       if (typeof window === 'undefined') return fallback;
       const value = getComputedStyle(document.documentElement).getPropertyValue(token).trim();
       return value || fallback;
     };
+    const tokens = SURFACE_TOKENS[surface];
     return {
-      ink: new THREE.Color(read('--text', '#101011')),
-      ground: new THREE.Color(read('--bg', '#ffffff')),
-      line: new THREE.Color(read('--border-strong', '#d3d3d7')),
-      faint: new THREE.Color(read('--text-faint', '#9b9ba1')),
+      ink: new THREE.Color(read(tokens.ink)),
+      ground: new THREE.Color(read(tokens.ground)),
+      line: new THREE.Color(read(tokens.line)),
+      faint: new THREE.Color(read(tokens.faint)),
       // `theme` is the dependency that matters — the tokens change with it.
       key: theme,
     };
-  }, [theme]);
+  }, [surface, theme]);
 }
 
 interface SceneFrameProps extends Omit<CanvasProps, 'children' | 'frameloop'> {

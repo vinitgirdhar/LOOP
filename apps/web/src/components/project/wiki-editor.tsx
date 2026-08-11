@@ -22,8 +22,8 @@ const TOOLBAR: { label: string; title: string; wrap: [string, string]; block?: b
   { label: '{ }', title: 'Code block', wrap: ['```\n', '\n```'], block: true },
   { label: '•', title: 'Bullet list', wrap: ['- ', ''], block: true },
   { label: '1.', title: 'Numbered list', wrap: ['1. ', ''], block: true },
-  { label: '❝', title: 'Quote', wrap: ['> ', ''], block: true },
-  { label: '🔗', title: 'Link', wrap: ['[', '](https://)'] },
+  { label: '“', title: 'Quote', wrap: ['> ', ''], block: true },
+  { label: 'Link', title: 'Link', wrap: ['[', '](https://)'] },
   { label: '▦', title: 'Table', wrap: ['| Column | Column |\n| --- | --- |\n| Value | Value |', ''], block: true },
 ];
 
