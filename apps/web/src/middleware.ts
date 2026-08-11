@@ -28,7 +28,8 @@ export async function middleware(request: NextRequest) {
     },
   );
 
-  await supabase.auth.getUser();
+  // Use getSession() for 0ms local JWT validation rather than a blocking remote network call
+  await supabase.auth.getSession();
 
   return response;
 }

@@ -32,13 +32,19 @@ export interface Ctx {
  */
 export async function requireUser(): Promise<Ctx> {
   const supabase = await createClient();
-  const { data, error } = await supabase.auth.getUser();
-  if (error || !data.user) throw unauthorized();
+  const { data: sessionData } = await supabase.auth.getSession();
+  let userId = sessionData.session?.user?.id;
+  
+  if (!userId) {
+    const { data, error } = await supabase.auth.getUser();
+    if (error || !data.user) throw unauthorized();
+    userId = data.user.id;
+  }
 
   const { data: profile } = await supabase
     .from('profiles')
     .select('id, email, name, is_platform_admin, is_suspended')
-    .eq('id', data.user.id)
+    .eq('id', userId)
     .single();
 
   if (!profile) throw unauthorized('Your profile is not set up yet');
@@ -170,8 +176,14 @@ export async function requireMember(
   payload?: unknown,
 ): Promise<Ctx & { ws: WorkspaceContext }> {
   const supabase = await createClient();
-  const { data: auth, error } = await supabase.auth.getUser();
-  if (error || !auth.user) throw unauthorized();
+  const { data: sessionData } = await supabase.auth.getSession();
+  let userId = sessionData.session?.user?.id;
+
+  if (!userId) {
+    const { data: auth, error } = await supabase.auth.getUser();
+    if (error || !auth.user) throw unauthorized();
+    userId = auth.user.id;
+  }
 
   const workspaceId = workspaceIdFrom(request, params, payload);
   if (!workspaceId) throw forbidden('Missing workspace context');
@@ -179,7 +191,7 @@ export async function requireMember(
   const { data } = await supabase
     .from('profiles')
     .select('id, email, name, is_platform_admin, is_suspended, memberships:workspace_members (role, workspace_id)')
-    .eq('id', auth.user.id)
+    .eq('id', userId)
     .eq('memberships.workspace_id', workspaceId)
     .single();
 

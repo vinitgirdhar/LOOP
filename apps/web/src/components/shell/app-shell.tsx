@@ -135,6 +135,7 @@ export function AppShell({ workspaceId, children }: { workspaceId: string; child
                     <Link
                       key={item.id}
                       href={item.href}
+                      prefetch={true}
                       aria-current={active ? 'page' : undefined}
                       className={cx('nav-row', active && 'nav-row-active')}
                     >

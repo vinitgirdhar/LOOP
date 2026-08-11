@@ -20,6 +20,10 @@
 }
 
 :root {
+  /* Removes mobile double-tap zoom delay & provides instant single-tap feedback */
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+
   /* Surfaces — warm-free greys so white cards read as paper on a soft ground. */
   --bg: #ffffff;
   --bg-subtle: #f3f3f4;

@@ -4,11 +4,16 @@ import { use, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/components/providers/auth';
 import { AppShell, ShellLoading } from '@/components/shell/app-shell';
+import { setWorkspaceId } from '@/lib/api';
 
 export default function WorkspaceLayout({ children, params }: { children: React.ReactNode; params: Promise<{ workspaceId: string }> }) {
   const { workspaceId } = use(params);
   const router = useRouter();
-  const { ready, user, memberships, workspaceId: active, selectWorkspace } = useAuth();
+  const { ready, user, memberships, selectWorkspace } = useAuth();
+
+  // Synchronously update the API module's workspace ID so fetch calls from child components
+  // immediately include the correct x-workspace-id header without waiting for a re-render.
+  setWorkspaceId(workspaceId);
 
   const isMember = memberships.some((m) => m.workspace.id === workspaceId);
 
@@ -22,12 +27,12 @@ export default function WorkspaceLayout({ children, params }: { children: React.
       router.replace('/app');
       return;
     }
-    if (active !== workspaceId) selectWorkspace(workspaceId);
-  }, [ready, user, isMember, active, workspaceId, router, selectWorkspace]);
+    selectWorkspace(workspaceId);
+  }, [ready, user, isMember, workspaceId, router, selectWorkspace]);
 
-  // Wait until the API client knows which workspace to scope requests to,
-  // otherwise the first fetch of every page would 403.
-  if (!ready || !user || active !== workspaceId) return <ShellLoading />;
+  // Wait until initial auth hydration completes before rendering the shell.
+  // Once ready and user are present, keep AppShell mounted across page transitions.
+  if (!ready || !user) return <ShellLoading />;
 
   return <AppShell workspaceId={workspaceId}>{children}</AppShell>;
 }

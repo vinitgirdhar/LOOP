@@ -61,22 +61,31 @@ export function useQuery<T>(path: string | null, deps: unknown[] = []): QuerySta
     controller.current = next;
 
     const cached = responseCache.get(path);
-    // Show what we had and revalidate quietly; only an empty cache spins.
-    setState((s) => ({
-      data: (cached?.data as T) ?? s.data,
-      meta: cached?.meta ?? s.meta,
-      loading: s.data === null && cached === undefined,
-      error: null,
-    }));
+    if (cached !== undefined) {
+      setState({
+        data: cached.data as T,
+        meta: cached.meta,
+        loading: false,
+        error: null,
+      });
+    } else {
+      setState({
+        data: null,
+        meta: null,
+        loading: true,
+        error: null,
+      });
+    }
 
     try {
       const { data, meta } = await api.get<T>(path, { signal: next.signal });
       responseCache.set(path, { data, meta: meta ?? null });
-      if (!next.signal.aborted && mounted.current) setState({ data, meta: meta ?? null, loading: false, error: null });
+      if (!next.signal.aborted && mounted.current) {
+        setState({ data, meta: meta ?? null, loading: false, error: null });
+      }
     } catch (error: unknown) {
       if (next.signal.aborted || !mounted.current) return;
       if (error instanceof DOMException && error.name === 'AbortError') return;
-      // A failed revalidation must not blank out content already on screen.
       setState((s) => ({ data: s.data, meta: s.meta, loading: false, error: apiErrorMessage(error) }));
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
