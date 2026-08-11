@@ -27,6 +27,8 @@ const schema = z.object({
 
 const INVITE_DAYS = 7;
 
+import { sendWorkspaceInviteEmail } from '@/lib/server/email';
+
 export const POST = route(async (request: Request, { params }: Params) => {
   const ctx = await requireMember(request, await params);
   await requirePermission(ctx, ctx.ws, 'workspace.invite');
@@ -43,13 +45,17 @@ export const POST = route(async (request: Request, { params }: Params) => {
     if (already) throw badRequest('That person is already in this workspace');
   }
 
+  const { data: wsData } = await ctx.supabase.from('workspaces').select('name').eq('id', ctx.ws.workspaceId).single();
+
+  const token = crypto.randomUUID().replace(/-/g, '');
+
   const { data, error } = await ctx.supabase
     .from('invites')
     .insert({
       workspace_id: ctx.ws.workspaceId,
       email: input.email,
       role: input.role,
-      token: crypto.randomUUID().replace(/-/g, ''),
+      token,
       invited_by_id: ctx.user.id,
       expires_at: new Date(Date.now() + INVITE_DAYS * 86_400_000).toISOString(),
     })
@@ -57,5 +63,19 @@ export const POST = route(async (request: Request, { params }: Params) => {
     .single();
 
   assertOk(error, 'Invite');
+
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+  const inviteUrl = `${appUrl}/join/${token}`;
+  const workspaceName = wsData?.name || 'Workspace';
+
+  // Dispatch professional email via Resend API
+  sendWorkspaceInviteEmail({
+    to: input.email,
+    inviterName: ctx.user.name,
+    workspaceName,
+    role: input.role,
+    inviteUrl,
+  }).catch((err) => console.error('[email:invite-error]', err));
+
   return created(data);
 });
