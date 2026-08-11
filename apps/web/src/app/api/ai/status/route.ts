@@ -17,8 +17,8 @@ export const GET = route(async (request: Request) => {
   // were read by nothing.
   return ok({
     enabled: groq || gemini,
-    frontier: groq ? process.env.GROQ_MODEL ?? 'groq' : null,
-    fallback: gemini ? process.env.GEMINI_MODEL ?? 'gemini' : null,
+    frontier: groq ? process.env.GROQ_MODEL ?? 'llama-3.3-70b-versatile' : null,
+    fallback: gemini ? process.env.GEMINI_MODEL ?? 'gemini-2.0-flash' : null,
     embeddings: gemini ? process.env.GEMINI_EMBED_MODEL ?? 'text-embedding-004' : null,
     ...(probes ? { probes } : {}),
   });

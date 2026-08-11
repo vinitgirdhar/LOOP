@@ -47,17 +47,23 @@ const describe = (provider: string, status: number) =>
       ? `${provider} rejected the API key`
       : `${provider} replied ${status}`;
 
-async function callGroq(messages: ChatMessage[], key: string): Promise<string> {
+async function callGroq(messages: ChatMessage[], key: string, targetModel?: string): Promise<string> {
+  const model = targetModel || process.env.GROQ_MODEL || 'llama-3.3-70b-versatile';
   const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${key}` },
     body: JSON.stringify({
-      model: process.env.GROQ_MODEL || 'llama-3.3-70b-versatile',
+      model,
       messages,
       temperature: 0.2,
     }),
     signal: AbortSignal.timeout(TIMEOUT_MS),
   });
+
+  // Fall back automatically if a specific Groq model version is unlisted or deprecated for this key
+  if (response.status === 404 && model !== 'llama-3.1-8b-instant') {
+    return callGroq(messages, key, 'llama-3.1-8b-instant');
+  }
 
   if (!response.ok) throw new AiError(failureFor(response.status), describe('Groq', response.status), response.status);
 
@@ -65,8 +71,8 @@ async function callGroq(messages: ChatMessage[], key: string): Promise<string> {
   return payload.choices?.[0]?.message?.content ?? '';
 }
 
-async function callGemini(messages: ChatMessage[], key: string): Promise<string> {
-  const model = process.env.GEMINI_MODEL || 'gemini-2.0-flash';
+async function callGemini(messages: ChatMessage[], key: string, targetModel?: string): Promise<string> {
+  const model = targetModel || process.env.GEMINI_MODEL || 'gemini-2.0-flash';
   const system = messages.filter((m) => m.role === 'system').map((m) => m.content).join('\n');
   const rest = messages.filter((m) => m.role !== 'system');
 
@@ -83,6 +89,11 @@ async function callGemini(messages: ChatMessage[], key: string): Promise<string>
     }),
     signal: AbortSignal.timeout(TIMEOUT_MS),
   });
+
+  // Fall back automatically if a specific model version is not enabled for this key
+  if (response.status === 404 && model !== 'gemini-1.5-flash') {
+    return callGemini(messages, key, 'gemini-1.5-flash');
+  }
 
   if (!response.ok) throw new AiError(failureFor(response.status), describe('Gemini', response.status), response.status);
 
