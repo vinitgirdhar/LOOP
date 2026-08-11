@@ -494,11 +494,18 @@ h1, h2, h3, h4 {
 /* The tall pill CTA the onboarding and auth screens lead with. */
 .btn-hero {
   width: 100%;
-  min-height: 3.25rem;
-  font-size: 0.9375rem;
+  min-height: 2.875rem;
+  font-size: 0.90625rem;
   font-weight: 600;
-  padding-inline: 1.75rem;
+  padding-inline: 1.5rem;
   border-radius: var(--radius-pill);
+}
+@media (min-width: 640px) {
+  .btn-hero {
+    min-height: 3.25rem;
+    font-size: 0.9375rem;
+    padding-inline: 1.75rem;
+  }
 }
 
 /* Touch pointers get a bit more height; mice keep the tighter desktop size. */
@@ -596,8 +603,16 @@ input[type='radio'] {
   border-bottom: 1.5px solid var(--border-strong);
   border-radius: 0;
   padding-inline: 0;
-  padding-block: 0.5rem;
-  min-height: 2.75rem;
+  padding-block: 0.4rem;
+  min-height: 2.5rem;
+}
+@media (min-width: 640px) {
+  .auth-sheet .input,
+  .auth-sheet .select,
+  .auth-sheet .textarea {
+    padding-block: 0.5rem;
+    min-height: 2.75rem;
+  }
 }
 .auth-sheet .input:focus,
 .auth-sheet .select:focus,

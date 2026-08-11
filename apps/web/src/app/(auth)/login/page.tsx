@@ -83,7 +83,7 @@ function LoginForm() {
       subtitle="Sign in to pick up exactly where your team left off."
       footer={<>Don&apos;t have an account? <AuthFooterLink href="/register">Sign up</AuthFooterLink></>}
     >
-      <form onSubmit={submit} className="space-y-4">
+      <form onSubmit={submit} className="space-y-3.5 sm:space-y-4">
         <FormError message={error} />
         <Field label="Email">
           <input className="input" type="email" placeholder="you@company.com" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} required autoFocus />

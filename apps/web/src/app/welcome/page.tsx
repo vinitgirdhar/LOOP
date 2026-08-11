@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Mascot, type MascotId } from '@/components/mascots';
 import { useAuth } from '@/components/providers/auth';
+import { Logo } from '@/components/marketing';
 import { cx } from '@/lib/format';
 
 /**
@@ -101,13 +102,8 @@ export default function WelcomePage() {
       }}
     >
       <header className="flex items-center justify-between px-4">
-        <Link href="/" className="flex items-center gap-2" aria-label="Loop home">
-          <span className="inline-flex h-8 w-8 items-center justify-center rounded-[11px] bg-[var(--ink)] text-[var(--ink-text)]" aria-hidden>
-            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M7.5 8.5a4.5 4.5 0 100 7h9a4.5 4.5 0 100-7h-9z" />
-            </svg>
-          </span>
-          <span className="text-[15px] font-bold tracking-[-0.02em]">Loop</span>
+        <Link href="/" aria-label="Loop home">
+          <Logo size="md" />
         </Link>
         <button type="button" onClick={() => finish('/login')} className="btn btn-ghost btn-sm">
           Skip

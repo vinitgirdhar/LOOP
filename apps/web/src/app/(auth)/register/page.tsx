@@ -52,7 +52,7 @@ export default function RegisterPage() {
       subtitle="Create an account, verify your email, then build your first workspace."
       footer={<>Already have an account? <AuthFooterLink href="/login">Sign in</AuthFooterLink></>}
     >
-      <form onSubmit={submit} className="space-y-4">
+      <form onSubmit={submit} className="space-y-2.5 sm:space-y-4">
         <FormError message={error} />
         <Field label="Full name">
           <input className="input" value={name} onChange={(e) => setName(e.target.value)} autoComplete="name" required autoFocus />

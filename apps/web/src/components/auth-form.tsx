@@ -7,6 +7,7 @@ import { supabase } from '@/lib/supabase/client';
 import { Icon } from '@/components/icons';
 import { Mascot, mascotFor } from '@/components/mascots';
 import { ThemeToggle } from '@/components/providers/theme';
+import { Logo } from '@/components/marketing';
 
 /**
  * The auth screen shape.
@@ -38,7 +39,7 @@ export function AuthCard({
     <div className="flex min-h-dvh flex-col bg-[var(--ink)] text-[var(--ink-text)] lg:flex-row">
       {/* ── hero ──────────────────────────────────────────────────────── */}
       <div
-        className="relative overflow-hidden px-5 pb-14 sm:px-8 lg:flex lg:w-[44%] lg:shrink-0 lg:flex-col lg:pb-8"
+        className="relative overflow-hidden px-5 pb-8 pt-3 sm:px-8 sm:pb-12 lg:flex lg:w-[44%] lg:shrink-0 lg:flex-col lg:pb-8 lg:pt-8"
         style={{ paddingTop: 'max(0.75rem, env(safe-area-inset-top))' }}
       >
         <ConstellationMark />
@@ -47,30 +48,36 @@ export function AuthCard({
           <button
             type="button"
             onClick={() => router.back()}
-            className="-ml-1 inline-flex h-11 w-11 items-center justify-center rounded-full transition-colors hover:bg-[color-mix(in_oklab,var(--ink-text)_10%,transparent)]"
+            className="-ml-1 inline-flex h-10 w-10 items-center justify-center rounded-full transition-colors hover:bg-[color-mix(in_oklab,var(--ink-text)_10%,transparent)] sm:h-11 sm:w-11"
             aria-label="Go back"
           >
             <Icon.arrowLeft width={19} height={19} />
           </button>
+
+          {/* On mobile screens, show Logo in top header bar */}
+          <div className="lg:hidden">
+            <Logo size="md" />
+          </div>
+
           <ThemeToggle className="text-[var(--ink-text)] hover:bg-[color-mix(in_oklab,var(--ink-text)_10%,transparent)] hover:text-[var(--ink-text)]" />
         </header>
 
-        <div className="relative mt-7 lg:mt-auto">
+        <div className="relative mt-2 hidden sm:block lg:mt-auto">
           <AuthMark />
-          <p className="mt-3 text-[13px] leading-relaxed text-[var(--ink-muted)]">{tagline}</p>
+          <p className="mt-2 text-[13px] leading-relaxed text-[var(--ink-muted)] sm:mt-3">{tagline}</p>
         </div>
       </div>
 
       {/* ── sheet ─────────────────────────────────────────────────────── */}
       <div
-        className="auth-sheet fade-in relative -mt-9 flex flex-1 flex-col rounded-tl-[3.5rem] bg-[var(--bg)] px-5 pb-8 pt-9 text-[var(--text)] sm:px-8 lg:-ml-9 lg:mt-0 lg:justify-center lg:rounded-l-[3.5rem] lg:rounded-tr-none lg:px-12 lg:py-12"
-        style={{ paddingBottom: 'max(2rem, env(safe-area-inset-bottom))' }}
+        className="auth-sheet fade-in relative -mt-6 flex flex-1 flex-col rounded-t-[2.5rem] bg-[var(--bg)] px-5 pb-6 pt-6 text-[var(--text)] sm:-mt-9 sm:px-8 sm:pb-8 sm:pt-9 lg:-ml-9 lg:mt-0 lg:justify-center lg:rounded-l-[3.5rem] lg:rounded-tr-none lg:px-12 lg:py-12"
+        style={{ paddingBottom: 'max(1.5rem, env(safe-area-inset-bottom))' }}
       >
-        <div className="mx-auto w-full max-w-sm">
-          <h1 className="text-[30px] font-bold leading-[1.1] sm:text-[34px]">{title}</h1>
-          {subtitle && <p className="mt-2.5 text-[14px] leading-relaxed text-[var(--text-muted)]">{subtitle}</p>}
-          <div className="mt-7">{children}</div>
-          {footer && <div className="mt-7 text-center text-[14px] text-[var(--text-muted)]">{footer}</div>}
+        <div className="mx-auto w-full max-w-sm flex-1 flex flex-col justify-start pt-1 sm:justify-center sm:pt-0">
+          <h1 className="text-[26px] font-bold leading-tight sm:text-[32px] sm:leading-[1.1]">{title}</h1>
+          {subtitle && <p className="mt-1.5 text-[14px] leading-relaxed text-[var(--text-muted)]">{subtitle}</p>}
+          <div className="mt-5 sm:mt-7">{children}</div>
+          {footer && <div className="mt-5 text-center text-[14px] text-[var(--text-muted)] sm:mt-7">{footer}</div>}
         </div>
       </div>
     </div>
@@ -81,15 +88,7 @@ export function AuthCard({
 export function AuthMark() {
   return (
     <span className="flex items-center gap-2.5">
-      <span
-        className="inline-flex h-11 w-11 items-center justify-center rounded-[15px] bg-[var(--ink-text)] text-[var(--ink)]"
-        aria-hidden
-      >
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M7.5 8.5a4.5 4.5 0 100 7h9a4.5 4.5 0 100-7h-9z" />
-        </svg>
-      </span>
-      <span className="text-[19px] font-bold tracking-[-0.03em]">Loop</span>
+      <Logo size="lg" />
     </span>
   );
 }
@@ -151,7 +150,7 @@ export function GoogleButton({ label = 'Continue with Google', next }: { label?:
 
 export function AuthDivider({ label = 'or' }: { label?: string }) {
   return (
-    <div className="my-5 flex items-center gap-3">
+    <div className="my-4 flex items-center gap-3 sm:my-5">
       <div className="h-px flex-1 bg-current opacity-15" />
       <span className="text-[11px] font-semibold uppercase tracking-[0.14em] opacity-50">{label}</span>
       <div className="h-px flex-1 bg-current opacity-15" />
@@ -187,15 +186,15 @@ export function DemoAccounts({ onPick }: { onPick: (email: string) => void }) {
     { email: 'admin@loop.dev', role: 'Admin' },
   ];
   return (
-    <div className="mt-6">
+    <div className="mt-4 sm:mt-5">
       <p className="text-center text-[11px] font-semibold uppercase tracking-[0.14em] opacity-55">
         Demo accounts · password Password123
       </p>
-      <div className="no-scrollbar -mx-5 mt-3 flex gap-2 overflow-x-auto px-5">
+      <div className="no-scrollbar -mx-5 mt-2.5 flex gap-2 overflow-x-auto px-5">
         {accounts.map((account) => (
-          <button key={account.email} type="button" onClick={() => onPick(account.email)} className="chip pl-1.5">
+          <button key={account.email} type="button" onClick={() => onPick(account.email)} className="chip pl-1.5 text-xs">
             <span
-              className="inline-flex h-6 w-6 items-end justify-center overflow-hidden rounded-full bg-[var(--bg-inset)] text-[var(--text)]"
+              className="inline-flex h-5.5 w-5.5 items-end justify-center overflow-hidden rounded-full bg-[var(--bg-inset)] text-[var(--text)] sm:h-6 sm:w-6"
               style={{ ['--mascot-paper' as string]: 'var(--surface)' }}
             >
               <Mascot id={mascotFor(account.email)} crop="bust" size="100%" />

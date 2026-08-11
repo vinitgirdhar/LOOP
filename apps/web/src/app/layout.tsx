@@ -32,6 +32,17 @@ export const metadata: Metadata = {
   robots: { index: true, follow: true },
   applicationName: 'Loop',
   appleWebApp: { capable: true, title: 'Loop', statusBarStyle: 'default' },
+  icons: {
+    icon: [
+      { url: '/favicon.ico' },
+      { url: '/favicon-32x32.png', sizes: '32x32', type: 'image/png' },
+      { url: '/icon-192.png', sizes: '192x192', type: 'image/png' },
+      { url: '/logo.svg', type: 'image/svg+xml' },
+    ],
+    apple: [
+      { url: '/apple-touch-icon.png', sizes: '180x180', type: 'image/png' },
+    ],
+  },
   // Stops iOS Safari from turning task ids and numbers into phone links.
   formatDetection: { telephone: false, date: false, address: false, email: false },
 };
