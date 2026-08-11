@@ -22,5 +22,14 @@ export const GET = route(async (request: Request) => {
 
   const { data, error, count } = await query;
   assertOk(error, 'Suggestions');
-  return ok(data ?? [], { total: count ?? 0, page, limit });
+
+  // `pending` drives the tab count and the Auto-Pilot badge in the shell, and
+  // has to be the total waiting rather than the count on this page or filter.
+  const { count: pending } = await supabase
+    .from('ai_suggestions')
+    .select('id', { count: 'exact', head: true })
+    .eq('workspace_id', ws.workspaceId)
+    .eq('status', 'PENDING');
+
+  return ok({ items: data ?? [], pending: pending ?? 0 }, { total: count ?? 0, page, limit });
 });

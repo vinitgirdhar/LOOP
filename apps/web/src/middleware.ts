@@ -35,8 +35,18 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    // Everything except static assets and image files — those never carry a
-    // session and refreshing on them just burns requests.
-    '/((?!_next/static|_next/image|favicon.ico|.*\.(?:svg|png|jpg|jpeg|gif|webp|ico|glb|woff2?)$).*)',
+    /*
+     * Page requests only.
+     *
+     * `/api/*` is excluded on purpose: every route handler already opens with
+     * requireUser(), which calls getUser() itself. Running the middleware over
+     * them too meant two auth round trips to Supabase before a single row was
+     * read, on every request the app makes — the largest single cost in a page
+     * load. Route handlers can also write refreshed cookies themselves, so
+     * nothing is lost by skipping them.
+     *
+     * Static assets are excluded because they carry no session to refresh.
+     */
+    '/((?!api/|_next/static|_next/image|favicon.ico|.*\.(?:svg|png|jpg|jpeg|gif|webp|ico|glb|woff2?)$).*)',
   ],
 };

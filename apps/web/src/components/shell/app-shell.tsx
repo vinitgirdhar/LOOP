@@ -81,9 +81,18 @@ export function AppShell({ workspaceId, children }: { workspaceId: string; child
     }
   }, [can]);
 
+  // Once per workspace, not once per navigation. Refetching these on every
+  // pathname change put two extra API calls in front of every tap, which is
+  // most of why moving between sections felt slow.
   useEffect(() => {
     void loadBadges();
-  }, [loadBadges, workspaceId, pathname]);
+  }, [loadBadges, workspaceId]);
+
+  // Opening chat marks the channel read server-side; reflect that here rather
+  // than paying for a badge refetch on every navigation.
+  useEffect(() => {
+    if (pathname.startsWith(`/w/${workspaceId}/chat`)) setChatUnread(0);
+  }, [pathname, workspaceId]);
 
   useSocketEvent('suggestion:new', () => setSuggestionCount((n) => n + 1));
   useSocketEvent<{ author?: { id: string }; channelId?: string }>('message:new', (message) => {
@@ -207,10 +216,13 @@ export function AppShell({ workspaceId, children }: { workspaceId: string; child
             <Logo size="sm" />
           </Link>
 
+          {/* Search claims the free space, so on a phone it sits hard against
+              the icons on the right rather than floating mid-header. On desktop
+              it becomes the wide field at the start of the row instead. */}
           <button
             type="button"
             onClick={() => setPaletteOpen(true)}
-            className="ml-auto flex h-11 min-w-11 items-center justify-center gap-2 rounded-lg border px-2.5 text-[13px] text-[var(--text-faint)] transition-colors hover:border-[var(--border-strong)] hover:text-[var(--text-muted)] lg:ml-0 lg:h-9 lg:w-72 lg:justify-start"
+            className="ml-auto flex h-11 min-w-11 items-center justify-center gap-2 rounded-lg border px-2.5 text-[13px] text-[var(--text-faint)] transition-colors hover:border-[var(--border-strong)] hover:text-[var(--text-muted)] lg:ml-0 lg:mr-auto lg:h-9 lg:w-72 lg:justify-start"
             aria-label="Search"
           >
             <Icon.search width={16} height={16} />
@@ -218,7 +230,7 @@ export function AppShell({ workspaceId, children }: { workspaceId: string; child
             <kbd className="kbd ml-auto hidden lg:inline-flex">⌘K</kbd>
           </button>
 
-          <div className="ml-auto flex items-center gap-0.5">
+          <div className="flex items-center gap-0.5">
             <span
               className={cx('mr-1 hidden h-1.5 w-1.5 rounded-full sm:block', connected ? 'bg-[var(--success)]' : 'bg-[var(--text-faint)]')}
               title={connected ? 'Live updates connected' : 'Reconnecting…'}

@@ -10,6 +10,7 @@ import { Logo } from '@/components/marketing';
 import { ThemeToggle } from '@/components/providers/theme';
 import { Icon } from '@/components/icons';
 import { useAuth } from '@/components/providers/auth';
+import { supabase } from '@/lib/supabase/client';
 import { useToast } from '@/components/providers/toast';
 import { api, apiErrorMessage } from '@/lib/api';
 import { formatDateTime, relativeTime } from '@/lib/format';
@@ -65,7 +66,6 @@ export default function ProfilePage() {
             <div className="mt-1 flex flex-wrap gap-1.5">
               {user.isPlatformAdmin && <Badge tone="accent">Platform admin</Badge>}
               {user.emailVerifiedAt ? <Badge tone="success">Email verified</Badge> : <Badge tone="warning">Email not verified</Badge>}
-              {user.twoFactorOn && <Badge tone="info">2FA on</Badge>}
             </div>
           </div>
         </div>
@@ -170,8 +170,22 @@ function SecurityTab() {
   const [saving, setSaving] = useState(false);
   const [setup, setSetup] = useState<{ secret: string; qrDataUrl: string } | null>(null);
   const [code, setCode] = useState('');
+  const [twoFactorOn, setTwoFactorOn] = useState(false);
 
   const canUse2fa = user?.isPlatformAdmin || memberships.some((m) => m.role === 'OWNER');
+
+  // Asked for here rather than in the auth provider: only this panel needs it,
+  // and there it sat in front of the first paint of every page.
+  useEffect(() => {
+    if (!canUse2fa) return;
+    let cancelled = false;
+    void supabase.auth.mfa.listFactors().then(({ data }) => {
+      if (!cancelled) setTwoFactorOn((data?.totp ?? []).some((factor) => factor.status === 'verified'));
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [canUse2fa]);
 
   return (
     <div className="space-y-4">
@@ -211,7 +225,7 @@ function SecurityTab() {
         <SectionTitle title="Two-factor authentication" subtitle="Available to workspace owners and platform admins" />
         {!canUse2fa ? (
           <p className="text-[13px] text-[var(--text-muted)]">Your role does not have two-factor available.</p>
-        ) : user?.twoFactorOn ? (
+        ) : twoFactorOn ? (
           <div className="space-y-3">
             <Badge tone="success">Two-factor is on</Badge>
             <Field label="Enter a code to turn it off">

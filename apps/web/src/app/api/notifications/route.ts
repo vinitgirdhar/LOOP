@@ -17,5 +17,13 @@ export const GET = route(async (request: Request) => {
 
   const { data, error, count } = await query;
   assertOk(error, 'Notifications');
-  return ok(data ?? [], { total: count ?? 0, page, limit });
+
+  // The bell shows a badge for everything unread, not just this page of rows.
+  const { count: unread } = await supabase
+    .from('notifications')
+    .select('id', { count: 'exact', head: true })
+    .eq('user_id', user.id)
+    .is('read_at', null);
+
+  return ok({ items: data ?? [], unread: unread ?? 0 }, { total: count ?? 0, page, limit });
 });

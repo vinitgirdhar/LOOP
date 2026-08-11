@@ -22,5 +22,27 @@ export const GET = route(async (request: Request) => {
 
   const { data, error, count } = await query;
   assertOk(error, 'Users');
-  return ok(data ?? [], { total: count ?? 0, page, limit });
+
+  const rows = data ?? [];
+  const ids = rows.map((row: { id: string }) => row.id);
+
+  // The table shows a workspace count per person. Sessions live in auth.*,
+  // which the anon key cannot read, so that figure is reported as 0 rather
+  // than guessed at.
+  const { data: memberships } = ids.length
+    ? await supabase.from('workspace_members').select('user_id').in('user_id', ids)
+    : { data: [] as { user_id: string }[] };
+
+  const perUser = new Map<string, number>();
+  for (const row of (memberships ?? []) as { user_id: string }[]) {
+    perUser.set(row.user_id, (perUser.get(row.user_id) ?? 0) + 1);
+  }
+
+  return ok(
+    rows.map((row: Record<string, unknown>) => ({
+      ...row,
+      _count: { memberships: perUser.get(row.id as string) ?? 0, sessions: 0 },
+    })),
+    { total: count ?? 0, page, limit },
+  );
 });
