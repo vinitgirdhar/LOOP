@@ -365,9 +365,16 @@ export function RazorpayModal({
                 autoFocus
                 className="input text-center font-mono text-xl tracking-[0.4em] font-bold"
               />
-              <p className="mt-1.5 text-[11px] text-blue-600 dark:text-blue-400 font-medium cursor-pointer hover:underline">
-                Resend OTP (Simulated: enter 123456)
-              </p>
+              {/* Was a <p> styled as a link, so it invited a tap and did
+                  nothing. In a simulated checkout the honest behaviour is to
+                  clear the field and let the reader start again. */}
+              <button
+                type="button"
+                onClick={() => setOtp('')}
+                className="mt-1.5 text-[11px] font-medium text-[var(--accent)] hover:underline"
+              >
+                Resend OTP (simulated — enter 123456)
+              </button>
             </div>
 
             <button

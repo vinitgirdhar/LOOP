@@ -52,9 +52,19 @@ export default function DashboardPage({ params }: { params: Promise<{ workspaceI
         <div className="space-y-4">
           {/* Stats */}
           <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-            <StatTile label="Active projects" value={data.activeProjects.length} />
-            <StatTile label="My open tasks" value={data.myTasks.length} hint={`${data.myTasks.filter((t) => isOverdue(t.dueDate)).length} overdue`} />
-            <StatTile label="Done this week" value={data.productivity.tasksCompletedThisWeek} hint={`${data.productivity.hoursThisWeek}h logged`} />
+            <StatTile label="Active projects" value={data.activeProjects.length} href={`/w/${workspaceId}/projects`} />
+            <StatTile
+              label="My open tasks"
+              value={data.myTasks.length}
+              hint={`${data.myTasks.filter((t) => isOverdue(t.dueDate)).length} overdue`}
+              href={`/w/${workspaceId}/tasks`}
+            />
+            <StatTile
+              label="Done this week"
+              value={data.productivity.tasksCompletedThisWeek}
+              hint={`${data.productivity.hoursThisWeek}h logged`}
+              href={`/w/${workspaceId}/time`}
+            />
             <StatTile label="Unread" value={data.unreadNotifications} hint="notifications" />
           </div>
 

@@ -48,10 +48,10 @@ export default function LandingPage() {
         {/* Stat strip — the numbers count up as they arrive. */}
         <section className="border-b bg-[var(--bg-subtle)]">
           <div data-reveal-group className="mx-auto grid max-w-6xl 2xl:max-w-7xl 3xl:max-w-[88rem] grid-cols-2 gap-y-6 px-4 py-9 sm:px-6 lg:grid-cols-4">
-            <Stat value={5} label="Signals behind every health score" />
-            <Stat value={0} label="Silent AI writes to your board" />
-            <Stat value={4} label="Roles, enforced on the API" />
-            <Stat value={1} label="Workspace instead of six tools" />
+            <Stat value={5} label="Signals behind every health score" href="/blog/explainable-health-score" />
+            <Stat value={0} label="Silent AI writes to your board" href="/#faq" />
+            <Stat value={4} label="Roles, enforced on the API" href="/blog/permission-aware-rag" />
+            <Stat value={1} label="Workspace instead of six tools" href="/#features" />
           </div>
         </section>
 
@@ -168,22 +168,23 @@ export default function LandingPage() {
   );
 }
 
-function Stat({ value, label }: { value: number; label: string }) {
+/** Every figure here is a claim, and each one opens the page that backs it. */
+function Stat({ value, label, href }: { value: number; label: string; href: string }) {
   return (
-    <div className="px-2 text-center">
+    <Link href={href} className="group block rounded-[var(--radius)] px-2 py-1 text-center transition-colors hover:bg-[var(--bg-inset)]">
       {/* Renders the final figure, so with no JavaScript the number is still
           right; the counter simply replaces it on the way in. */}
       <p data-count={value} className="text-4xl font-bold tabular-nums sm:text-5xl">
         {value}
       </p>
-      <p className="mx-auto mt-1.5 max-w-[13rem] text-[11.5px] leading-snug text-[var(--text-muted)]">{label}</p>
-    </div>
+      <p className="mx-auto mt-1.5 max-w-[13rem] text-[11.5px] leading-snug text-[var(--text-muted)] group-hover:text-[var(--text)]">{label}</p>
+    </Link>
   );
 }
 
 function SuggestionSketch({ title, confidence, evidence, kind }: { title: string; confidence: string; evidence: string; kind: string }) {
   return (
-    <div className="rounded-[16px] border bg-[var(--bg)] p-3.5">
+    <Link href="/login" className="group block rounded-[16px] border bg-[var(--bg)] p-3.5 transition-colors hover:border-[var(--border-strong)]">
       <div className="flex items-start justify-between gap-3">
         <p className="text-[13px] font-semibold">{title}</p>
         <span className="badge shrink-0 bg-[var(--success-soft)] text-[var(--success)]">{confidence}</span>
@@ -193,10 +194,14 @@ function SuggestionSketch({ title, confidence, evidence, kind }: { title: string
         <br />
         {evidence}
       </p>
-      <div className="mt-3 flex gap-1.5">
-        <span className="btn btn-primary btn-sm pointer-events-none">Accept</span>
-        <span className="btn btn-secondary btn-sm pointer-events-none">Reject</span>
+      {/* These two are a picture of the controls, not the controls. Rendered
+          small and muted so they read as part of the preview, with the card
+          itself carrying the way to the real thing. */}
+      <div className="mt-3 flex items-center gap-1.5">
+        <span className="badge bg-[var(--bg-inset)] text-[var(--text-muted)]">Accept</span>
+        <span className="badge bg-[var(--bg-inset)] text-[var(--text-muted)]">Reject</span>
+        <span className="ml-auto text-[11px] font-medium text-[var(--accent)] group-hover:underline">Try it on a demo account →</span>
       </div>
-    </div>
+    </Link>
   );
 }

@@ -42,14 +42,44 @@ export function PageHeader({
   );
 }
 
-export function StatTile({ label, value, hint, tone }: { label: string; value: ReactNode; hint?: string; tone?: string }) {
-  return (
-    <div className="card p-3.5">
+/**
+ * A figure, optionally a way in.
+ *
+ * A count is a question — "which twelve?" — and the answer is always a list
+ * that already exists. Given an `href` the tile becomes that link and says so
+ * on hover; without one it stays a plain figure rather than pretending.
+ */
+export function StatTile({
+  label,
+  value,
+  hint,
+  tone,
+  href,
+}: {
+  label: string;
+  value: ReactNode;
+  hint?: string;
+  tone?: string;
+  href?: string;
+}) {
+  const body = (
+    <>
       <p className="text-[11px] font-medium uppercase tracking-wide text-[var(--text-faint)]">{label}</p>
       <p className="mt-1 text-xl font-bold tabular-nums tracking-[-0.02em]" style={tone ? { color: tone } : undefined}>
         {value}
       </p>
       {hint && <p className="mt-0.5 text-[11px] text-[var(--text-muted)]">{hint}</p>}
-    </div>
+    </>
+  );
+
+  if (!href) return <div className="card p-3.5">{body}</div>;
+
+  return (
+    <Link
+      href={href}
+      className="card group block p-3.5 transition-colors hover:border-[var(--border-strong)] hover:bg-[var(--bg-inset)]"
+    >
+      {body}
+    </Link>
   );
 }
