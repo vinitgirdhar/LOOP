@@ -29,6 +29,16 @@ function seeded(i: number, salt: number) {
 
 const easeInOut = (t: number) => (t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2);
 
+/**
+ * Scroll fraction at which the block is fully assembled.
+ *
+ * Shared with the section's copy timing: the third beat claims the board ends
+ * up current, and it should land on a finished cube rather than narrate one
+ * that is still visibly flying together. The remaining scroll holds the
+ * finished object while that beat is read.
+ */
+export const ASSEMBLY_END = 0.58;
+
 interface Piece {
   home: THREE.Vector3;
   away: THREE.Vector3;
@@ -83,7 +93,9 @@ function Block({ progress }: { progress: { current: number } }) {
   const scratch = useMemo(() => new THREE.Object3D(), []);
 
   const layout = useCallback((time: number, step: number) => {
-    const p = THREE.MathUtils.clamp(progress.current, 0, 1);
+    // Scroll progress is remapped so the assembly completes at ASSEMBLY_END
+    // and simply holds afterwards.
+    const p = THREE.MathUtils.clamp(progress.current / ASSEMBLY_END, 0, 1);
 
     pieces.forEach((piece, i) => {
       // Each piece runs its own slightly-shifted copy of the timeline.
@@ -104,15 +116,17 @@ function Block({ progress }: { progress: { current: number } }) {
     if (edges.current) edges.current.instanceMatrix.needsUpdate = true;
 
     if (group.current) {
-      // A full turn across the scroll, plus a slow idle so it is never frozen.
-      group.current.rotation.y = p * Math.PI * 1.6 + time * 0.12;
+      // Most of the turn happens during the assembly; the idle drift carries on
+      // afterwards so the finished block is never a still image.
+      group.current.rotation.y = p * Math.PI * 1.35 + time * 0.12;
       group.current.rotation.x = Math.sin(time * 0.25) * 0.16 + (1 - p) * 0.3;
     }
 
     if (ring.current) {
       ring.current.rotation.z += step * 0.4;
-      // The Loop ring closes in only once the block is nearly whole.
-      const reveal = THREE.MathUtils.smoothstep(p, 0.72, 1);
+      // The ring closes in over the last stretch of the assembly, so it is
+      // settled by the time the block is whole.
+      const reveal = THREE.MathUtils.smoothstep(p, 0.68, 1);
       ring.current.scale.setScalar(1.6 - reveal * 0.35);
       (ring.current.material as THREE.MeshBasicMaterial).opacity = reveal;
     }

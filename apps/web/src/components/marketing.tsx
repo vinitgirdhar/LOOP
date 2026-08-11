@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { Icon } from '@/components/icons';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { ThemeToggle } from '@/components/providers/theme';
 import { useAuth } from '@/components/providers/auth';
 import { cx } from '@/lib/format';
@@ -40,12 +40,55 @@ const NAV = [
 
 export function MarketingNav() {
   const [open, setOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
   const { user, ready } = useAuth();
+
+  /*
+    The left slot carries the wordmark while the hero is on screen and becomes
+    the menu button once the reader starts scrolling. It is one control the
+    whole time — tapping the mark opens the menu too — which is what lets the
+    bar hold a single action on the right instead of crowding three.
+  */
+  useEffect(() => {
+    let frame = 0;
+    const onScroll = () => {
+      if (frame) return;
+      frame = requestAnimationFrame(() => {
+        frame = 0;
+        setScrolled(window.scrollY > 24);
+      });
+    };
+    onScroll();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => {
+      window.removeEventListener('scroll', onScroll);
+      if (frame) cancelAnimationFrame(frame);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (event: KeyboardEvent) => event.key === 'Escape' && setOpen(false);
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [open]);
 
   return (
     <header className="sticky top-0 z-40 border-b bg-[var(--bg)]/85 backdrop-blur-md">
       <nav className="mx-auto flex h-14 max-w-6xl 2xl:max-w-7xl 3xl:max-w-[88rem] items-center gap-3 px-4 sm:px-6" aria-label="Main">
-        <Link href="/" className="shrink-0">
+        {/* Mobile: one left control, wordmark → menu icon on scroll. */}
+        <button
+          type="button"
+          onClick={() => setOpen((v) => !v)}
+          aria-expanded={open}
+          aria-label={open ? 'Close menu' : 'Open menu'}
+          className="-ml-1 flex h-11 min-w-11 shrink-0 items-center justify-center rounded-lg px-1 transition-colors hover:bg-[var(--bg-inset)] lg:hidden"
+        >
+          {open ? <Icon.close width={18} height={18} /> : scrolled ? <Icon.menu width={19} height={19} /> : <Logo />}
+        </button>
+
+        {/* Desktop keeps the mark as a link home, with the section nav beside it. */}
+        <Link href="/" className="hidden shrink-0 lg:block">
           <Logo />
         </Link>
 
@@ -68,15 +111,12 @@ export function MarketingNav() {
               <Link href="/login" className="btn btn-ghost btn-sm hidden sm:inline-flex">
                 Sign in
               </Link>
-              {/* First-time visitors meet the three mascots before the form. */}
+              {/* Last in the row, so it sits hard against the right edge. */}
               <Link href="/welcome" className="btn btn-primary btn-sm">
                 Get started
               </Link>
             </>
           )}
-          <button type="button" className="btn btn-ghost btn-icon btn-sm lg:hidden" onClick={() => setOpen((v) => !v)} aria-expanded={open} aria-label="Toggle menu">
-            {open ? <Icon.close width={16} height={16} /> : <Icon.menu width={17} height={17} />}
-          </button>
         </div>
       </nav>
 

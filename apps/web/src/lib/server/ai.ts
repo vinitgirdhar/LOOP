@@ -17,6 +17,36 @@ export const isAiConfigured = () => Boolean(process.env.GROQ_API_KEY || process.
 
 const TIMEOUT_MS = 25_000;
 
+export type AiFailure = 'unconfigured' | 'rate_limited' | 'rejected' | 'unavailable';
+
+/**
+ * A provider failure the UI can act on.
+ *
+ * "The AI did not answer" is not a useful thing to tell somebody. A spent quota
+ * and a wrong key need different responses, and both look identical once the
+ * status code is thrown away.
+ */
+export class AiError extends Error {
+  constructor(
+    public reason: AiFailure,
+    message: string,
+    public status?: number,
+  ) {
+    super(message);
+    this.name = 'AiError';
+  }
+}
+
+const failureFor = (status: number): AiFailure =>
+  status === 429 ? 'rate_limited' : status === 401 || status === 403 ? 'rejected' : 'unavailable';
+
+const describe = (provider: string, status: number) =>
+  status === 429
+    ? `${provider} is rate limited or out of quota`
+    : status === 401 || status === 403
+      ? `${provider} rejected the API key`
+      : `${provider} replied ${status}`;
+
 async function callGroq(messages: ChatMessage[], key: string): Promise<string> {
   const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
     method: 'POST',
@@ -29,7 +59,7 @@ async function callGroq(messages: ChatMessage[], key: string): Promise<string> {
     signal: AbortSignal.timeout(TIMEOUT_MS),
   });
 
-  if (!response.ok) throw new Error(`Groq replied ${response.status}`);
+  if (!response.ok) throw new AiError(failureFor(response.status), describe('Groq', response.status), response.status);
 
   const payload = (await response.json()) as { choices?: { message?: { content?: string } }[] };
   return payload.choices?.[0]?.message?.content ?? '';
@@ -54,7 +84,7 @@ async function callGemini(messages: ChatMessage[], key: string): Promise<string>
     signal: AbortSignal.timeout(TIMEOUT_MS),
   });
 
-  if (!response.ok) throw new Error(`Gemini replied ${response.status}`);
+  if (!response.ok) throw new AiError(failureFor(response.status), describe('Gemini', response.status), response.status);
 
   const payload = (await response.json()) as { candidates?: { content?: { parts?: { text?: string }[] } }[] };
   return payload.candidates?.[0]?.content?.parts?.map((part) => part.text ?? '').join('') ?? '';
@@ -64,16 +94,54 @@ export async function chat(messages: ChatMessage[]): Promise<string> {
   const groqKey = process.env.GROQ_API_KEY;
   const geminiKey = process.env.GEMINI_API_KEY;
 
+  let first: unknown;
+
   if (groqKey) {
     try {
       return await callGroq(messages, groqKey);
     } catch (error) {
       // Fall through to Gemini rather than failing the request outright.
       console.error('[ai] groq failed', error);
+      first = error;
       if (!geminiKey) throw error;
     }
   }
 
-  if (geminiKey) return callGemini(messages, geminiKey);
-  throw new Error('No AI provider is configured');
+  if (geminiKey) {
+    try {
+      return await callGemini(messages, geminiKey);
+    } catch (error) {
+      console.error('[ai] gemini failed', error);
+      // Report whichever failure explains it best: a spent quota is the useful
+      // thing to say even when the second provider merely timed out.
+      const spent = [first, error].find((candidate) => candidate instanceof AiError && candidate.reason === 'rate_limited');
+      throw spent ?? error;
+    }
+  }
+
+  throw new AiError('unconfigured', 'No AI provider is configured', undefined);
+}
+
+/**
+ * A deliberately tiny live call to each configured provider.
+ *
+ * Whether a key is *present* and whether it still *works* are different
+ * questions, and only the second one matters when the answers stop coming.
+ * Kept off the normal status response because it costs a request per provider.
+ */
+export async function probeProviders(): Promise<{ provider: string; configured: boolean; ok: boolean; detail: string }[]> {
+  const probe = async (provider: 'groq' | 'gemini', key: string | undefined) => {
+    if (!key) return { provider, configured: false, ok: false, detail: 'No API key set' };
+    try {
+      const reply = provider === 'groq'
+        ? await callGroq([{ role: 'user', content: 'ping' }], key)
+        : await callGemini([{ role: 'user', content: 'ping' }], key);
+      return { provider, configured: true, ok: true, detail: reply ? 'Answered' : 'Answered empty' };
+    } catch (error) {
+      const detail = error instanceof AiError ? error.message : error instanceof Error ? error.message : 'Failed';
+      return { provider, configured: true, ok: false, detail };
+    }
+  };
+
+  return Promise.all([probe('groq', process.env.GROQ_API_KEY), probe('gemini', process.env.GEMINI_API_KEY)]);
 }

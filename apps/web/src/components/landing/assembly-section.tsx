@@ -24,6 +24,23 @@ const AssemblyScene = dynamic(() => import('@/components/three/assembly'), {
   loading: () => <div className="h-full w-full" />,
 });
 
+/**
+ * Where each beat is on screen, as a fraction of the scroll track.
+ *
+ * Written out rather than derived from `1 / BEATS.length` so the copy can be
+ * held against the cube: the first two beats run while the block assembles,
+ * and the third is not revealed until after it has finished at 0.58 — it is
+ * the beat that claims the board ends up current, and it should land on a
+ * finished object. `fade` is short on purpose; a third of the track spent
+ * cross-fading is what made the reveal feel like it lagged the scroll.
+ */
+const FADE = 0.05;
+const WINDOWS = [
+  { enter: 0, exit: 0.26 },
+  { enter: 0.3, exit: 0.55 },
+  { enter: 0.62, exit: 1 },
+];
+
 const BEATS = [
   {
     step: '01',
@@ -71,33 +88,36 @@ export function AssemblySection() {
       // Beats cross-fade against the same track, so copy and cube stay in step.
       const beats = gsap.utils.toArray<HTMLElement>('[data-beat]');
       beats.forEach((beat, index) => {
-        const span = 1 / beats.length;
-        const enter = index * span;
+        const slot = WINDOWS[index] ?? WINDOWS[WINDOWS.length - 1]!;
+        const first = index === 0;
+
         gsap.fromTo(
           beat,
-          { opacity: index === 0 ? 1 : 0, y: index === 0 ? 0 : 24 },
+          { opacity: first ? 1 : 0, y: first ? 0 : 20 },
           {
             opacity: 1,
             y: 0,
             ease: 'none',
             scrollTrigger: {
               trigger: track.current,
-              start: `top+=${enter * 100}% top`,
-              end: `top+=${(enter + span * 0.45) * 100}% top`,
-              scrub: 0.4,
+              start: `top+=${slot.enter * 100}% top`,
+              end: `top+=${(slot.enter + (first ? 0.01 : FADE)) * 100}% top`,
+              scrub: 0.3,
             },
           },
         );
+
+        // The last beat holds to the end of the track rather than fading out.
         if (index < beats.length - 1) {
           gsap.to(beat, {
             opacity: 0,
-            y: -24,
+            y: -20,
             ease: 'none',
             scrollTrigger: {
               trigger: track.current,
-              start: `top+=${(enter + span * 0.62) * 100}% top`,
-              end: `top+=${(enter + span) * 100}% top`,
-              scrub: 0.4,
+              start: `top+=${(slot.exit - FADE) * 100}% top`,
+              end: `top+=${slot.exit * 100}% top`,
+              scrub: 0.3,
             },
           });
         }
@@ -107,7 +127,7 @@ export function AssemblySection() {
       gsap.to('[data-beat-rail]', {
         scaleX: 1,
         ease: 'none',
-        scrollTrigger: { trigger: track.current, start: 'top top', end: 'bottom bottom', scrub: 0.4 },
+        scrollTrigger: { trigger: track.current, start: 'top top', end: 'bottom bottom', scrub: 0.3 },
       });
     }, track);
 
