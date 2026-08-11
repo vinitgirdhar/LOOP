@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { requireUser } from '@/lib/server/context';
 import { badRequest, body, ok, route, unauthorized } from '@/lib/server/http';
+import { enforceRateLimit } from '@/lib/server/rate-limit';
 
 const schema = z.object({
   currentPassword: z.string().min(1, 'Enter your current password'),
@@ -13,7 +14,9 @@ const schema = z.object({
  * owner out of their account.
  */
 export const POST = route(async (request: Request) => {
-  const { supabase, user } = await requireUser();
+  const ctx = await requireUser();
+  const { supabase, user } = ctx;
+  await enforceRateLimit(supabase, 'auth', ctx.user.id);
   const { currentPassword, password } = await body(request, schema);
 
   const { error: wrong } = await supabase.auth.signInWithPassword({ email: user.email, password: currentPassword });

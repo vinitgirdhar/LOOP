@@ -1,11 +1,13 @@
 import { z } from 'zod';
 import { requireUser } from '@/lib/server/context';
 import { badRequest, body, ok, route } from '@/lib/server/http';
+import { enforceRateLimit } from '@/lib/server/rate-limit';
 
 const schema = z.object({ code: z.string().trim().length(6, 'Enter the six digit code') });
 
 export const POST = route(async (request: Request) => {
-  const { supabase } = await requireUser();
+  const { supabase, user } = await requireUser();
+  await enforceRateLimit(supabase, 'auth', user.id);
   const { code } = await body(request, schema);
 
   const { data: factors } = await supabase.auth.mfa.listFactors();

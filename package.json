@@ -2,7 +2,7 @@
   "name": "loop",
   "private": true,
   "version": "1.0.0",
-  "description": "Loop — enterprise project management & team collaboration platform (DevFusion 4.0 PS-5). Next.js on Vercel, Supabase for data, auth, storage and realtime.",
+  "description": "Loop \u2014 enterprise project management & team collaboration platform (DevFusion 4.0 PS-5). Next.js on Vercel, Supabase for data, auth, storage and realtime.",
   "workspaces": [
     "packages/shared",
     "apps/web"
@@ -12,6 +12,7 @@
     "build": "npm run build --workspace @loop/web",
     "start": "npm run start --workspace @loop/web",
     "lint": "npm run lint --workspace @loop/web",
+    "test": "tsx apps/web/src/lib/gantt.test.ts && tsx apps/web/src/lib/whiteboard.test.ts && tsx apps/web/src/lib/i18n/dictionaries.test.ts && tsx --conditions=react-server apps/web/src/lib/server/share.test.ts && tsx --conditions=react-server apps/web/src/lib/server/rate-limit.test.ts",
     "typecheck": "npm run typecheck --workspace @loop/web",
     "db:push": "supabase db push",
     "db:reset": "supabase db reset",
@@ -19,7 +20,8 @@
     "supabase:start": "supabase start",
     "supabase:stop": "supabase stop",
     "db:seed": "node supabase/seed.mjs",
-    "db:seed:reset": "node supabase/seed.mjs --reset"
+    "db:seed:reset": "node supabase/seed.mjs --reset",
+    "openapi": "node scripts/generate-openapi.mjs"
   },
   "devDependencies": {
     "tsx": "^4.19.2",

@@ -48,9 +48,18 @@ export const created = <T>(data: T) => ok(data, undefined, 201);
  */
 export function fail(error: unknown) {
   if (error instanceof HttpError) {
+    // A 429 without Retry-After tells the caller to back off but not for how
+    // long, so every client invents its own guess. Read structurally rather
+    // than by importing RateLimitError, which would make this module and the
+    // rate limiter depend on each other.
+    const retryAfter = (error as HttpError & { retryAfterSeconds?: number }).retryAfterSeconds;
+
     return Response.json(
       { success: false, error: error.message, code: error.code, ...(error.details ? { details: error.details } : {}) },
-      { status: error.status },
+      {
+        status: error.status,
+        ...(typeof retryAfter === 'number' ? { headers: { 'retry-after': String(retryAfter) } } : {}),
+      },
     );
   }
 

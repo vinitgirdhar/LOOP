@@ -4,6 +4,7 @@ import { Suspense, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/components/providers/auth';
+import { useT } from '@/components/providers/locale';
 import { AuthCard, AuthDivider, AuthFooterLink, DemoAccounts, FormError, GoogleButton } from '@/components/auth-form';
 import { Button, Field } from '@/components/ui';
 import { apiErrorMessage } from '@/lib/api';
@@ -12,6 +13,7 @@ function LoginForm() {
   const router = useRouter();
   const params = useSearchParams();
   const { login, loginWith2fa, user, ready } = useAuth();
+  const t = useT();
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -79,28 +81,28 @@ function LoginForm() {
 
   return (
     <AuthCard
-      title="Welcome back."
-      subtitle="Sign in to pick up exactly where your team left off."
-      footer={<>Don&apos;t have an account? <AuthFooterLink href="/register">Sign up</AuthFooterLink></>}
+      title={t('auth.welcomeBack')}
+      subtitle={t('auth.signInSubtitle')}
+      footer={<>{t('auth.noAccount')} <AuthFooterLink href="/register">{t('auth.signUp')}</AuthFooterLink></>}
     >
       <form onSubmit={submit} className="space-y-4 sm:space-y-5 lg:space-y-6">
         <FormError message={error} />
-        <Field label="Email">
+        <Field label={t('auth.email')}>
           <input className="input" type="email" placeholder="you@company.com" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} required autoFocus />
         </Field>
-        <Field label="Password">
+        <Field label={t('auth.password')}>
           <input className="input" type="password" placeholder="••••••••" autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} required />
         </Field>
         <Button type="submit" variant="primary" className="btn-hero" loading={loading}>
-          Sign in
+          {t('auth.signIn')}
         </Button>
         <div className="text-center pt-0.5">
           <Link href="/forgot-password" className="text-[13px] font-medium underline underline-offset-4 opacity-80 hover:opacity-100 sm:text-[14px]">
-            Forgot the password?
+            {t('auth.forgotPassword')}
           </Link>
         </div>
       </form>
-      <AuthDivider label="or continue with" />
+      <AuthDivider label={t('auth.orContinueWith')} />
       <GoogleButton label="Google" />
       <DemoAccounts
         onPick={(demo) => {

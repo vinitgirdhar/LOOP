@@ -10,6 +10,7 @@ import { useAuth } from '@/components/providers/auth';
 import { useToast } from '@/components/providers/toast';
 import { api, apiErrorMessage } from '@/lib/api';
 import { formatShortDate } from '@/lib/format';
+import { ShareLinks } from '@/components/project/share-links';
 
 interface ProjectShape {
   id: string;
@@ -379,6 +380,8 @@ export function ProjectSettings({ project, workspaceId, onChanged }: { project: 
           </Button>
         </Card>
       )}
+
+      <ShareLinks projectId={project.id} />
 
       <Confirm
         open={archiving}

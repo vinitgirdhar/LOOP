@@ -107,8 +107,11 @@ export function Avatar({ name, src, size = 28, className, seed, kind = 'person' 
   const style = { width: size, height: size, fontSize: Math.max(9, size * 0.38) };
 
   if (src && !failed) {
-    // eslint-disable-next-line @next/next/no-img-element
+    // Not next/image: the source may be a blob: preview of a file the reader
+    // has not uploaded yet, which the optimiser cannot fetch, and the onError
+    // fallback to initials is the whole reason this branch exists.
     return (
+      // eslint-disable-next-line @next/next/no-img-element
       <img
         src={src}
         alt={name}

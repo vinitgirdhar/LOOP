@@ -7,6 +7,7 @@ import { ROLE_LABELS } from '@loop/shared';
 import { useAuth } from '@/components/providers/auth';
 import { useSocket, useSocketEvent } from '@/components/providers/socket';
 import { ThemeToggle } from '@/components/providers/theme';
+import { LocaleSwitcher } from '@/components/providers/locale';
 import { Avatar, Menu, MenuItem, Spinner } from '@/components/ui';
 import { Icon } from '@/components/icons';
 import { Logo } from '@/components/marketing';
@@ -236,6 +237,9 @@ export function AppShell({ workspaceId, children }: { workspaceId: string; child
               className={cx('mr-1 hidden h-1.5 w-1.5 rounded-full sm:block', connected ? 'bg-[var(--success)]' : 'bg-[var(--text-faint)]')}
               title={connected ? 'Live updates connected' : 'Reconnecting…'}
             />
+            <span className="hidden sm:block">
+              <LocaleSwitcher />
+            </span>
             <span className="hidden sm:block">
               <ThemeToggle />
             </span>

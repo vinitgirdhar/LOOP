@@ -1,12 +1,15 @@
 import { requireMember } from '@/lib/server/context';
 import { badRequest, notFound, ok, route } from '@/lib/server/http';
+import { enforceRateLimit } from '@/lib/server/rate-limit';
 import { chat, isAiConfigured } from '@/lib/server/ai';
 
 type Params = { params: Promise<{ taskId: string }> };
 
 export const POST = route(async (request: Request, { params }: Params) => {
   const { taskId } = await params;
-  const { supabase, ws } = await requireMember(request);
+  const ctx = await requireMember(request);
+  const { supabase, ws } = ctx;
+  await enforceRateLimit(supabase, 'ai', ctx.user.id);
 
   if (!isAiConfigured()) throw badRequest('AI is not configured on this deployment');
 

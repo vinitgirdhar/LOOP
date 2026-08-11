@@ -48,6 +48,7 @@ export const navItems = (workspaceId: string): NavItem[] => {
 
     { id: 'chat', href: `${w}/chat`, label: 'Chat', short: 'Chat', icon: 'chat', group: 'knowledge', permission: 'chat.read', badge: 'chat', hint: 'Channels, threads and DMs' },
     { id: 'docs', href: `${w}/docs`, label: 'Docs', short: 'Docs', icon: 'doc', group: 'knowledge', hint: 'Wiki pages across every project' },
+    { id: 'boards', href: `${w}/boards`, label: 'Boards', short: 'Boards', icon: 'sparkles', group: 'knowledge', permission: 'wiki.read', hint: 'Mind maps and whiteboards' },
     { id: 'files', href: `${w}/files`, label: 'Files', short: 'Files', icon: 'folder', group: 'knowledge', hint: 'Every attachment in one place' },
     { id: 'ask', href: `${w}/ask`, label: 'Ask workspace', short: 'Ask', icon: 'sparkles', group: 'knowledge', permission: 'ai.ask', hint: 'Answers with citations you can open' },
 

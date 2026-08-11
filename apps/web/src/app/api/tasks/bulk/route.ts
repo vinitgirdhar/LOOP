@@ -2,6 +2,7 @@ import { z } from 'zod';
 import { PRIORITIES } from '@loop/shared';
 import { requireMember, requirePermission } from '@/lib/server/context';
 import { assertOk, body, ok, route } from '@/lib/server/http';
+import { enforceRateLimit } from '@/lib/server/rate-limit';
 
 const schema = z.object({
   ids: z.array(z.string().uuid()).min(1, 'Select at least one task').max(200),
@@ -13,6 +14,7 @@ const schema = z.object({
 
 export const PATCH = route(async (request: Request) => {
   const ctx = await requireMember(request);
+  await enforceRateLimit(ctx.supabase, 'expensive', ctx.user.id);
   await requirePermission(ctx, ctx.ws, 'task.update.any');
   const input = await body(request, schema);
 

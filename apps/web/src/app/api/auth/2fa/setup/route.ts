@@ -1,5 +1,6 @@
 import { requireUser } from '@/lib/server/context';
 import { badRequest, ok, route } from '@/lib/server/http';
+import { enforceRateLimit } from '@/lib/server/rate-limit';
 
 /**
  * Starts TOTP enrolment. The factor stays `unverified` until a code from the
@@ -7,7 +8,8 @@ import { badRequest, ok, route } from '@/lib/server/http';
  * setup cannot lock anyone out.
  */
 export const POST = route(async () => {
-  const { supabase } = await requireUser();
+  const { supabase, user } = await requireUser();
+  await enforceRateLimit(supabase, 'auth', user.id);
 
   // Clear any half-finished attempt, otherwise Supabase rejects the new one as
   // a duplicate friendly name.

@@ -8,6 +8,7 @@ import { supabase } from '@/lib/supabase/client';
 import { Icon } from '@/components/icons';
 import { Mascot, mascotFor } from '@/components/mascots';
 import { ThemeToggle } from '@/components/providers/theme';
+import { LocaleSwitcher, useT } from '@/components/providers/locale';
 import { Logo } from '@/components/marketing';
 import { useMediaQuery } from '@/lib/hooks';
 
@@ -64,7 +65,7 @@ export function AuthCard({
       >
         <ConstellationMark />
 
-        <header className="relative flex items-center justify-between z-10">
+        <header className="relative z-10 flex items-center justify-between gap-1">
           <button
             type="button"
             onClick={() => router.back()}
@@ -74,6 +75,7 @@ export function AuthCard({
             <Icon.arrowLeft width={19} height={19} />
           </button>
 
+          <LocaleSwitcher className="text-[var(--ink-text)]" />
           <ThemeToggle className="text-[var(--ink-text)] hover:bg-[color-mix(in_oklab,var(--ink-text)_10%,transparent)] hover:text-[var(--ink-text)]" />
         </header>
 
@@ -205,6 +207,7 @@ export function FormSuccess({ message }: { message: string | null }) {
 
 /** Judge-friendly shortcut: one tap fills a seeded account, mascot and all. */
 export function DemoAccounts({ onPick }: { onPick: (email: string) => void }) {
+  const label = useT()('auth.demoAccounts');
   const accounts = [
     { email: 'owner@loop.dev', role: 'Owner' },
     { email: 'pm@loop.dev', role: 'PM' },
@@ -215,7 +218,7 @@ export function DemoAccounts({ onPick }: { onPick: (email: string) => void }) {
   return (
     <div className="mt-4 sm:mt-6 lg:mt-7">
       <p className="text-center text-[11px] font-semibold uppercase tracking-[0.14em] opacity-60 sm:text-[12px]">
-        Demo accounts · password Password123
+        {label}
       </p>
       <div className="mt-2.5 flex flex-wrap justify-center gap-2 sm:gap-2.5">
         {accounts.map((account) => (

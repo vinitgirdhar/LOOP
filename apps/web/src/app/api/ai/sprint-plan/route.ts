@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { requireMember, requirePermission } from '@/lib/server/context';
 import { badRequest, body, ok, route } from '@/lib/server/http';
+import { enforceRateLimit } from '@/lib/server/rate-limit';
 import { chat, isAiConfigured } from '@/lib/server/ai';
 
 const schema = z.object({
@@ -14,6 +15,7 @@ const schema = z.object({
  */
 export const POST = route(async (request: Request) => {
   const ctx = await requireMember(request);
+  await enforceRateLimit(ctx.supabase, 'ai', ctx.user.id);
   await requirePermission(ctx, ctx.ws, 'sprint.manage');
   const input = await body(request, schema);
 

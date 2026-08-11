@@ -1,5 +1,6 @@
 import { requireMember, requirePermission } from '@/lib/server/context';
 import { fail } from '@/lib/server/http';
+import { enforceRateLimit } from '@/lib/server/rate-limit';
 
 /** RFC 4180: quote every field and double any quote inside it. */
 const cell = (value: unknown) => `"${String(value ?? '').replace(/"/g, '""')}"`;
@@ -7,6 +8,7 @@ const cell = (value: unknown) => `"${String(value ?? '').replace(/"/g, '""')}"`;
 export async function GET(request: Request) {
   try {
     const ctx = await requireMember(request);
+    await enforceRateLimit(ctx.supabase, 'expensive', ctx.user.id);
     await requirePermission(ctx, ctx.ws, 'report.generate');
 
     const { data: tasks } = await ctx.supabase

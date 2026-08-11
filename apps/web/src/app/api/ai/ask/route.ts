@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { requireMember } from '@/lib/server/context';
 import { badRequest, body, ok, route } from '@/lib/server/http';
+import { enforceRateLimit } from '@/lib/server/rate-limit';
 import { chat, isAiConfigured } from '@/lib/server/ai';
 
 const schema = z.object({ question: z.string().trim().min(3, 'Ask a fuller question').max(500) });
@@ -14,6 +15,7 @@ const schema = z.object({ question: z.string().trim().min(3, 'Ask a fuller quest
  */
 export const POST = route(async (request: Request) => {
   const { supabase, user, ws } = await requireMember(request);
+  await enforceRateLimit(supabase, 'ai', user.id);
   const { question } = await body(request, schema);
 
   if (!isAiConfigured()) throw badRequest('AI is not configured on this deployment');

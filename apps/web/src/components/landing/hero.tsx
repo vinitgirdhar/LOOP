@@ -4,6 +4,7 @@ import { useLayoutEffect, useRef } from 'react';
 import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import gsap from 'gsap';
+import { useT } from '@/components/providers/locale';
 
 /*
   Hero.
@@ -28,6 +29,7 @@ function SceneSkeleton() {
 }
 
 export function Hero() {
+  const t = useT();
   const root = useRef<HTMLElement>(null);
 
   useLayoutEffect(() => {
@@ -52,7 +54,7 @@ export function Hero() {
       <div className="mx-auto grid max-w-6xl 2xl:max-w-7xl 3xl:max-w-[88rem] items-center gap-5 px-4 pb-8 pt-6 sm:gap-6 sm:px-6 sm:pb-16 sm:pt-12 lg:grid-cols-[1.05fr_1fr] lg:gap-8 2xl:gap-14 lg:pb-24 lg:pt-20">
         <div className="lg:pr-4">
           <span data-hero-badge className="badge bg-[var(--accent-soft)] text-[var(--accent)] 2xl:text-xs">
-            Jira + Notion + Slack + GitHub, in one place
+            {t('hero.badge')}
           </span>
 
           {/* Each line clips its own overflow so the rise reads as type
@@ -60,37 +62,36 @@ export function Hero() {
           <h1 className="mt-4 text-[29px] font-bold leading-[1.05] min-[390px]:text-[34px] sm:text-5xl lg:text-6xl 2xl:text-7xl">
             <span className="block overflow-hidden pb-[0.08em]">
               <span data-hero-line className="block">
-                The project tool
+                {t('hero.titleLine1')}
               </span>
             </span>
             <span className="block overflow-hidden pb-[0.08em]">
               <span data-hero-line className="block">
-                that keeps itself
+                {t('hero.titleLine2')}
               </span>
             </span>
             <span className="block overflow-hidden pb-[0.08em]">
               <span data-hero-line className="block">
-                updated
+                {t('hero.titleLine3')}
               </span>
             </span>
           </h1>
 
           <p data-hero-copy className="mt-4 max-w-xl text-[15px] leading-relaxed text-[var(--text-muted)] sm:text-base 2xl:text-lg 2xl:max-w-2xl">
-            Every team already has the tools. The problem is the board is always stale. Loop reads your real activity — commits, chat, task events — and
-            proposes the updates, with evidence you can accept or reject.
+{t('hero.body')}
           </p>
 
           <div data-hero-cta className="mt-6 flex flex-col gap-2.5 sm:flex-row">
             <Link href="/welcome" className="btn btn-primary btn-hero sm:w-auto sm:px-7 2xl:px-9 2xl:text-base">
-              Create a workspace
+              {t('hero.createWorkspace')}
             </Link>
             <Link href="/login" className="btn btn-secondary btn-hero sm:w-auto sm:px-7 2xl:px-9 2xl:text-base">
-              Try a demo account
+              {t('hero.tryDemo')}
             </Link>
           </div>
 
           <p data-hero-note className="mt-3 text-xs text-[var(--text-faint)] 2xl:text-sm">
-            No card needed · Demo accounts for all five roles
+            {t('hero.note')}
           </p>
         </div>
 

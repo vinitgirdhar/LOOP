@@ -52,6 +52,14 @@ export const setUnauthorizedHandler = (fn: (() => void) | null) => {
 };
 
 interface RequestOptions {
+  /**
+   * Queue this write instead of failing when the network is gone.
+   *
+   * Off by default and opt-in per call, because replay is only safe for
+   * mutations that can run late without surprising anybody. A comment posted
+   * an hour after it was written is fine; a "start sprint" is not.
+   */
+  offlineQueue?: boolean;
   method?: 'GET' | 'POST' | 'PATCH' | 'PUT' | 'DELETE';
   body?: unknown;
   /** FormData bypasses JSON encoding so file uploads work. */
@@ -68,13 +76,30 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<{
   if (ws) headers['x-workspace-id'] = ws;
   if (options.body !== undefined) headers['Content-Type'] = 'application/json';
 
-  const response = await fetch(`${API_URL}${path}`, {
-    method: options.method ?? (options.body || options.form ? 'POST' : 'GET'),
-    headers,
-    credentials: 'include',
-    signal: options.signal,
-    ...(options.form ? { body: options.form } : options.body !== undefined ? { body: JSON.stringify(options.body) } : {}),
-  });
+  const method = options.method ?? (options.body || options.form ? 'POST' : 'GET');
+
+  let response: Response;
+  try {
+    response = await fetch(`${API_URL}${path}`, {
+      method,
+      headers,
+      credentials: 'include',
+      signal: options.signal,
+      ...(options.form ? { body: options.form } : options.body !== undefined ? { body: JSON.stringify(options.body) } : {}),
+    });
+  } catch (networkError: unknown) {
+    // An aborted request is the caller changing its mind, not a failure.
+    if (networkError instanceof DOMException && networkError.name === 'AbortError') throw networkError;
+
+    // A FormData upload cannot be structured-cloned into IndexedDB, so file
+    // uploads are never queued — they fail honestly instead.
+    if (options.offlineQueue && method !== 'GET' && !options.form) {
+      const { enqueue } = await import('./offline-queue');
+      await enqueue({ path, method: method as 'POST' | 'PATCH' | 'PUT' | 'DELETE', body: options.body ?? null, workspaceId: ws ?? null });
+      throw new ApiError(0, 'Saved offline — this will be sent when you reconnect', 'queued');
+    }
+    throw new ApiError(0, 'You appear to be offline', 'offline');
+  }
 
   if (options.raw) return { data: (await response.text()) as T };
 

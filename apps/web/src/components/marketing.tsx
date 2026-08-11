@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { Icon } from '@/components/icons';
 import { useEffect, useState } from 'react';
 import { ThemeToggle } from '@/components/providers/theme';
+import { LocaleSwitcher, useT } from '@/components/providers/locale';
 import { useAuth } from '@/components/providers/auth';
 import { cx } from '@/lib/format';
 
@@ -43,15 +44,16 @@ export function Logo({
 }
 
 const NAV = [
-  { href: '/#features', label: 'Features' },
-  { href: '/#pricing', label: 'Pricing' },
-  { href: '/#testimonials', label: 'Customers' },
-  { href: '/#faq', label: 'FAQ' },
-  { href: '/blog', label: 'Blog' },
-  { href: '/#contact', label: 'Contact' },
-];
+  { href: '/#features', key: 'nav.features' },
+  { href: '/#pricing', key: 'nav.pricing' },
+  { href: '/#testimonials', key: 'nav.customers' },
+  { href: '/#faq', key: 'nav.faq' },
+  { href: '/blog', key: 'nav.blog' },
+  { href: '/#contact', key: 'nav.contact' },
+] as const;
 
 export function MarketingNav() {
+  const t = useT();
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const { user, ready } = useAuth();
@@ -108,25 +110,26 @@ export function MarketingNav() {
         <div className="ml-4 hidden flex-1 items-center gap-1 lg:flex">
           {NAV.map((item) => (
             <Link key={item.href} href={item.href} className="rounded-lg px-2.5 py-1.5 text-[13px] text-[var(--text-muted)] transition-colors hover:bg-[var(--bg-inset)] hover:text-[var(--text)] 2xl:text-sm">
-              {item.label}
+              {t(item.key)}
             </Link>
           ))}
         </div>
 
         <div className="ml-auto flex items-center gap-1.5">
+          <LocaleSwitcher />
           <ThemeToggle />
           {ready && user ? (
             <Link href="/app" className="btn btn-primary btn-sm">
-              Open app
+              {t('nav.openApp')}
             </Link>
           ) : (
             <>
               <Link href="/login" className="btn btn-ghost btn-sm hidden sm:inline-flex">
-                Sign in
+                {t('nav.signIn')}
               </Link>
               {/* Last in the row, so it sits hard against the right edge. */}
               <Link href="/welcome" className="btn btn-primary btn-sm">
-                Get started
+                {t('nav.getStarted')}
               </Link>
             </>
           )}
@@ -137,11 +140,11 @@ export function MarketingNav() {
         <div className="fade-in border-t px-4 py-2 lg:hidden">
           {NAV.map((item) => (
             <Link key={item.href} href={item.href} onClick={() => setOpen(false)} className="block rounded-lg px-2 py-2.5 text-sm text-[var(--text-muted)] hover:bg-[var(--bg-inset)]">
-              {item.label}
+              {t(item.key)}
             </Link>
           ))}
           <Link href="/login" onClick={() => setOpen(false)} className="block rounded-lg px-2 py-2.5 text-sm font-medium sm:hidden">
-            Sign in
+            {t('nav.signIn')}
           </Link>
         </div>
       )}

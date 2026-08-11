@@ -15,6 +15,7 @@ import { api, apiErrorMessage } from '@/lib/api';
 import { PRIORITY_STYLE, STATUS_STYLE, cx, formatShortDate, isOverdue, relativeTime } from '@/lib/format';
 import { TaskListTable } from '@/components/board/task-list';
 import { ProjectDocs } from '@/components/project/docs';
+import { ProjectGantt } from '@/components/project/gantt';
 import { ProjectFiles } from '@/components/project/files';
 import { ProjectSettings } from '@/components/project/settings';
 
@@ -40,6 +41,7 @@ interface ProjectDetail {
 const TABS = [
   { key: 'board', label: 'Board' },
   { key: 'list', label: 'List' },
+  { key: 'timeline', label: 'Timeline' },
   { key: 'health', label: 'Health' },
   { key: 'docs', label: 'Docs' },
   { key: 'files', label: 'Files' },
@@ -166,6 +168,8 @@ export default function ProjectPage({ params }: { params: Promise<{ workspaceId:
         )}
 
         {tab === 'list' && <TaskListTable workspaceId={workspaceId} projectId={projectId} columns={project.columns} members={project.members.map((m) => m.user)} />}
+
+        {tab === 'timeline' && <ProjectGantt projectId={projectId} />}
 
         {tab === 'health' && <HealthPanel projectId={projectId} />}
 

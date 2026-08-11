@@ -1,9 +1,11 @@
 import type { Metadata, Viewport } from 'next';
 import './globals.css';
 import { ThemeProvider, themeScript } from '@/components/providers/theme';
+import { LocaleProvider, localeScript } from '@/components/providers/locale';
 import { ToastProvider } from '@/components/providers/toast';
 import { AuthProvider } from '@/components/providers/auth';
 import { SocketProvider } from '@/components/providers/socket';
+import { OfflineProvider } from '@/components/providers/offline';
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000';
 
@@ -65,6 +67,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en" suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
+        <script dangerouslySetInnerHTML={{ __html: localeScript }} />
       </head>
       <body>
         <a
@@ -73,13 +76,18 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         >
           Skip to content
         </a>
+        <LocaleProvider>
         <ThemeProvider>
           <ToastProvider>
             <AuthProvider>
-              <SocketProvider>{children}</SocketProvider>
+              <SocketProvider>
+                {children}
+                <OfflineProvider />
+              </SocketProvider>
             </AuthProvider>
           </ToastProvider>
         </ThemeProvider>
+        </LocaleProvider>
       </body>
     </html>
   );

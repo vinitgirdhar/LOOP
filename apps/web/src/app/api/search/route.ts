@@ -1,5 +1,6 @@
 import { requireMember } from '@/lib/server/context';
 import { ok, route } from '@/lib/server/http';
+import { enforceRateLimit } from '@/lib/server/rate-limit';
 import { withKeys } from '@/lib/server/tasks';
 
 /**
@@ -9,7 +10,9 @@ import { withKeys } from '@/lib/server/tasks';
  * never include a project, page or task the caller could not already open.
  */
 export const GET = route(async (request: Request) => {
-  const { supabase, ws } = await requireMember(request);
+  const ctx = await requireMember(request);
+  const { supabase, ws } = ctx;
+  await enforceRateLimit(supabase, 'expensive', ctx.user.id);
   const url = new URL(request.url);
   const term = (url.searchParams.get('q') ?? '').trim();
 

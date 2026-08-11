@@ -254,8 +254,11 @@ function MessageRow({
         <div className="mt-1.5 flex flex-wrap gap-1.5">
           {message.attachments.map((file) =>
             file.mime.startsWith('image/') ? (
-              // eslint-disable-next-line @next/next/no-img-element
               <a key={file.id} href={file.url} target="_blank" rel="noreferrer">
+                {/* Signed storage URLs carry an expiry in the query string, so
+                    caching them through the image optimiser would serve dead
+                    links after the signature lapses. */}
+                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={file.url} alt={file.name} className="max-h-40 rounded-lg border" />
               </a>
             ) : (
