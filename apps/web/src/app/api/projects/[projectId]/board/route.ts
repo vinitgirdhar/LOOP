@@ -42,15 +42,14 @@ export const GET = route(async (request: Request, { params }: Params) => {
 
   // Every card shows checklist progress, labels and comment/attachment counts.
   // Four narrow reads keyed by task id beat four per card.
-  const [subtasks, comments, attachments, children, labels] = ids.length
+  const [subtasks, comments, attachments, children] = ids.length
     ? await Promise.all([
         supabase.from('subtasks').select('task_id, done').in('task_id', ids),
         supabase.from('comments').select('task_id').in('task_id', ids),
         supabase.from('attachments').select('task_id').in('task_id', ids),
         supabase.from('tasks').select('parent_id').in('parent_id', ids),
-        supabase.from('task_labels').select('task_id, label:labels (id, name, color)').in('task_id', ids),
       ])
-    : [{ data: [] }, { data: [] }, { data: [] }, { data: [] }, { data: [] }];
+    : [{ data: [] }, { data: [] }, { data: [] }, { data: [] }];
 
   const checklist = new Map<string, { done: number; total: number }>();
   for (const row of (subtasks.data ?? []) as { task_id: string; done: boolean }[]) {
@@ -73,12 +72,6 @@ export const GET = route(async (request: Request, { params }: Params) => {
   const attachmentCount = tally(attachments.data, 'task_id');
   const childCount = tally(children.data, 'parent_id');
 
-  const labelsFor = new Map<string, unknown[]>();
-  for (const row of (labels.data ?? []) as { task_id: string; label: unknown }[]) {
-    if (!row.label) continue;
-    labelsFor.set(row.task_id, [...(labelsFor.get(row.task_id) ?? []), row.label]);
-  }
-
   return ok({
     columns: columns.data ?? [],
     tasks: rows.map((task) => {
@@ -87,7 +80,6 @@ export const GET = route(async (request: Request, { params }: Params) => {
       const subtaskCount = progress.total;
       return {
         ...task,
-        labels: labelsFor.get(id) ?? [],
         checklistDone: progress.done,
         checklistTotal: progress.total,
         _count: {

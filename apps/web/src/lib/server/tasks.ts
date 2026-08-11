@@ -26,9 +26,21 @@ function keyFor(row: Record<string, unknown>): string | null {
   return resolved?.key && typeof number === 'number' ? `${resolved.key}-${number}` : null;
 }
 
+/**
+ * PostgREST returns a join table as `[{ label: {...} }]`. Every consumer reads
+ * a flat `labels: [{ id, name, color }]`, and a task without the join present
+ * must still carry an array — `task.labels.slice()` on undefined is a crash,
+ * not a blank space.
+ */
+function flatLabels(row: Record<string, unknown>): unknown[] {
+  const raw = row.labels;
+  if (!Array.isArray(raw)) return [];
+  return raw.map((entry) => (entry && typeof entry === 'object' && 'label' in entry ? (entry as { label: unknown }).label : entry)).filter(Boolean);
+}
+
 export function withKey(task: unknown): TaskWithKey {
   const row = (task ?? {}) as Record<string, unknown>;
-  return { ...row, key: keyFor(row) };
+  return { ...row, labels: flatLabels(row), key: keyFor(row) };
 }
 
 export function withKeys(tasks: unknown): TaskWithKey[] {
@@ -38,4 +50,5 @@ export function withKeys(tasks: unknown): TaskWithKey[] {
 /** Columns every task read needs so `withKey` and the board can do their job. */
 export const TASK_SELECT =
   'id, number, title, description, status, priority, story_points, estimate_hrs, due_date, start_date, completed_at, order, is_blocked, blocked_note, workspace_id, project_id, sprint_id, milestone_id, parent_id, assignee_id, reporter_id, last_activity_at, created_at, updated_at, ' +
-  'project:projects (id, name, key), assignee:profiles!tasks_assignee_id_fkey (id, name, avatar_url, mascot), reporter:profiles!tasks_reporter_id_fkey (id, name, avatar_url, mascot)';
+  'project:projects (id, name, key, color), labels:task_labels (label:labels (id, name, color)), ' +
+  'assignee:profiles!tasks_assignee_id_fkey (id, name, avatar_url, mascot), reporter:profiles!tasks_reporter_id_fkey (id, name, avatar_url, mascot)';

@@ -2,8 +2,11 @@ import { z } from 'zod';
 import { requireMember, requirePermission } from '@/lib/server/context';
 import { assertOk, body, created, ok, route } from '@/lib/server/http';
 
+// Kept as one literal: supabase-js can only infer a row type from a select it
+// can read at compile time, and a concatenated string degrades every caller to
+// GenericStringError.
 const MEETING_SELECT =
-  '*, createdBy:profiles (id, name, avatar_url, mascot), project:projects (id, name, key), participants:meeting_participants (user_id, status)';
+  '*, createdBy:profiles (id, name, avatar_url, mascot), project:projects (id, name, key), participants:meeting_participants (user_id, status, user:profiles (id, name, email, avatar_url)), actionItems:tasks (id, number, title, status, completed_at, assignee:profiles!tasks_assignee_id_fkey (id, name))';
 
 export const GET = route(async (request: Request) => {
   const { supabase, ws } = await requireMember(request);
@@ -22,7 +25,15 @@ export const GET = route(async (request: Request) => {
 
   const { data, error } = await query;
   assertOk(error, 'Meetings');
-  return ok(data ?? []);
+  // A membership row whose profile is not readable would hand the avatar stack
+  // an undefined person; drop it instead.
+  return ok(
+    ((data ?? []) as unknown as Record<string, unknown>[]).map((meeting) => ({
+      ...meeting,
+      participants: ((meeting.participants ?? []) as { user: unknown }[]).filter((participant) => participant.user),
+      actionItems: (meeting.actionItems ?? []) as unknown[],
+    })),
+  );
 });
 
 const schema = z.object({

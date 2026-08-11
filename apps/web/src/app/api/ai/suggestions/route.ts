@@ -9,7 +9,8 @@ export const GET = route(async (request: Request) => {
 
   let query = supabase
     .from('ai_suggestions')
-    .select('*, task:tasks (id, number, title, project:projects (id, key)), project:projects (id, name, key)', {
+    .select('*, task:tasks (id, number, title, status, is_blocked, project:projects (id, key, name)), ' +
+      'project:projects (id, name, key, auto_apply), decidedBy:profiles (id, name)', {
       count: 'exact',
     })
     .eq('workspace_id', ws.workspaceId)
