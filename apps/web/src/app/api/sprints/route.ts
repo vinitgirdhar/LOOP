@@ -19,7 +19,38 @@ export const GET = route(async (request: Request) => {
 
   const { data, error } = await query;
   assertOk(error, 'Sprints');
-  return ok(data ?? []);
+
+  const sprints = data ?? [];
+  const ids = sprints.map((sprint: { id: string }) => sprint.id);
+  if (ids.length === 0) return ok([]);
+
+  // The sprint card shows a task count and a points total per sprint.
+  const { data: tasks } = await supabase
+    .from('tasks')
+    .select('sprint_id, story_points, completed_at')
+    .in('sprint_id', ids);
+
+  const totals = new Map<string, { tasks: number; points: number; donePoints: number }>();
+  for (const row of (tasks ?? []) as { sprint_id: string; story_points: number | null; completed_at: string | null }[]) {
+    const entry = totals.get(row.sprint_id) ?? { tasks: 0, points: 0, donePoints: 0 };
+    entry.tasks += 1;
+    entry.points += row.story_points ?? 0;
+    if (row.completed_at) entry.donePoints += row.story_points ?? 0;
+    totals.set(row.sprint_id, entry);
+  }
+
+  return ok(
+    sprints.map((sprint: Record<string, unknown>) => {
+      const counted = totals.get(sprint.id as string) ?? { tasks: 0, points: 0, donePoints: 0 };
+      return {
+        ...sprint,
+        totalPoints: counted.points,
+        donePoints: counted.donePoints,
+        percent: counted.points === 0 ? 0 : Math.round((counted.donePoints / counted.points) * 100),
+        _count: { tasks: counted.tasks },
+      };
+    }),
+  );
 });
 
 const schema = z.object({

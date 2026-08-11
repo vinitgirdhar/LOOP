@@ -11,13 +11,35 @@ export const GET = route(async (request: Request, { params }: Params) => {
 
   const { data, error } = await supabase
     .from('projects')
-    .select('*, columns:board_columns (*), milestones (*), labels (*), members:project_members (id, role, user:profiles (id, name, email, avatar_url, mascot))')
+    .select(
+      '*, columns:board_columns (*), milestones (*), labels (*), sprints (id, name, status, start_date, end_date), ' +
+        'members:project_members (id, role, user:profiles (id, name, email, avatar_url, mascot))',
+    )
     .eq('id', projectId)
     .eq('workspace_id', ws.workspaceId)
     .single();
 
   assertOk(error, 'Project');
-  return ok(data);
+
+  // The header reads `_count`; these are head-only counts, so no rows travel.
+  const [tasks, wikiPages, attachments] = await Promise.all([
+    supabase.from('tasks').select('id', { count: 'exact', head: true }).eq('project_id', projectId),
+    supabase.from('wiki_pages').select('id', { count: 'exact', head: true }).eq('project_id', projectId),
+    supabase.from('attachments').select('id', { count: 'exact', head: true }).eq('project_id', projectId),
+  ]);
+
+  // supabase-js cannot type a runtime-assembled select, so the row arrives as
+  // GenericStringError. The envelope is the contract; read it as a record.
+  const project = (data ?? {}) as Record<string, unknown>;
+  const members = ((project.members ?? []) as { user: unknown }[]).filter((member) => member.user);
+  const columns = ((project.columns ?? []) as { order: number }[]).slice().sort((a, b) => a.order - b.order);
+
+  return ok({
+    ...project,
+    members,
+    columns,
+    _count: { tasks: tasks.count ?? 0, wikiPages: wikiPages.count ?? 0, attachments: attachments.count ?? 0 },
+  });
 });
 
 const patchSchema = z.object({

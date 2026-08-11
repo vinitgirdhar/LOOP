@@ -37,5 +37,58 @@ export const GET = route(async (request: Request, { params }: Params) => {
   assertOk(columns.error, 'Board');
   assertOk(tasks.error, 'Tasks');
 
-  return ok({ columns: columns.data ?? [], tasks: withKeys(tasks.data ?? []) });
+  const rows = withKeys(tasks.data ?? []);
+  const ids = rows.map((task) => task.id as string);
+
+  // Every card shows checklist progress, labels and comment/attachment counts.
+  // Four narrow reads keyed by task id beat four per card.
+  const [subtasks, comments, attachments, children] = ids.length
+    ? await Promise.all([
+        supabase.from('subtasks').select('task_id, done').in('task_id', ids),
+        supabase.from('comments').select('task_id').in('task_id', ids),
+        supabase.from('attachments').select('task_id').in('task_id', ids),
+        supabase.from('tasks').select('parent_id').in('parent_id', ids),
+      ])
+    : [{ data: [] }, { data: [] }, { data: [] }, { data: [] }];
+
+  const checklist = new Map<string, { done: number; total: number }>();
+  for (const row of (subtasks.data ?? []) as { task_id: string; done: boolean }[]) {
+    const entry = checklist.get(row.task_id) ?? { done: 0, total: 0 };
+    entry.total += 1;
+    if (row.done) entry.done += 1;
+    checklist.set(row.task_id, entry);
+  }
+
+  const tally = (source: unknown, key: 'task_id' | 'parent_id') => {
+    const counts = new Map<string, number>();
+    for (const row of (source ?? []) as Record<string, string | null>[]) {
+      const id = row[key];
+      if (id) counts.set(id, (counts.get(id) ?? 0) + 1);
+    }
+    return counts;
+  };
+
+  const commentCount = tally(comments.data, 'task_id');
+  const attachmentCount = tally(attachments.data, 'task_id');
+  const childCount = tally(children.data, 'parent_id');
+
+  return ok({
+    columns: columns.data ?? [],
+    tasks: rows.map((task) => {
+      const id = task.id as string;
+      const progress = checklist.get(id) ?? { done: 0, total: 0 };
+      const subtaskCount = progress.total;
+      return {
+        ...task,
+        checklistDone: progress.done,
+        checklistTotal: progress.total,
+        _count: {
+          comments: commentCount.get(id) ?? 0,
+          subtasks: subtaskCount,
+          attachments: attachmentCount.get(id) ?? 0,
+          children: childCount.get(id) ?? 0,
+        },
+      };
+    }),
+  });
 });

@@ -23,9 +23,30 @@ export const GET = route(async (request: Request, { params }: Params) => {
 
   assertOk(error, 'Messages');
 
+  const rows = [...(data ?? [])].reverse();
+  const ids = rows.map((message) => message.id as string);
+
+  // The transcript shows a reply count on each root message.
+  const { data: replies } = ids.length
+    ? await supabase.from('messages').select('parent_id').in('parent_id', ids).is('deleted_at', null)
+    : { data: [] as { parent_id: string | null }[] };
+
+  const replyCount = new Map<string, number>();
+  for (const row of (replies ?? []) as { parent_id: string | null }[]) {
+    if (!row.parent_id) continue;
+    replyCount.set(row.parent_id, (replyCount.get(row.parent_id) ?? 0) + 1);
+  }
+
   // Oldest first is what the transcript renders, but paging has to start from
   // the newest, so the page is reversed rather than the query.
-  return ok([...(data ?? [])].reverse(), { total: count ?? 0, page, limit });
+  return ok(
+    rows.map((message) => ({
+      ...message,
+      attachments: (message as { attachments?: unknown[] }).attachments ?? [],
+      _count: { replies: replyCount.get(message.id as string) ?? 0 },
+    })),
+    { total: count ?? 0, page, limit },
+  );
 });
 
 const schema = z.object({
