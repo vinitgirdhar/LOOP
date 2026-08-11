@@ -54,6 +54,14 @@ export function fail(error: unknown) {
     );
   }
 
+  // A spent AI quota is not an internal fault, and "Something went wrong" is
+  // not something the reader can act on. Matched by name so this layer does
+  // not have to import the server-only AI module.
+  if (error instanceof Error && error.name === 'AiError') {
+    const reason = (error as Error & { reason?: string }).reason ?? 'unavailable';
+    return Response.json({ success: false, error: error.message, code: `ai_${reason}` }, { status: reason === 'rate_limited' ? 429 : 503 });
+  }
+
   console.error('[api] unhandled', error);
   return Response.json({ success: false, error: 'Something went wrong', code: 'internal' }, { status: 500 });
 }

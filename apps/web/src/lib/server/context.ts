@@ -141,13 +141,70 @@ export async function requirePermission(ctx: Ctx, ws: WorkspaceContext, permissi
   if (!data) throw forbidden();
 }
 
-/** Convenience for the common "authenticated, in a workspace" opening of a handler. */
+interface ProfileWithMembership {
+  id: string;
+  email: string;
+  name: string;
+  is_platform_admin: boolean;
+  is_suspended: boolean;
+  memberships: { role: Role }[];
+}
+
+/**
+ * The common "authenticated, in a workspace" opening of a handler.
+ *
+ * Written as one query rather than requireUser() + requireWorkspace() because
+ * those are two sequential round trips to Postgres on top of the auth call —
+ * paid by every endpoint in the app before a single row of real data is read,
+ * which was the largest fixed cost in a page load. The membership is embedded
+ * and filtered to the workspace being asked about, so it arrives with the
+ * profile. The embed is not `!inner`: the profile must still come back for a
+ * platform admin who is not a member.
+ *
+ * RLS remains the security boundary. This resolves the role so the UI can be
+ * told *why* it was refused instead of receiving a silent empty list.
+ */
 export async function requireMember(
   request: Request,
   params?: Record<string, string | undefined>,
   payload?: unknown,
 ): Promise<Ctx & { ws: WorkspaceContext }> {
-  const ctx = await requireUser();
-  const ws = await requireWorkspace(ctx, request, params, payload);
-  return { ...ctx, ws };
+  const supabase = await createClient();
+  const { data: auth, error } = await supabase.auth.getUser();
+  if (error || !auth.user) throw unauthorized();
+
+  const workspaceId = workspaceIdFrom(request, params, payload);
+  if (!workspaceId) throw forbidden('Missing workspace context');
+
+  const { data } = await supabase
+    .from('profiles')
+    .select('id, email, name, is_platform_admin, is_suspended, memberships:workspace_members (role, workspace_id)')
+    .eq('id', auth.user.id)
+    .eq('memberships.workspace_id', workspaceId)
+    .single();
+
+  const profile = data as unknown as ProfileWithMembership | null;
+  if (!profile) throw unauthorized('Your profile is not set up yet');
+  if (profile.is_suspended) throw forbidden('This account is suspended');
+
+  const ctx: Ctx = {
+    supabase,
+    user: {
+      id: profile.id,
+      email: profile.email,
+      name: profile.name,
+      isPlatformAdmin: profile.is_platform_admin,
+    },
+  };
+
+  const role = profile.memberships?.[0]?.role;
+  if (role) return { ...ctx, ws: { workspaceId, role, viaAdmin: false } };
+
+  if (profile.is_platform_admin) {
+    const { data: workspace } = await supabase.from('workspaces').select('id').eq('id', workspaceId).maybeSingle();
+    if (!workspace) throw notFound('Workspace not found');
+    return { ...ctx, ws: { workspaceId, role: 'OWNER', viaAdmin: true } };
+  }
+
+  throw forbidden('You are not a member of this workspace');
 }
