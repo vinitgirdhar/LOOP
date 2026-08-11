@@ -3,6 +3,14 @@ import { DEFAULT_COLUMNS, PROJECT_STATUSES, PRIORITIES } from '@loop/shared';
 import { requireMember, requirePermission } from '@/lib/server/context';
 import { assertOk, badRequest, body, created, ok, route } from '@/lib/server/http';
 
+/**
+ * The project list, with the figures the cards render.
+ *
+ * Counts, progress and the latest health score are derived here rather than
+ * left to the client: the browser must not have to fetch every task of every
+ * project to render a progress bar, and the card reads `_count`, `progress`
+ * and `health[]` directly.
+ */
 export const GET = route(async (request: Request) => {
   const { supabase, ws } = await requireMember(request);
   const url = new URL(request.url);
@@ -10,7 +18,7 @@ export const GET = route(async (request: Request) => {
 
   let query = supabase
     .from('projects')
-    .select('*, members:project_members (user_id, role)')
+    .select('*, members:project_members (id, role, user:profiles (id, name, email, avatar_url))')
     .eq('workspace_id', ws.workspaceId)
     .order('updated_at', { ascending: false });
 
@@ -19,7 +27,60 @@ export const GET = route(async (request: Request) => {
 
   const { data, error } = await query;
   assertOk(error, 'Projects');
-  return ok(data ?? []);
+
+  const projects = data ?? [];
+  const ids = projects.map((project: { id: string }) => project.id);
+  if (ids.length === 0) return ok([]);
+
+  const [tasks, sprints, health] = await Promise.all([
+    supabase.from('tasks').select('project_id, completed_at').eq('workspace_id', ws.workspaceId).in('project_id', ids),
+    supabase.from('sprints').select('project_id').eq('workspace_id', ws.workspaceId).in('project_id', ids),
+    supabase
+      .from('health_snapshots')
+      .select('project_id, score, created_at')
+      .in('project_id', ids)
+      .order('created_at', { ascending: false }),
+  ]);
+
+  const totals = new Map<string, { tasks: number; done: number }>();
+  for (const row of (tasks.data ?? []) as { project_id: string; completed_at: string | null }[]) {
+    const entry = totals.get(row.project_id) ?? { tasks: 0, done: 0 };
+    entry.tasks += 1;
+    if (row.completed_at) entry.done += 1;
+    totals.set(row.project_id, entry);
+  }
+
+  const sprintCounts = new Map<string, number>();
+  for (const row of (sprints.data ?? []) as { project_id: string }[]) {
+    sprintCounts.set(row.project_id, (sprintCounts.get(row.project_id) ?? 0) + 1);
+  }
+
+  // Ordered newest first, so the first score per project is the current one.
+  const latestHealth = new Map<string, number>();
+  for (const row of (health.data ?? []) as { project_id: string; score: number }[]) {
+    if (!latestHealth.has(row.project_id)) latestHealth.set(row.project_id, row.score);
+  }
+
+  return ok(
+    projects.map((project: Record<string, unknown>) => {
+      const id = project.id as string;
+      const counted = totals.get(id) ?? { tasks: 0, done: 0 };
+      const score = latestHealth.get(id);
+      const members = (project.members ?? []) as { user: unknown }[];
+
+      return {
+        ...project,
+        // The card maps `members[].user`, so a membership without a readable
+        // profile is dropped rather than handed over as undefined.
+        members: members.filter((member) => member.user),
+        taskCount: counted.tasks,
+        doneCount: counted.done,
+        progress: counted.tasks === 0 ? 0 : Math.round((counted.done / counted.tasks) * 100),
+        health: score === undefined ? [] : [{ score }],
+        _count: { tasks: counted.tasks, members: members.length, sprints: sprintCounts.get(id) ?? 0 },
+      };
+    }),
+  );
 });
 
 const createSchema = z.object({

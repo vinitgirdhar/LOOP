@@ -16,7 +16,13 @@ export const GET = route(async (request: Request, { params }: Params) => {
     .single();
 
   assertOk(error, 'Page');
-  return ok(data);
+
+  const { count } = await supabase
+    .from('wiki_versions')
+    .select('id', { count: 'exact', head: true })
+    .eq('page_id', pageId);
+
+  return ok({ ...data, _count: { versions: count ?? 0 } });
 });
 
 const schema = z.object({

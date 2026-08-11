@@ -14,7 +14,13 @@ export const GET = route(async (request: Request, { params }: Params) => {
     .single();
 
   assertOk(error, 'Workspace');
-  return ok(data);
+
+  const [members, projects] = await Promise.all([
+    supabase.from('workspace_members').select('id', { count: 'exact', head: true }).eq('workspace_id', ws.workspaceId),
+    supabase.from('projects').select('id', { count: 'exact', head: true }).eq('workspace_id', ws.workspaceId),
+  ]);
+
+  return ok({ ...data, _count: { members: members.count ?? 0, projects: projects.count ?? 0 } });
 });
 
 const patchSchema = z.object({

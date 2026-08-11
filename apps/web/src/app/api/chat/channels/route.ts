@@ -8,7 +8,7 @@ export const GET = route(async (request: Request) => {
   const [{ data: channels, error }, { data: reads }] = await Promise.all([
     supabase
       .from('channels')
-      .select('*, project:projects (id, name, key)')
+      .select('*, project:projects (id, name, key), members:channel_members (user_id, user:profiles (id, name, avatar_url))')
       .eq('workspace_id', ws.workspaceId)
       .order('name', { ascending: true }),
     supabase.from('channel_members').select('channel_id, last_read_at').eq('user_id', user.id),
@@ -16,8 +16,45 @@ export const GET = route(async (request: Request) => {
 
   assertOk(error, 'Channels');
 
-  const readAt = new Map((reads ?? []).map((row) => [row.channel_id, row.last_read_at]));
-  return ok((channels ?? []).map((channel) => ({ ...channel, lastReadAt: readAt.get(channel.id) ?? null })));
+  const rows = channels ?? [];
+  const ids = rows.map((channel: { id: string }) => channel.id);
+  const readAt = new Map(((reads ?? []) as { channel_id: string; last_read_at: string | null }[]).map((row) => [row.channel_id, row.last_read_at]));
+
+  // One pass over message timestamps gives both the total and the unread count
+  // per channel; a per-channel count query would be one round trip each.
+  const { data: stamps } = ids.length
+    ? await supabase
+        .from('messages')
+        .select('channel_id, created_at, author_id')
+        .in('channel_id', ids)
+        .is('deleted_at', null)
+    : { data: [] as { channel_id: string; created_at: string; author_id: string }[] };
+
+  const totals = new Map<string, number>();
+  const unread = new Map<string, number>();
+  for (const row of (stamps ?? []) as { channel_id: string; created_at: string; author_id: string }[]) {
+    totals.set(row.channel_id, (totals.get(row.channel_id) ?? 0) + 1);
+    const since = readAt.get(row.channel_id);
+    // Your own messages are never unread, and a channel never read counts all.
+    if (row.author_id !== user.id && (!since || row.created_at > since)) {
+      unread.set(row.channel_id, (unread.get(row.channel_id) ?? 0) + 1);
+    }
+  }
+
+  return ok(
+    rows.map((channel: Record<string, unknown>) => {
+      const id = channel.id as string;
+      const members = ((channel.members ?? []) as { user_id: string; user: unknown }[]).filter((member) => member.user);
+      return {
+        ...channel,
+        members,
+        lastReadAt: readAt.get(id) ?? null,
+        joined: readAt.has(id),
+        unread: unread.get(id) ?? 0,
+        _count: { messages: totals.get(id) ?? 0 },
+      };
+    }),
+  );
 });
 
 const schema = z.object({

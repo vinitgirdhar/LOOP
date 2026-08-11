@@ -8,7 +8,10 @@
 
 type Json = null | boolean | number | string | Json[] | { [key: string]: Json };
 
-const toCamel = (key: string) => key.replace(/_([a-z0-9])/g, (_, c: string) => c.toUpperCase());
+// Only *internal* underscores are separators. A leading one is meaningful —
+// `_count` is part of the response contract the components read, and stripping
+// it would silently rename the field to `Count`.
+const toCamel = (key: string) => key.replace(/(?<!^)_([a-z0-9])/g, (_, c: string) => c.toUpperCase());
 const toSnake = (key: string) => key.replace(/[A-Z]/g, (c) => `_${c.toLowerCase()}`);
 
 /**

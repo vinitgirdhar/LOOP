@@ -22,7 +22,10 @@ export const GET = route(async (request: Request, { params }: Params) => {
     .single();
 
   assertOk(error, 'Task');
-  return ok(withKey(data!));
+
+  const { count } = await supabase.from('comments').select('id', { count: 'exact', head: true }).eq('task_id', taskId);
+
+  return ok({ ...withKey(data!), _count: { comments: count ?? 0 } });
 });
 
 const patchSchema = z.object({
