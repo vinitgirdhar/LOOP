@@ -1,5 +1,5 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
-import type { Permission, Role } from '@loop/shared';
+import { explainPermission, type Permission, type Role } from '@loop/shared';
 import { createClient } from '@/lib/supabase/server';
 import { forbidden, notFound, unauthorized } from './http';
 import { toDatabasePermission } from './permissions';
@@ -117,7 +117,7 @@ export async function requireWorkspace(
     return { workspaceId, role: 'OWNER', viaAdmin: true };
   }
 
-  throw forbidden('You are not a member of this workspace');
+  throw forbidden('You are not a member of this workspace. Ask a Workspace Owner to invite you.');
 }
 
 /**
@@ -144,7 +144,10 @@ export async function requirePermission(ctx: Ctx, ws: WorkspaceContext, permissi
     console.error('[api] permission check failed', error);
     throw forbidden();
   }
-  if (!data) throw forbidden();
+  // The refusal names the capability and who holds it. A bare "you do not have
+  // permission" leaves the reader with no next step and makes the whole role
+  // model invisible to anyone trying to evaluate it.
+  if (!data) throw forbidden(explainPermission(permission, ws.role));
 }
 
 interface ProfileWithMembership {
@@ -218,5 +221,5 @@ export async function requireMember(
     return { ...ctx, ws: { workspaceId, role: 'OWNER', viaAdmin: true } };
   }
 
-  throw forbidden('You are not a member of this workspace');
+  throw forbidden('You are not a member of this workspace. Ask a Workspace Owner to invite you.');
 }

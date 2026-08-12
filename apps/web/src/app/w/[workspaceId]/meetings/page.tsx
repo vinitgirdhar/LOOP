@@ -9,6 +9,7 @@ import { useAuth } from '@/components/providers/auth';
 import { useToast } from '@/components/providers/toast';
 import { api, apiErrorMessage, API_URL } from '@/lib/api';
 import { formatDateTime, relativeTime } from '@/lib/format';
+import { NEW_MEET_URL, PROVIDER_LABELS, detectProvider, googleCalendarUrl } from '@/lib/meeting-links';
 
 interface Meeting {
   id: string;
@@ -16,6 +17,8 @@ interface Meeting {
   agenda: string | null;
   notes: string | null;
   location: string | null;
+  meetingUrl: string | null;
+  conferenceProvider: string | null;
   startsAt: string;
   endsAt: string;
   createdBy: { id: string; name: string; avatarUrl: string | null };
@@ -101,6 +104,34 @@ export default function MeetingsPage({ params }: { params: Promise<{ workspaceId
       <Modal open={Boolean(open)} onClose={() => setOpen(null)} title={open?.title ?? ''} wide>
         {open && (
           <div className="space-y-4">
+            {/* Joining and saving to a personal calendar are the two things a
+                reader actually wants from a meeting record, so they sit above
+                the metadata rather than under the notes. */}
+            <div className="flex flex-wrap items-center gap-2">
+              {open.meetingUrl && (
+                <a href={open.meetingUrl} target="_blank" rel="noreferrer" className="btn btn-primary btn-sm">
+                  <Icon.video width={14} height={14} />
+                  Join {PROVIDER_LABELS[detectProvider(open.meetingUrl) ?? 'other']}
+                </a>
+              )}
+              <a
+                href={googleCalendarUrl({
+                  title: open.title,
+                  startsAt: open.startsAt,
+                  endsAt: open.endsAt,
+                  details: open.agenda,
+                  location: open.location,
+                  meetingUrl: open.meetingUrl,
+                })}
+                target="_blank"
+                rel="noreferrer"
+                className="btn btn-secondary btn-sm"
+              >
+                <Icon.calendar width={14} height={14} />
+                Add to Google Calendar
+              </a>
+            </div>
+
             <div className="flex flex-wrap items-center gap-2 text-[12px] text-[var(--text-muted)]">
               <Icon.clock width={13} height={13} />
               {formatDateTime(open.startsAt)} → {new Date(open.endsAt).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}
@@ -261,6 +292,7 @@ function CreateMeetingModal({
     agenda: '',
     projectId: '',
     location: '',
+    meetingUrl: '',
     startsAt: new Date(soon.getTime() - soon.getTimezoneOffset() * 60_000).toISOString().slice(0, 16),
     minutes: '30',
   });
@@ -288,6 +320,7 @@ function CreateMeetingModal({
                   ...(form.agenda.trim() ? { agenda: form.agenda.trim() } : {}),
                   ...(form.projectId ? { projectId: form.projectId } : {}),
                   ...(form.location.trim() ? { location: form.location.trim() } : {}),
+                  ...(form.meetingUrl.trim() ? { meetingUrl: form.meetingUrl.trim() } : {}),
                   startsAt: startsAt.toISOString(),
                   endsAt: new Date(startsAt.getTime() + Number(form.minutes) * 60_000).toISOString(),
                   participantIds,
@@ -307,6 +340,22 @@ function CreateMeetingModal({
       }
     >
       <div className="space-y-3">
+        <Field
+          label="Video call link"
+          hint="Paste a Meet, Zoom or Teams link. Create Meet opens Google's new-room page — paste the link it gives you back here."
+        >
+          <div className="flex gap-2">
+            <input
+              className="input font-mono text-[12px]"
+              placeholder="https://meet.google.com/abc-defg-hij"
+              value={form.meetingUrl}
+              onChange={(e) => setForm({ ...form, meetingUrl: e.target.value })}
+            />
+            <a href={NEW_MEET_URL} target="_blank" rel="noreferrer" className="btn btn-secondary btn-sm shrink-0">
+              Create Meet
+            </a>
+          </div>
+        </Field>
         <Field label="Title" required>
           <input className="input" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} placeholder="Sprint review" autoFocus />
         </Field>

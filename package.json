@@ -12,7 +12,7 @@
     "build": "npm run build --workspace @loop/web",
     "start": "npm run start --workspace @loop/web",
     "lint": "npm run lint --workspace @loop/web",
-    "test": "tsx apps/web/src/lib/gantt.test.ts && tsx apps/web/src/lib/whiteboard.test.ts && tsx apps/web/src/lib/i18n/dictionaries.test.ts && tsx --conditions=react-server apps/web/src/lib/server/share.test.ts && tsx --conditions=react-server apps/web/src/lib/server/rate-limit.test.ts",
+    "test": "tsx apps/web/src/lib/gantt.test.ts && tsx apps/web/src/lib/whiteboard.test.ts && tsx apps/web/src/lib/i18n/dictionaries.test.ts && tsx apps/web/src/lib/meeting-links.test.ts && tsx --conditions=react-server apps/web/src/lib/server/share.test.ts && tsx --conditions=react-server apps/web/src/lib/server/rate-limit.test.ts && tsx --conditions=react-server apps/web/src/lib/server/autopilot.test.ts",
     "typecheck": "npm run typecheck --workspace @loop/web",
     "db:push": "supabase db push",
     "db:reset": "supabase db reset",

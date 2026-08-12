@@ -130,6 +130,35 @@ export function can(role: Role | undefined | null, permission: Permission): bool
   return ROLE_PERMISSIONS[role]?.includes(permission) ?? false;
 }
 
+/** Every role that holds a permission, strongest first. */
+export function rolesWith(permission: Permission): Role[] {
+  return ROLES.filter((role) => ROLE_PERMISSIONS[role].includes(permission)).sort(
+    (a, b) => ROLE_RANK[b] - ROLE_RANK[a],
+  );
+}
+
+/**
+ * A refusal a person can act on.
+ *
+ * "You do not have permission to do that" tells the reader nothing: not what
+ * was needed, not whether it is worth asking someone, not who to ask. This
+ * names the capability in plain words and lists the roles that hold it, which
+ * is also what makes the RBAC model visible to anyone evaluating the product
+ * rather than buried in a matrix they have to take on trust.
+ */
+export function explainPermission(permission: Permission, role?: Role | null): string {
+  const holders = rolesWith(permission);
+  const what = PERMISSIONS[permission] ?? permission;
+  const who = holders.length === 0
+    ? 'No role currently holds it'
+    : holders.length === 1
+      ? `Only ${ROLE_LABELS[holders[0]!]} can`
+      : `${holders.slice(0, -1).map((r) => ROLE_LABELS[r]).join(', ')} and ${ROLE_LABELS[holders[holders.length - 1]!]} can`;
+
+  const youAre = role ? ` You are signed in as ${ROLE_LABELS[role]}.` : '';
+  return `This needs the "${what}" permission. ${who}.${youAre}`;
+}
+
 export function atLeast(role: Role | undefined | null, minimum: Role): boolean {
   if (!role) return false;
   return ROLE_RANK[role] >= ROLE_RANK[minimum];

@@ -1529,7 +1529,8 @@
         "tags": [
           "analytics"
         ],
-        "summary": "GET /api/analytics/overview",
+        "summary": "Workspace headline numbers, plus the 30-day throughput series.",
+        "description": "The shape here is `{ totals, throughput }` because that is what the page\nreads. It previously returned six flat fields under different names, so\n`overview.totals.completionRate` threw a TypeError on every render and the\nwhole Analytics view fell into its error boundary — the API was fine, the\ntwo sides had simply never agreed on a contract.\n\nThroughput is computed from the completed tasks themselves rather than a\nstored series, so the chart is real history and not a straight line drawn\nbetween two points.",
         "parameters": [
           {
             "name": "x-workspace-id",
@@ -1592,6 +1593,7 @@
           "analytics"
         ],
         "summary": "Per-project totals for the analytics table.",
+        "description": "Returns `tasks`, `done`, `overdue`, `progress` and `health` because those are\nthe fields the table renders. It used to return `totalTasks`/`completedTasks`\nand no colour or health at all, so every row showed blanks and the health\nbadge scored `undefined` as Critical.",
         "parameters": [
           {
             "name": "x-workspace-id",
@@ -1653,7 +1655,8 @@
         "tags": [
           "analytics"
         ],
-        "summary": "GET /api/analytics/workload",
+        "summary": "Open work per person.",
+        "description": "Field names here are the ones the page reads — `openPoints` and `role`, not\n`estimatedHrs`. The mismatch meant the workload bar chart was fed `undefined`\nfor every value and the story-points column was permanently blank.\n\nMembers whose profile row has gone are dropped rather than returned with a\nnull `user`: the page indexes `row.user.id` for its React key, so a null\nthere is a crash rather than a gap.",
         "parameters": [
           {
             "name": "x-workspace-id",
@@ -9135,8 +9138,7 @@
         "tags": [
           "webhooks"
         ],
-        "summary": "Replays what a real GitHub webhook would do, for demos and for testing the Auto-Pilot rules without wiring a reposito…",
-        "description": "The task reference is a project key and number (PAY-7), which is how commit\nmessages name work.",
+        "summary": "POST /api/webhooks/github/simulate",
         "parameters": [
           {
             "name": "x-workspace-id",

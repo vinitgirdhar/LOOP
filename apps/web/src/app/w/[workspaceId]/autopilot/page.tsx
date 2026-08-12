@@ -192,7 +192,7 @@ export default function AutoPilotPage({ params }: { params: Promise<{ workspaceI
         )}
       </div>
 
-      <SimulateModal open={simulating} workspaceId={workspaceId} onClose={() => setSimulating(false)} onDone={() => { setSimulating(false); void refetch(); }} />
+      <SimulateModal open={simulating} onClose={() => setSimulating(false)} onDone={() => { setSimulating(false); void refetch(); }} />
     </Page>
   );
 }
@@ -211,7 +211,7 @@ function ConfidenceBadge({ value }: { value: number }) {
 }
 
 /** Lets the demo produce a real suggestion without a public webhook tunnel. */
-function SimulateModal({ open, workspaceId, onClose, onDone }: { open: boolean; workspaceId: string; onClose: () => void; onDone: () => void }) {
+function SimulateModal({ open, onClose, onDone }: { open: boolean; onClose: () => void; onDone: () => void }) {
   const toast = useToast();
   const [kind, setKind] = useState('pull_request_opened');
   const [reference, setReference] = useState('feat/PAY-4-refund-flow');
@@ -232,14 +232,17 @@ function SimulateModal({ open, workspaceId, onClose, onDone }: { open: boolean; 
             onClick={async () => {
               setLoading(true);
               try {
-                const { data } = await api.post<{ suggestions: number }>('/api/webhooks/github/simulate', {
-                  workspaceId,
-                  repo,
-                  kind,
-                  reference,
-                  actor: 'demo-bot',
-                });
-                toast.success(data.suggestions > 0 ? `${data.suggestions} suggestion(s) created` : 'No task key matched that reference');
+                const { data } = await api.post<{ suggestions: number; matched: string[]; skipped: string[] }>(
+                  '/api/webhooks/github/simulate',
+                  { repo, kind, reference },
+                );
+                // Say why nothing happened. "No suggestions" with no reason is
+                // indistinguishable from the feature being broken.
+                if (data.suggestions > 0) {
+                  toast.success(`${data.suggestions} suggestion${data.suggestions === 1 ? '' : 's'} created for ${data.matched.join(', ')}`);
+                } else {
+                  toast.info(data.skipped[0] ? `No suggestion created — ${data.skipped[0]}` : 'No task key matched that reference');
+                }
                 onDone();
               } catch (caught: unknown) {
                 toast.error(apiErrorMessage(caught));

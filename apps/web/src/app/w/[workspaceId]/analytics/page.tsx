@@ -4,7 +4,7 @@ import { use } from 'react';
 import Link from 'next/link';
 import { useQuery } from '@/lib/hooks';
 import { Page, PageHeader, StatTile } from '@/components/page';
-import { Avatar, Badge, Button, Card, EmptyState, Progress, SectionTitle, Skeleton } from '@/components/ui';
+import { Avatar, Badge, Button, Card, EmptyState, ErrorState, Progress, SectionTitle, Skeleton } from '@/components/ui';
 import { BarChart, LineChart } from '@/components/charts';
 import { Icon } from '@/components/icons';
 import { api, apiErrorMessage } from '@/lib/api';
@@ -42,7 +42,7 @@ export default function AnalyticsPage({ params }: { params: Promise<{ workspaceI
   const { workspaceId } = use(params);
   const toast = useToast();
 
-  const { data: overview, loading } = useQuery<Overview>('/api/analytics/overview', [workspaceId]);
+  const { data: overview, loading, error, refetch } = useQuery<Overview>('/api/analytics/overview', [workspaceId]);
   const { data: workload } = useQuery<WorkloadRow[]>('/api/analytics/workload', [workspaceId]);
   const { data: projects } = useQuery<ProjectRow[]>('/api/analytics/projects', [workspaceId]);
 
@@ -76,7 +76,9 @@ export default function AnalyticsPage({ params }: { params: Promise<{ workspaceI
         }
       />
 
-      {loading && !overview ? (
+      {error ? (
+        <ErrorState message={error} onRetry={refetch} />
+      ) : loading && !overview ? (
         <Skeleton className="h-96 w-full" />
       ) : overview ? (
         <div className="space-y-4">
@@ -132,7 +134,7 @@ export default function AnalyticsPage({ params }: { params: Promise<{ workspaceI
             <Card>
               <SectionTitle title="Story points by person" />
               {workload && (
-                <BarChart data={workload.map((row) => ({ label: row.user.name.split(' ')[0]!, value: row.openPoints }))} height={170} />
+                <BarChart data={workload.map((row) => ({ label: (row.user?.name ?? 'Unassigned').split(' ')[0]!, value: row.openPoints }))} height={170} />
               )}
             </Card>
           </div>

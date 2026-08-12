@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { detectProvider } from '@/lib/meeting-links';
 import { requireMember, requirePermission } from '@/lib/server/context';
 import { assertOk, body, ok, route } from '@/lib/server/http';
 
@@ -24,6 +25,7 @@ const schema = z.object({
   agenda: z.string().trim().max(5000).nullable().optional(),
   notes: z.string().trim().max(20000).nullable().optional(),
   location: z.string().trim().max(200).nullable().optional(),
+  meetingUrl: z.string().trim().url().max(500).nullable().optional(),
   startsAt: z.string().datetime().optional(),
   endsAt: z.string().datetime().optional(),
 });
@@ -41,6 +43,7 @@ export const PATCH = route(async (request: Request, { params }: Params) => {
       ...(input.agenda !== undefined ? { agenda: input.agenda } : {}),
       ...(input.notes !== undefined ? { notes: input.notes } : {}),
       ...(input.location !== undefined ? { location: input.location } : {}),
+      ...(input.meetingUrl !== undefined ? { meeting_url: input.meetingUrl, conference_provider: detectProvider(input.meetingUrl) } : {}),
       ...(input.startsAt !== undefined ? { starts_at: input.startsAt } : {}),
       ...(input.endsAt !== undefined ? { ends_at: input.endsAt } : {}),
     })

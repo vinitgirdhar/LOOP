@@ -42,22 +42,22 @@ export const navItems = (workspaceId: string): NavItem[] => {
   return [
     { id: 'dashboard', href: w, label: 'Dashboard', short: 'Home', icon: 'home', group: 'work', exact: true, hint: 'Your day at a glance' },
     { id: 'projects', href: `${w}/projects`, label: 'Projects', short: 'Projects', icon: 'board', group: 'work', hint: 'Boards, milestones and members' },
-    { id: 'tasks', href: `${w}/tasks`, label: 'My tasks', short: 'Tasks', icon: 'check', group: 'work', hint: 'Everything assigned to you' },
-    { id: 'sprints', href: `${w}/sprints`, label: 'Sprints', short: 'Sprints', icon: 'sprint', group: 'work', permission: 'project.view', hint: 'Capacity, burndown and velocity' },
-    { id: 'autopilot', href: `${w}/autopilot`, label: 'Auto-Pilot', short: 'Auto', icon: 'bolt', group: 'work', badge: 'suggestions', hint: 'Suggestions waiting on a decision' },
+    { id: 'tasks', href: `${w}/tasks`, label: 'My tasks', short: 'Tasks', icon: 'check', group: 'work', permission: 'task.update.own', hint: 'Everything assigned to you' },
+    { id: 'sprints', href: `${w}/sprints`, label: 'Sprints', short: 'Sprints', icon: 'sprint', group: 'work', permission: 'sprint.manage', hint: 'Capacity, burndown and velocity' },
+    { id: 'autopilot', href: `${w}/autopilot`, label: 'Auto-Pilot', short: 'Auto', icon: 'bolt', group: 'work', badge: 'suggestions', permission: 'ai.suggestion.decide', hint: 'Suggestions waiting on a decision' },
 
     { id: 'chat', href: `${w}/chat`, label: 'Chat', short: 'Chat', icon: 'chat', group: 'knowledge', permission: 'chat.read', badge: 'chat', hint: 'Channels, threads and DMs' },
-    { id: 'docs', href: `${w}/docs`, label: 'Docs', short: 'Docs', icon: 'doc', group: 'knowledge', hint: 'Wiki pages across every project' },
-    { id: 'boards', href: `${w}/boards`, label: 'Boards', short: 'Boards', icon: 'sparkles', group: 'knowledge', permission: 'wiki.read', hint: 'Mind maps and whiteboards' },
-    { id: 'files', href: `${w}/files`, label: 'Files', short: 'Files', icon: 'folder', group: 'knowledge', hint: 'Every attachment in one place' },
+    { id: 'docs', href: `${w}/docs`, label: 'Docs', short: 'Docs', icon: 'doc', group: 'knowledge', permission: 'wiki.read', hint: 'Wiki pages across every project' },
+    { id: 'boards', href: `${w}/boards`, label: 'Boards', short: 'Boards', icon: 'sparkles', group: 'knowledge', permission: 'wiki.write', hint: 'Mind maps and whiteboards' },
+    { id: 'files', href: `${w}/files`, label: 'Files', short: 'Files', icon: 'folder', group: 'knowledge', permission: 'file.upload', hint: 'Every attachment in one place' },
     { id: 'ask', href: `${w}/ask`, label: 'Ask workspace', short: 'Ask', icon: 'sparkles', group: 'knowledge', permission: 'ai.ask', hint: 'Answers with citations you can open' },
 
     { id: 'calendar', href: `${w}/calendar`, label: 'Calendar', short: 'Calendar', icon: 'calendar', group: 'insights', hint: 'Deadlines and meetings by month' },
-    { id: 'meetings', href: `${w}/meetings`, label: 'Meetings', short: 'Meets', icon: 'video', group: 'insights', hint: 'Agendas, notes and action items' },
+    { id: 'meetings', href: `${w}/meetings`, label: 'Meetings', short: 'Meets', icon: 'video', group: 'insights', permission: 'meeting.manage', hint: 'Agendas, notes and action items' },
     { id: 'time', href: `${w}/time`, label: 'Time', short: 'Time', icon: 'clock', group: 'insights', permission: 'time.log', hint: 'Timers, logs and utilisation' },
     { id: 'analytics', href: `${w}/analytics`, label: 'Analytics', short: 'Stats', icon: 'chart', group: 'insights', permission: 'workspace.analytics.view', hint: 'Throughput, health and workload' },
 
-    { id: 'settings', href: `${w}/settings`, label: 'Settings', short: 'Settings', icon: 'settings', group: 'workspace', hint: 'Members, roles and integrations' },
+    { id: 'settings', href: `${w}/settings`, label: 'Settings', short: 'Settings', icon: 'settings', group: 'workspace', permission: 'workspace.update', hint: 'Members, roles and integrations' },
   ];
 };
 

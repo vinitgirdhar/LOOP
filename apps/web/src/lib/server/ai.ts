@@ -17,6 +17,9 @@ export const isAiConfigured = () => Boolean(process.env.GROQ_API_KEY || process.
 
 const TIMEOUT_MS = 25_000;
 
+/** Kept as an alias so a retired version number cannot take the feature down. */
+const GEMINI_FALLBACK_MODEL = 'gemini-flash-latest';
+
 export type AiFailure = 'unconfigured' | 'rate_limited' | 'rejected' | 'unavailable';
 
 /**
@@ -40,12 +43,22 @@ export class AiError extends Error {
 const failureFor = (status: number): AiFailure =>
   status === 429 ? 'rate_limited' : status === 401 || status === 403 ? 'rejected' : 'unavailable';
 
-const describe = (provider: string, status: number) =>
-  status === 429
-    ? `${provider} is rate limited or out of quota`
-    : status === 401 || status === 403
-      ? `${provider} rejected the API key`
-      : `${provider} replied ${status}`;
+/**
+ * What to tell the person looking at the screen.
+ *
+ * "Something went wrong" is useless to a reader who could act on the real
+ * reason. A spent free-tier quota is a wait-or-upgrade problem, a rejected key
+ * is a configuration problem, and a retired model is a deploy problem — three
+ * different next steps that a generic message throws away.
+ */
+const describe = (provider: string, status: number) => {
+  const name = provider === 'groq' ? 'Groq' : provider === 'gemini' ? 'Gemini' : provider;
+  if (status === 429) return `The free ${name} API quota has been used up. It resets on ${name}'s own schedule — try again shortly, or add a paid key.`;
+  if (status === 401 || status === 403) return `${name} rejected the API key. Check it is correct and still active.`;
+  if (status === 404) return `The configured ${name} model no longer exists. It has probably been retired.`;
+  if (status >= 500) return `${name} is having an outage (${status}). This is on their side.`;
+  return `${name} replied ${status}.`;
+};
 
 async function callGroq(messages: ChatMessage[], key: string, targetModel?: string): Promise<string> {
   const model = targetModel || process.env.GROQ_MODEL || 'llama-3.3-70b-versatile';
@@ -65,14 +78,17 @@ async function callGroq(messages: ChatMessage[], key: string, targetModel?: stri
     return callGroq(messages, key, 'llama-3.1-8b-instant');
   }
 
-  if (!response.ok) throw new AiError(failureFor(response.status), describe('Groq', response.status), response.status);
+  if (!response.ok) throw new AiError(failureFor(response.status), describe('groq', response.status), response.status);
 
   const payload = (await response.json()) as { choices?: { message?: { content?: string } }[] };
   return payload.choices?.[0]?.message?.content ?? '';
 }
 
 async function callGemini(messages: ChatMessage[], key: string, targetModel?: string): Promise<string> {
-  const model = targetModel || process.env.GEMINI_MODEL || 'gemini-2.0-flash';
+  // A moving alias, not a pinned version. `gemini-2.0-flash` and `gemini-1.5-flash`
+  // were both retired by Google while this code sat unchanged, and every AI
+  // feature returned 404 until someone noticed. `-latest` cannot rot the same way.
+  const model = targetModel || process.env.GEMINI_MODEL || 'gemini-flash-latest';
   const system = messages.filter((m) => m.role === 'system').map((m) => m.content).join('\n');
   const rest = messages.filter((m) => m.role !== 'system');
 
@@ -90,12 +106,14 @@ async function callGemini(messages: ChatMessage[], key: string, targetModel?: st
     signal: AbortSignal.timeout(TIMEOUT_MS),
   });
 
-  // Fall back automatically if a specific model version is not enabled for this key
-  if (response.status === 404 && model !== 'gemini-1.5-flash') {
-    return callGemini(messages, key, 'gemini-1.5-flash');
+  // A 404 here means the configured model was retired, not that the key is bad.
+  // Retry once against the alias, which Google keeps pointing at a live model.
+  if (response.status === 404 && model !== GEMINI_FALLBACK_MODEL) {
+    console.warn(`[ai] gemini model ${model} is unavailable, retrying with ${GEMINI_FALLBACK_MODEL}`);
+    return callGemini(messages, key, GEMINI_FALLBACK_MODEL);
   }
 
-  if (!response.ok) throw new AiError(failureFor(response.status), describe('Gemini', response.status), response.status);
+  if (!response.ok) throw new AiError(failureFor(response.status), describe('gemini', response.status), response.status);
 
   const payload = (await response.json()) as { candidates?: { content?: { parts?: { text?: string }[] } }[] };
   return payload.candidates?.[0]?.content?.parts?.map((part) => part.text ?? '').join('') ?? '';

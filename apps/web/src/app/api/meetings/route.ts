@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { detectProvider } from '@/lib/meeting-links';
 import { requireMember, requirePermission } from '@/lib/server/context';
 import { assertOk, body, created, ok, route } from '@/lib/server/http';
 
@@ -40,6 +41,9 @@ const schema = z.object({
   title: z.string().trim().min(1).max(160),
   agenda: z.string().trim().max(5000).nullable().optional(),
   location: z.string().trim().max(200).nullable().optional(),
+  // Validated as a URL here as well as by the column constraint, so a bad
+  // paste is a field error rather than a 500 from Postgres.
+  meetingUrl: z.string().trim().url().max(500).nullable().optional(),
   projectId: z.string().uuid().nullable().optional(),
   startsAt: z.string().datetime(),
   endsAt: z.string().datetime(),
@@ -54,6 +58,8 @@ export const POST = route(async (request: Request) => {
   const { data, error } = await ctx.supabase
     .from('meetings')
     .insert({
+      meeting_url: input.meetingUrl ?? null,
+      conference_provider: detectProvider(input.meetingUrl) ?? null,
       workspace_id: ctx.ws.workspaceId,
       title: input.title,
       agenda: input.agenda ?? null,
