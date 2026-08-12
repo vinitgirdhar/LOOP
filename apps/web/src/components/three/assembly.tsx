@@ -4,6 +4,7 @@ import { useFrame } from '@react-three/fiber';
 import { useCallback, useMemo, useRef } from 'react';
 import * as THREE from 'three';
 import { SceneFrame, useSceneColors, useSettleFrames } from './frame';
+import { ASSEMBLY_END } from '@/lib/scrollytelling';
 
 /*
   The scroll scene: twenty-seven scattered cubes becoming one solid block.
@@ -28,16 +29,6 @@ function seeded(i: number, salt: number) {
 }
 
 const easeInOut = (t: number) => (t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2);
-
-/**
- * Scroll fraction at which the block is fully assembled.
- *
- * Shared with the section's copy timing: the third beat claims the board ends
- * up current, and it should land on a finished cube rather than narrate one
- * that is still visibly flying together. The remaining scroll holds the
- * finished object while that beat is read.
- */
-export const ASSEMBLY_END = 0.58;
 
 interface Piece {
   home: THREE.Vector3;
@@ -94,7 +85,9 @@ function Block({ progress }: { progress: { current: number } }) {
 
   const layout = useCallback((time: number, step: number) => {
     // Scroll progress is remapped so the assembly completes at ASSEMBLY_END
-    // and simply holds afterwards.
+    // and simply holds afterwards. That constant is the same one the section
+    // schedules its copy against, so the block cannot finish ahead of the
+    // sentence describing it.
     const p = THREE.MathUtils.clamp(progress.current / ASSEMBLY_END, 0, 1);
 
     pieces.forEach((piece, i) => {

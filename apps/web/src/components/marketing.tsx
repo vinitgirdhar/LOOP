@@ -5,7 +5,6 @@ import { Icon } from '@/components/icons';
 import { useEffect, useState } from 'react';
 import { ThemeToggle } from '@/components/providers/theme';
 import { LocaleSwitcher, useT } from '@/components/providers/locale';
-import { useAuth } from '@/components/providers/auth';
 import { cx } from '@/lib/format';
 
 /**
@@ -56,7 +55,6 @@ export function MarketingNav() {
   const t = useT();
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
-  const { user, ready } = useAuth();
 
   /*
     The left slot carries the wordmark while the hero is on screen and becomes
@@ -118,21 +116,15 @@ export function MarketingNav() {
         <div className="ml-auto flex items-center gap-1.5">
           <LocaleSwitcher />
           <ThemeToggle />
-          {ready && user ? (
-            <Link href="/app" className="btn btn-primary btn-sm">
-              {t('nav.openApp')}
-            </Link>
-          ) : (
-            <>
-              <Link href="/login" className="btn btn-ghost btn-sm hidden sm:inline-flex">
-                {t('nav.signIn')}
-              </Link>
-              {/* Last in the row, so it sits hard against the right edge. */}
-              <Link href="/welcome" className="btn btn-primary btn-sm">
-                {t('nav.getStarted')}
-              </Link>
-            </>
-          )}
+          <Link href="/login" className="btn btn-ghost btn-sm hidden sm:inline-flex">
+            {t('nav.signIn')}
+          </Link>
+          {/* Last in the row, so it sits hard against the right edge. Signed-in
+              readers land on the app anyway: /login redirects an existing
+              session straight through. */}
+          <Link href="/welcome" className="btn btn-primary btn-sm">
+            {t('nav.getStarted')}
+          </Link>
         </div>
       </nav>
 

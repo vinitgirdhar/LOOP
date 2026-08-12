@@ -38,8 +38,7 @@ export function Hero() {
     const context = gsap.context(() => {
       const timeline = gsap.timeline({ defaults: { ease: 'power3.out' } });
       timeline
-        .from('[data-hero-badge]', { opacity: 0, y: 12, duration: 0.5 })
-        .from('[data-hero-line]', { opacity: 0, yPercent: 108, duration: 0.85, stagger: 0.1 }, '-=0.25')
+        .from('[data-hero-line]', { opacity: 0, yPercent: 108, duration: 0.85, stagger: 0.1 })
         .from('[data-hero-copy]', { opacity: 0, y: 16, duration: 0.6 }, '-=0.45')
         .from('[data-hero-cta]', { opacity: 0, y: 14, duration: 0.5 }, '-=0.35')
         .from('[data-hero-note]', { opacity: 0, duration: 0.4 }, '-=0.2')
@@ -53,13 +52,9 @@ export function Hero() {
     <section ref={root} className="relative overflow-hidden border-b">
       <div className="mx-auto grid max-w-6xl 2xl:max-w-7xl 3xl:max-w-[88rem] items-center gap-5 px-4 pb-8 pt-6 sm:gap-6 sm:px-6 sm:pb-16 sm:pt-12 lg:grid-cols-[1.05fr_1fr] lg:gap-8 2xl:gap-14 lg:pb-24 lg:pt-20">
         <div className="lg:pr-4">
-          <span data-hero-badge className="badge bg-[var(--accent-soft)] text-[var(--accent)] 2xl:text-xs">
-            {t('hero.badge')}
-          </span>
-
           {/* Each line clips its own overflow so the rise reads as type
               coming up from behind a mask rather than sliding on the page. */}
-          <h1 className="mt-4 text-[29px] font-bold leading-[1.05] min-[390px]:text-[34px] sm:text-5xl lg:text-6xl 2xl:text-7xl">
+          <h1 className="text-[29px] font-bold leading-[1.05] min-[390px]:text-[34px] sm:text-5xl lg:text-6xl 2xl:text-7xl">
             <span className="block overflow-hidden pb-[0.08em]">
               <span data-hero-line className="block">
                 {t('hero.titleLine1')}

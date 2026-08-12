@@ -6,6 +6,7 @@ import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { useMediaQuery } from '@/lib/hooks';
 import { cx } from '@/lib/format';
+import { beatState } from '@/lib/scrollytelling';
 
 /*
   The scrollytelling beat.
@@ -15,31 +16,21 @@ import { cx } from '@/lib/format';
   survives a resize or an address-bar collapse without a refresh. GSAP is left
   to do the one thing CSS cannot: report how far through the track we are.
 
-  Scroll progress lands in a ref, never in state. The frame loop reads it, so
-  dragging a finger down the page does not re-render a single React component.
+  One scroll fraction drives everything. It reaches the cube through a ref and
+  the copy through quickSetters, so a finger dragging down the page moves both
+  from the same number and re-renders no React at all. Beat timing lives in
+  lib/scrollytelling.ts, which explains why the two used to disagree.
+
+  Heights are in `svh`, not `vh`/`dvh`. On a phone `vh` is the tall viewport and
+  `dvh` changes as the address bar collapses, so a `300vh` track over a `dvh`
+  sticky pane measured two different screens and the scrub drifted mid-scroll.
+  `svh` is the one unit that holds still while the reader is scrolling.
 */
 
 const AssemblyScene = dynamic(() => import('@/components/three/assembly'), {
   ssr: false,
   loading: () => <div className="h-full w-full" />,
 });
-
-/**
- * Where each beat is on screen, as a fraction of the scroll track.
- *
- * Written out rather than derived from `1 / BEATS.length` so the copy can be
- * held against the cube: the first two beats run while the block assembles,
- * and the third is not revealed until after it has finished at 0.58 — it is
- * the beat that claims the board ends up current, and it should land on a
- * finished object. `fade` is short on purpose; a third of the track spent
- * cross-fading is what made the reveal feel like it lagged the scroll.
- */
-const FADE = 0.05;
-const WINDOWS = [
-  { enter: 0, exit: 0.26 },
-  { enter: 0.3, exit: 0.55 },
-  { enter: 0.62, exit: 1 },
-];
 
 const BEATS = [
   {
@@ -73,79 +64,70 @@ export function AssemblySection() {
 
     gsap.registerPlugin(ScrollTrigger);
 
+    // Queried outside the context because quickSetter writes straight to
+    // `style` and is not something `revert()` knows to undo; the teardown has
+    // to clear them itself or a beat left at opacity 0 stays invisible.
+    const beats = gsap.utils.toArray<HTMLElement>('[data-beat]', track.current);
+
     const context = gsap.context(() => {
-      ScrollTrigger.create({
-        trigger: track.current,
-        start: 'top top',
-        end: 'bottom bottom',
-        // 0.4s of catch-up turns a jumpy trackpad into a smooth assembly.
-        scrub: 0.4,
-        onUpdate: (self) => {
-          progress.current = self.progress;
+      gsap.set(beats, { willChange: 'opacity, transform' });
+
+      const setters = beats.map((beat) => ({
+        opacity: gsap.quickSetter(beat, 'opacity') as (value: number) => void,
+        y: gsap.quickSetter(beat, 'y', 'px') as (value: number) => void,
+      }));
+      const rails = gsap.utils.toArray<HTMLElement>('[data-beat-rail]', track.current);
+      const setRail = rails[0] ? (gsap.quickSetter(rails[0], 'scaleX') as (value: number) => void) : null;
+
+      /** The single write of the frame: same fraction to the cube and the copy. */
+      const paint = (fraction: number) => {
+        progress.current = fraction;
+        setters.forEach((set, index) => {
+          const state = beatState(fraction, index);
+          set.opacity(state.opacity);
+          set.y(state.y);
+        });
+        setRail?.(fraction);
+      };
+
+      // Scrubbing a plain object rather than reading ScrollTrigger.progress
+      // directly: `scrub` smooths the tween, not the trigger, so this is what
+      // turns a jumpy trackpad into a smooth assembly — and both the cube and
+      // the copy get the smoothed value instead of one of each.
+      const scrubbed = { fraction: 0 };
+      gsap.to(scrubbed, {
+        fraction: 1,
+        ease: 'none',
+        onUpdate: () => paint(scrubbed.fraction),
+        scrollTrigger: {
+          trigger: track.current,
+          start: 'top top',
+          end: 'bottom bottom',
+          scrub: 0.4,
+          invalidateOnRefresh: true,
         },
       });
 
-      // Beats cross-fade against the same track, so copy and cube stay in step.
-      const beats = gsap.utils.toArray<HTMLElement>('[data-beat]');
-      beats.forEach((beat, index) => {
-        const slot = WINDOWS[index] ?? WINDOWS[WINDOWS.length - 1]!;
-        const first = index === 0;
-
-        gsap.fromTo(
-          beat,
-          { opacity: first ? 1 : 0, y: first ? 0 : 20 },
-          {
-            opacity: 1,
-            y: 0,
-            ease: 'none',
-            scrollTrigger: {
-              trigger: track.current,
-              start: `top+=${slot.enter * 100}% top`,
-              end: `top+=${(slot.enter + (first ? 0.01 : FADE)) * 100}% top`,
-              scrub: 0.3,
-            },
-          },
-        );
-
-        // The last beat holds to the end of the track rather than fading out.
-        if (index < beats.length - 1) {
-          gsap.to(beat, {
-            opacity: 0,
-            y: -20,
-            ease: 'none',
-            scrollTrigger: {
-              trigger: track.current,
-              start: `top+=${(slot.exit - FADE) * 100}% top`,
-              end: `top+=${slot.exit * 100}% top`,
-              scrub: 0.3,
-            },
-          });
-        }
-      });
-
-      // The progress rail under the copy.
-      gsap.to('[data-beat-rail]', {
-        scaleX: 1,
-        ease: 'none',
-        scrollTrigger: { trigger: track.current, start: 'top top', end: 'bottom bottom', scrub: 0.3 },
-      });
+      paint(0);
     }, track);
 
-    return () => context.revert();
+    return () => {
+      context.revert();
+      gsap.set(beats, { clearProps: 'opacity,transform,willChange' });
+    };
   }, [reduced]);
 
   return (
     <section
       ref={track}
       id="how"
-      className={cx('relative scroll-mt-16 border-b bg-[var(--bg-subtle)]', !reduced && 'h-[300vh]')}
+      className={cx('relative scroll-mt-16 border-b bg-[var(--bg-subtle)]', !reduced && 'h-[300svh]')}
     >
-      <div className={cx('flex flex-col', !reduced && 'sticky top-0 h-dvh overflow-hidden')}>
-        <div className="mx-auto flex w-full max-w-6xl 2xl:max-w-7xl 3xl:max-w-[88rem] flex-1 flex-col px-4 py-3 pb-6 sm:px-6 sm:py-6 lg:grid lg:grid-cols-2 lg:items-center lg:gap-12 2xl:gap-20 lg:py-12">
-          {/*
-            Cube first on a phone, copy underneath. Fills the screen height proportionally without empty space at the bottom.
-          */}
-          <div className="relative order-1 min-h-0 flex-1 lg:order-2 lg:h-[62vh] 2xl:h-[68vh]">
+      <div className={cx('flex flex-col', !reduced && 'sticky top-0 h-[100svh] overflow-hidden')}>
+        <div className="mx-auto flex w-full max-w-6xl 2xl:max-w-7xl 3xl:max-w-[88rem] flex-1 flex-col gap-3 px-4 py-3 pb-6 sm:gap-5 sm:px-6 sm:py-6 lg:grid lg:grid-cols-2 lg:items-center lg:gap-12 2xl:gap-20 lg:py-12">
+          {/* Cube first on a phone, copy underneath. It takes whatever height
+              the copy does not, so neither is cropped on a short screen. */}
+          <div className="relative order-1 min-h-0 flex-1 lg:order-2 lg:h-[62svh] 2xl:h-[68svh]">
             <AssemblyScene progress={progress} />
           </div>
 
@@ -158,7 +140,7 @@ export function AssemblySection() {
               {BEATS.map((beat) => (
                 <div key={beat.step} data-beat className={cx(reduced && 'mb-8')}>
                   <p className="text-[12px] sm:text-[13px] font-bold tabular-nums text-[var(--text-faint)] 2xl:text-sm">{beat.step}</p>
-                  <h2 className="mt-0.5 text-[22px] sm:text-3xl lg:text-4xl 2xl:text-5xl font-bold leading-[1.12]">{beat.title}</h2>
+                  <h2 className="mt-0.5 text-[21px] sm:text-3xl lg:text-4xl 2xl:text-5xl font-bold leading-[1.12]">{beat.title}</h2>
                   <p className="mt-2 sm:mt-3 max-w-lg text-[13px] sm:text-[15px] 2xl:text-lg 2xl:max-w-xl leading-relaxed text-[var(--text-muted)]">{beat.body}</p>
                 </div>
               ))}
