@@ -159,7 +159,7 @@ const CAMERA_CONFIG = { position: [0, 0, 8] as [number, number, number], fov: 42
 export default function AssemblyScene({ progress }: { progress: { current: number } }) {
   const colors = useSceneColors();
   return (
-    <SceneFrame camera={CAMERA_CONFIG}>
+    <SceneFrame camera={CAMERA_CONFIG} alwaysOn>
       <fog attach="fog" args={[`#${colors.ground.getHexString()}`, 6.5, 16]} />
       <Block progress={progress} />
     </SceneFrame>

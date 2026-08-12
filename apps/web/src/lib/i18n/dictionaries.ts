@@ -33,8 +33,10 @@ const en = {
   'nav.contact': 'Contact',
   'nav.signIn': 'Sign in',
   'nav.getStarted': 'Get started',
+  'nav.openApp': 'Open app',
 
   // ── landing hero ────────────────────────────────────────────────────────
+  'hero.badge': 'Jira + Notion + Slack + GitHub, in one place',
   'hero.titleLine1': 'The project tool',
   'hero.titleLine2': 'that keeps itself',
   'hero.titleLine3': 'updated',
@@ -94,7 +96,9 @@ const hi: Dictionary = {
   'nav.contact': 'संपर्क',
   'nav.signIn': 'साइन इन',
   'nav.getStarted': 'शुरू करें',
+  'nav.openApp': 'ऐप खोलें',
 
+  'hero.badge': 'Jira + Notion + Slack + GitHub, एक ही जगह',
   'hero.titleLine1': 'वह प्रोजेक्ट टूल',
   'hero.titleLine2': 'जो खुद को',
   'hero.titleLine3': 'अपडेट रखता है',
@@ -148,7 +152,9 @@ const es: Dictionary = {
   'nav.contact': 'Contacto',
   'nav.signIn': 'Iniciar sesión',
   'nav.getStarted': 'Empezar',
+  'nav.openApp': 'Abrir la app',
 
+  'hero.badge': 'Jira + Notion + Slack + GitHub, en un solo lugar',
   'hero.titleLine1': 'La herramienta',
   'hero.titleLine2': 'que se mantiene',
   'hero.titleLine3': 'al día sola',

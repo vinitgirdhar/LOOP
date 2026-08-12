@@ -26,15 +26,15 @@ export const BEAT_SHIFT = 20;
  * letting two sit at half opacity would print one paragraph over another.
  */
 export const WINDOWS = [
-  { enter: 0, exit: 0.3 },
-  { enter: 0.32, exit: 0.62 },
-  { enter: 0.64, exit: 1 },
+  { enter: 0, exit: 0.35 },
+  { enter: 0.30, exit: 0.65 },
+  { enter: 0.60, exit: 1 },
 ] as const;
 
 /**
  * Scroll fraction at which the block finishes assembling.
  *
- * Set to the moment the third beat has fully arrived (0.64 + FADE) — that beat
+ * Set to the moment the third beat has fully arrived (0.60 + FADE) — that beat
  * claims the board ends up current, so it should land *as* the cube completes.
  * The remaining third of the track holds both, which is the pause that lets the
  * last point be read before the section unpins.

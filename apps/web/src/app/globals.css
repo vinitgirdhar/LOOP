@@ -903,66 +903,6 @@ input[type='radio'] {
 
 }
 
-/*
-  Checkout surface.
-
-  A payment sheet is the one place on the page that should not inherit the
-  product's theme: a gateway renders in its own frame and stays light whatever
-  the host is doing, and a reader who has seen a real one reads a dark
-  "checkout" as something else entirely. These are the motions that separate a
-  gateway from a form — the sheet rising, the pane swapping under the method
-  list, the indeterminate bar while the bank is contacted, the tick drawing
-  itself on settlement.
-*/
-.rzp-backdrop { animation: rzpFade 0.2s ease-out; }
-@keyframes rzpFade { from { opacity: 0; } to { opacity: 1; } }
-
-/* A phone gets a sheet from the bottom edge; a desktop gets a card. */
-.rzp-sheet { animation: rzpSheet 0.32s cubic-bezier(0.16, 1, 0.3, 1); }
-@keyframes rzpSheet { from { opacity: 0; transform: translateY(100%); } to { opacity: 1; transform: none; } }
-@media (min-width: 640px) {
-  .rzp-sheet { animation: rzpCard 0.26s cubic-bezier(0.16, 1, 0.3, 1); }
-}
-@keyframes rzpCard { from { opacity: 0; transform: translateY(14px) scale(0.97); } to { opacity: 1; transform: none; } }
-
-/* Keyed on the method, so switching re-runs it rather than cutting. */
-.rzp-pane { animation: rzpPane 0.22s ease-out; }
-@keyframes rzpPane { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
-
-/* Mobile drills from the method list into one method and back. */
-.rzp-push { animation: rzpPush 0.24s cubic-bezier(0.16, 1, 0.3, 1); }
-@keyframes rzpPush { from { opacity: 0; transform: translateX(16px); } to { opacity: 1; transform: none; } }
-
-/* Indeterminate, because the gateway cannot say how long a bank will take. */
-.rzp-bar::after {
-  content: '';
-  position: absolute;
-  inset: 0 auto 0 0;
-  width: 38%;
-  border-radius: inherit;
-  background: currentColor;
-  animation: rzpBar 1.15s cubic-bezier(0.65, 0, 0.35, 1) infinite;
-}
-@keyframes rzpBar {
-  from { transform: translateX(-105%); }
-  to { transform: translateX(365%); }
-}
-
-/* The tick draws rather than appears: a settled payment earns the beat. */
-.rzp-tick { stroke-dasharray: 26; stroke-dashoffset: 26; animation: rzpTick 0.45s 0.1s cubic-bezier(0.65, 0, 0.35, 1) forwards; }
-@keyframes rzpTick { to { stroke-dashoffset: 0; } }
-
-.rzp-ring { animation: rzpRing 0.6s ease-out; }
-@keyframes rzpRing {
-  from { transform: scale(0.7); opacity: 0; }
-  60% { transform: scale(1.06); opacity: 1; }
-  to { transform: none; opacity: 1; }
-}
-
-/* The QR settles in the way a freshly generated one does. */
-.rzp-qr { animation: rzpQr 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
-@keyframes rzpQr { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: none; } }
-
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     animation-duration: 0.01ms !important;
