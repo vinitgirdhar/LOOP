@@ -11,7 +11,7 @@ export const GET = route(async (request: Request, { params }: Params) => {
 
   const { data, error } = await supabase
     .from('meetings')
-    .select('*, createdBy:profiles (id, name, avatar_url), participants:meeting_participants (status, user:profiles (id, name, avatar_url))')
+    .select('*, createdBy:profiles!meetings_created_by_id_fkey (id, name, avatar_url), participants:meeting_participants (status, user:profiles (id, name, avatar_url))')
     .eq('id', meetingId)
     .eq('workspace_id', ws.workspaceId)
     .single();

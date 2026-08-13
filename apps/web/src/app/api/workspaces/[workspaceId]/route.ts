@@ -9,7 +9,7 @@ export const GET = route(async (request: Request, { params }: Params) => {
 
   const { data, error } = await supabase
     .from('workspaces')
-    .select('*, organization:organizations (id, name, plan)')
+    .select('*, organization:organizations (id, name, plan:billing_plans (key, name, seats, price_monthly))')
     .eq('id', ws.workspaceId)
     .single();
 

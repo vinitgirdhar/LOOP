@@ -26,9 +26,9 @@ export const BEAT_SHIFT = 20;
  * letting two sit at half opacity would print one paragraph over another.
  */
 export const WINDOWS = [
-  { enter: 0, exit: 0.35 },
-  { enter: 0.30, exit: 0.65 },
-  { enter: 0.60, exit: 1 },
+  { enter: 0, exit: 0.3 },
+  { enter: 0.32, exit: 0.6 },
+  { enter: 0.62, exit: 1 },
 ] as const;
 
 /**

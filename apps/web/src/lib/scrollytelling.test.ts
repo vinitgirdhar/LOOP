@@ -26,11 +26,19 @@ const opacity = (progress: number) => WINDOWS.map((_, index) => Number(beatState
   assert.deepEqual(opacity(1), [0, 0, 1]);
 
   // Beats share a grid cell, so two of them visible at once is two paragraphs
-  // printed on top of each other.
+  // printed on top of each other. The threshold is "painted at all", not
+  // "legible": a beat held at 0.4 opacity over another one still ghosts, and a
+  // 0.5 cutoff here let exactly that through when the windows lost their gaps.
   for (let progress = 0; progress <= 1; progress += 0.01) {
-    const visible = opacity(progress).filter((value) => value > 0.5).length;
-    assert.ok(visible <= 1, `at ${progress.toFixed(2)} at most one beat is legible, saw ${visible}`);
+    const visible = opacity(progress).filter((value) => value > 0.01).length;
+    assert.ok(visible <= 1, `at ${progress.toFixed(2)} at most one beat is painted, saw ${visible}`);
   }
+
+  // Which only holds while each beat is finished fading out before the next
+  // starts fading in. Stated directly so the numbers above cannot drift back.
+  WINDOWS.slice(0, -1).forEach((window, index) => {
+    assert.ok(window.exit <= WINDOWS[index + 1].enter, `beat ${index} clears the slot before beat ${index + 1} enters it`);
+  });
 }
 
 // ── nothing overshoots its window ─────────────────────────────────────────

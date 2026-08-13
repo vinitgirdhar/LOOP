@@ -6,8 +6,11 @@ import { assertOk, body, created, ok, route } from '@/lib/server/http';
 // Kept as one literal: supabase-js can only infer a row type from a select it
 // can read at compile time, and a concatenated string degrades every caller to
 // GenericStringError.
+// createdBy is pinned to the created_by_id FK by name: meeting_participants
+// gives meetings a second, many-to-many path to profiles, so a bare
+// `profiles` embed is ambiguous and PostgREST refuses it with a 400.
 const MEETING_SELECT =
-  '*, createdBy:profiles (id, name, avatar_url, mascot), project:projects (id, name, key), participants:meeting_participants (user_id, status, user:profiles (id, name, email, avatar_url)), actionItems:tasks (id, number, title, status, completed_at, assignee:profiles!tasks_assignee_id_fkey (id, name))';
+  '*, createdBy:profiles!meetings_created_by_id_fkey (id, name, avatar_url, mascot), project:projects (id, name, key), participants:meeting_participants (user_id, status, user:profiles (id, name, email, avatar_url)), actionItems:tasks (id, number, title, status, completed_at, assignee:profiles!tasks_assignee_id_fkey (id, name))';
 
 export const GET = route(async (request: Request) => {
   const { supabase, ws } = await requireMember(request);

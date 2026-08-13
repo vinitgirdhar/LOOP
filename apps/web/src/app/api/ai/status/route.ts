@@ -19,7 +19,9 @@ export const GET = route(async (request: Request) => {
     enabled: groq || gemini,
     frontier: groq ? process.env.GROQ_MODEL ?? 'llama-3.3-70b-versatile' : null,
     fallback: gemini ? process.env.GEMINI_MODEL ?? 'gemini-2.0-flash' : null,
-    embeddings: gemini ? process.env.GEMINI_EMBED_MODEL ?? 'text-embedding-004' : null,
+    // text-embedding-004 has been retired and now 404s, so it cannot be the
+    // fallback — an unset var on a deploy would take embeddings down.
+    embeddings: gemini ? process.env.GEMINI_EMBED_MODEL ?? 'gemini-embedding-001' : null,
     ...(probes ? { probes } : {}),
   });
 });

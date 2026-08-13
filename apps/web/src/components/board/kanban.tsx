@@ -130,7 +130,10 @@ export function KanbanBoard({
       setData((current) => (current ? { ...current, tasks: current.tasks.map((t) => (t.id === taskId ? { ...t, status: columnKey } : t)) } : (current as never)));
 
       try {
-        await api.post(`/api/tasks/${taskId}/move`, { status: columnKey, index: Math.max(0, index) });
+        const { data: updated } = await api.post<BoardTask>(`/api/tasks/${taskId}/move`, { status: columnKey, index: Math.max(0, index) });
+        // Adopt the server's authoritative order so the card settles exactly
+        // where it was dropped rather than at its pre-move position.
+        setData((current) => (current ? { ...current, tasks: current.tasks.map((t) => (t.id === taskId ? { ...t, ...updated } : t)) } : (current as never)));
       } catch (caught: unknown) {
         toast.error(apiErrorMessage(caught));
         void refetch();

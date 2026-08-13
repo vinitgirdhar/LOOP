@@ -13,7 +13,9 @@ export const GET = route(async (request: Request, { params }: Params) => {
   const { data, error } = await supabase
     .from('tasks')
     .select(
-      `${TASK_SELECT}, subtasks (*), labels:task_labels (label:labels (*)), attachments (*), ` +
+      // TASK_SELECT already embeds `labels`; repeating the alias here made
+      // PostgREST emit a spurious "aggregate functions are not allowed" 400.
+      `${TASK_SELECT}, subtasks (*), attachments (*), ` +
         'blockedBy:task_dependencies!task_dependencies_blocked_id_fkey (id, blocker_id), ' +
         'blocking:task_dependencies!task_dependencies_blocker_id_fkey (id, blocked_id)',
     )
