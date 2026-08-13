@@ -34,6 +34,13 @@ export default function ProfilePage() {
     if (ready && !user) router.replace('/login?next=/profile');
   }, [ready, user, router]);
 
+  // Checkout lands here on `?tab=billing`, so the receipt is the first thing a
+  // person sees after paying rather than something they have to go looking for.
+  useEffect(() => {
+    const wanted = new URLSearchParams(window.location.search).get('tab');
+    if (wanted) setTab(wanted);
+  }, []);
+
   if (!ready || !user) {
     return (
       <div className="flex min-h-dvh items-center justify-center">
@@ -72,6 +79,7 @@ export default function ProfilePage() {
         <Tabs
           tabs={[
             { key: 'profile', label: 'Profile' },
+            { key: 'billing', label: 'Billing' },
             { key: 'security', label: 'Security' },
             { key: 'sessions', label: 'Devices' },
             { key: 'workspaces', label: 'Workspaces' },
@@ -82,6 +90,7 @@ export default function ProfilePage() {
 
         <div className="mt-4 space-y-4">
           {tab === 'profile' && <ProfileTab onSaved={reloadMemberships} />}
+          {tab === 'billing' && <BillingTab />}
           {tab === 'security' && <SecurityTab />}
           {tab === 'sessions' && <SessionsTab onLogoutAll={logout} />}
           {tab === 'workspaces' && (
@@ -300,6 +309,130 @@ function SecurityTab() {
           </div>
         )}
       </Modal>
+    </div>
+  );
+}
+
+interface SubscriptionRow {
+  id: string;
+  planKey: string;
+  planName: string;
+  amountInr: number;
+  cadence: 'monthly' | 'annual';
+  paymentId: string;
+  method: string | null;
+  status: string;
+  isTest: boolean;
+  startedAt: string;
+  currentPeriodEnd: string;
+  createdAt: string;
+}
+
+const METHOD_LABEL: Record<string, string> = {
+  upi: 'UPI',
+  card: 'Card',
+  netbanking: 'Netbanking',
+  wallet: 'Wallet',
+  paylater: 'Pay Later',
+};
+
+/**
+ * The plan on this account, and the receipts behind it.
+ *
+ * Before this, a completed checkout wrote nothing anywhere — somebody could pay
+ * and then find no trace of it in the product. This is where the purchase
+ * finally shows up.
+ */
+function BillingTab() {
+  const { data, loading } = useQuery<{ active: SubscriptionRow | null; receipts: SubscriptionRow[] }>('/api/billing/subscription', []);
+
+  if (loading) return <Skeleton className="h-40 w-full" />;
+
+  const active = data?.active ?? null;
+  const receipts = data?.receipts ?? [];
+
+  return (
+    <div className="space-y-4">
+      <Card padded={false}>
+        <div className="border-b px-4 py-3">
+          <SectionTitle title="Current plan" subtitle={active ? 'Renews automatically at the end of the period' : undefined} />
+        </div>
+
+        {active ? (
+          <div className="px-4 py-4">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="text-lg font-bold tracking-[-0.02em]">{active.planName}</span>
+              <Badge tone="success">Active</Badge>
+              {active.isTest && <Badge tone="warning">Test payment</Badge>}
+            </div>
+
+            <p className="mt-1 text-[13px] text-[var(--text-muted)]">
+              ₹{active.amountInr.toLocaleString('en-IN')} per user / month · billed {active.cadence === 'annual' ? 'annually' : 'monthly'}
+            </p>
+
+            <dl className="mt-4 grid gap-3 border-t pt-4 text-[12px] sm:grid-cols-3">
+              <div>
+                <dt className="text-[var(--text-faint)]">Started</dt>
+                <dd className="mt-0.5 font-medium">{formatDateTime(active.startedAt)}</dd>
+              </div>
+              <div>
+                <dt className="text-[var(--text-faint)]">Renews</dt>
+                <dd className="mt-0.5 font-medium">{formatDateTime(active.currentPeriodEnd)}</dd>
+              </div>
+              <div>
+                <dt className="text-[var(--text-faint)]">Paid with</dt>
+                <dd className="mt-0.5 font-medium">{active.method ? METHOD_LABEL[active.method] ?? active.method : '—'}</dd>
+              </div>
+            </dl>
+
+            {active.isTest && (
+              <p className="mt-4 rounded-lg bg-[var(--warning-soft)] px-3 py-2 text-[11.5px] leading-relaxed text-[var(--warning)]">
+                This subscription was settled by the checkout running in test mode. No money moved and no live Razorpay capture took place.
+              </p>
+            )}
+          </div>
+        ) : (
+          <div className="px-4 py-8 text-center">
+            <p className="text-[13px] font-medium">You are on the Free plan</p>
+            <p className="mx-auto mt-1 max-w-sm text-[12px] text-[var(--text-muted)]">
+              Up to 5 people and 3 active projects. Upgrade when your team outgrows it.
+            </p>
+            <Link href="/#pricing" className="btn btn-primary btn-sm mt-4 inline-flex">
+              View plans
+            </Link>
+          </div>
+        )}
+      </Card>
+
+      <Card padded={false}>
+        <div className="border-b px-4 py-3">
+          <SectionTitle title="Receipts" subtitle={receipts.length ? undefined : 'Payments will appear here'} />
+        </div>
+
+        {receipts.length === 0 ? (
+          <p className="px-4 py-6 text-center text-[12px] text-[var(--text-muted)]">No payments yet.</p>
+        ) : (
+          <ul className="divide-y">
+            {receipts.map((receipt) => (
+              <li key={receipt.id} className="flex items-center gap-3 px-4 py-3">
+                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[var(--bg-inset)]">
+                  <Icon.check width={15} height={15} className="text-[var(--success)]" />
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate text-[13px] font-medium">
+                    {receipt.planName} · {receipt.cadence === 'annual' ? 'Annual' : 'Monthly'}
+                  </span>
+                  <span className="block truncate font-mono text-[11px] text-[var(--text-faint)]">{receipt.paymentId}</span>
+                </span>
+                <span className="shrink-0 text-right">
+                  <span className="block text-[13px] font-semibold tabular-nums">₹{receipt.amountInr.toLocaleString('en-IN')}</span>
+                  <span className="block text-[11px] text-[var(--text-muted)]">{relativeTime(receipt.createdAt)}</span>
+                </span>
+              </li>
+            ))}
+          </ul>
+        )}
+      </Card>
     </div>
   );
 }

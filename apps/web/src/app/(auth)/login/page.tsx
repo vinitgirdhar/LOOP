@@ -83,7 +83,7 @@ function LoginForm() {
     <AuthCard
       title={t('auth.welcomeBack')}
       subtitle={t('auth.signInSubtitle')}
-      footer={<>{t('auth.noAccount')} <AuthFooterLink href="/register">{t('auth.signUp')}</AuthFooterLink></>}
+      footer={<>{t('auth.noAccount')} <AuthFooterLink href={`/register?next=${encodeURIComponent(next)}`}>{t('auth.signUp')}</AuthFooterLink></>}
     >
       <form onSubmit={submit} className="space-y-4 sm:space-y-5 lg:space-y-6">
         <FormError message={error} />

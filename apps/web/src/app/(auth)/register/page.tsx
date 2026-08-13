@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { Suspense, useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { AuthCard, AuthDivider, AuthFooterLink, FormError, GoogleButton } from '@/components/auth-form';
 import { Button, Field } from '@/components/ui';
 import { apiErrorMessage } from '@/lib/api';
@@ -14,8 +14,12 @@ const RULES = [
   { test: (v: string) => /\d/.test(v), label: 'A number' },
 ];
 
-export default function RegisterPage() {
+function RegisterForm() {
   const router = useRouter();
+  const params = useSearchParams();
+  // Where to go once the account exists and the email is verified. Somebody who
+  // started at a pricing plan comes back to that checkout, not to a dashboard.
+  const next = params.get('next') ?? '/app';
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -35,10 +39,13 @@ export default function RegisterPage() {
       const { error: failed } = await supabase.auth.signUp({
         email: address,
         password,
-        options: { data: { name: name.trim() }, emailRedirectTo: `${window.location.origin}/auth/callback` },
+        options: {
+          data: { name: name.trim() },
+          emailRedirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}`,
+        },
       });
       if (failed) throw new Error(failed.message);
-      router.push(`/verify-email?email=${encodeURIComponent(address)}`);
+      router.push(`/verify-email?email=${encodeURIComponent(address)}&next=${encodeURIComponent(next)}`);
     } catch (caught: unknown) {
       setError(apiErrorMessage(caught));
     } finally {
@@ -98,5 +105,14 @@ export default function RegisterPage() {
         Email verification is required before you can create a workspace.
       </p>
     </AuthCard>
+  );
+}
+
+/* useSearchParams needs a Suspense boundary to prerender this route. */
+export default function RegisterPage() {
+  return (
+    <Suspense fallback={null}>
+      <RegisterForm />
+    </Suspense>
   );
 }

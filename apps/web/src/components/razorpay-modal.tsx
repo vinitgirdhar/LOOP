@@ -41,13 +41,17 @@ export interface RazorpayModalProps {
   planName: string;
   amountINR: number;
   cadence?: string;
-  onSuccess?: (details: { paymentId: string; amount: number; plan: string }) => void;
+  onSuccess?: (details: { paymentId: string; amount: number; plan: string; method: string }) => void;
 }
 
 type PaymentMethod = 'upi' | 'card' | 'netbanking' | 'wallet' | 'paylater';
 type Step = 'checkout' | 'processing' | 'otp' | 'success' | 'expired';
 
 /** Razorpay's own palette, held here so no shade is invented twice. */
+/** The registered business a real gateway would print, held once so the band
+    and the bank's own wording cannot drift apart. */
+const MERCHANT = 'Loop Technologies Pvt Ltd';
+
 const NAVY = '#02042B';
 const BLUE = '#3395FF';
 const INK = '#12203C';
@@ -176,7 +180,7 @@ export function RazorpayModal({ isOpen, onClose, planName, amountINR, cadence = 
     setStep('processing');
     later(() => {
       setStep('success');
-      onSuccess?.({ paymentId, amount: amountINR, plan: planName });
+      onSuccess?.({ paymentId, amount: amountINR, plan: planName, method });
     }, 1300);
   };
 
@@ -296,7 +300,7 @@ function MerchantBand({
         </span>
 
         <div className="min-w-0 flex-1">
-          <p className="truncate text-[14px] font-semibold leading-tight">Loop Technologies</p>
+          <p className="truncate text-[14px] font-semibold leading-tight">{MERCHANT}</p>
           <p className="mt-0.5 truncate text-[11.5px] text-white/60">
             {planName} · {cadence}
           </p>
@@ -759,7 +763,7 @@ function SecureStep({
 
       <h3 className="mt-3 text-[15px] font-bold">3D Secure verification</h3>
       <p className="mx-auto mt-1 max-w-xs text-[11.5px] leading-relaxed" style={{ color: MUTED }}>
-        Your bank is authorising {rupees(amountINR)} to Loop Technologies. Enter the code sent to the mobile ending
+        Your bank is authorising {rupees(amountINR)} to {MERCHANT}. Enter the code sent to the mobile ending
         <span className="font-semibold" style={{ color: INK }}>
           {' '}
           •••• 3210
