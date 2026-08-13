@@ -66,11 +66,11 @@ export const POSTS: Post[] = [
     body: [
       { p: 'Plenty of products bolt a chat box onto a knowledge base and call it done. The interesting question is what happens when a client account asks "what is blocking the release?" and the honest answer lives in an internal engineering channel.' },
       { h: 'Order of operations' },
-      { p: 'Loop resolves the asker\'s role and project membership first, converts that into a SQL filter, and only then runs the similarity search. A client account is restricted to sources marked shared — task progress and explicitly published documents. Internal chat and comments are never candidates, so they cannot appear in the context window and the model cannot leak what it was never given.' },
+      { p: 'Loop resolves the asker\'s role and project membership first, converts that into a SQL filter, and only then runs the search. A client account is restricted to sources marked shared — task progress and explicitly published documents. Internal chat and comments are never candidates, so they cannot appear in the context window and the model cannot leak what it was never given.' },
       { h: 'Citations are not decoration' },
       { p: 'Every answer numbers its sources and links back to them. If a claim has no citation it is a bug, not a stylistic choice — and because retrieval was already filtered, following a citation can never land somebody on a page they are not allowed to open.' },
-      { h: 'Degrading honestly' },
-      { p: 'Without an embeddings key the retriever falls back to keyword search over the same permission-filtered rows, and the UI says so. The failure mode is fewer results, never wider access.' },
+      { h: 'Filtered, not just ranked' },
+      { p: 'Retrieval matches on the words in your own tasks and documents, over the same permission-filtered rows — so a result is only ever as wide as your access, never wider. The failure mode is fewer results, never a leak.' },
     ],
   },
 ];

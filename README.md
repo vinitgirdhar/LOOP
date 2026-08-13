@@ -32,7 +32,7 @@
 
 - **Lane 1 — Infrastructure & Security**: Authentication, RBAC system, database schema architecture, security middleware, and cloud deployment pipelines.
 - **Lane 2 — Product & Core Application**: Project planning, issue tracking, interactive Kanban board, sprint backlog, wiki documentation, and time logging.
-- **Lane 3 — Real-Time Engine & AI Systems**: Auto-Pilot suggestions inbox, explainable health score calculation, permission-aware RAG search, Socket.IO real-time channels, and 3D visual components.
+- **Lane 3 — Real-Time Engine & AI Systems**: Auto-Pilot suggestions inbox, explainable health score calculation, permission-aware workspace search, Supabase Realtime channels, and 3D visual components.
 
 ---
 
@@ -61,10 +61,10 @@ Loop addresses this root cause by connecting development activity directly to pr
 - **0–100 Mathematical Index**: Project health is computed through pure deterministic arithmetic across five explicit indicators: overdue task ratio, blocked dependency depth, velocity trend, work-in-progress overload per member, and stale task inactivity.
 - **Auditable & Non-Hallucinatory**: Language models never compute or guess numerical scores. AI is restricted strictly to generating plain-English executive summaries based on the computed metrics and recommending corrective actions.
 
-### 3. Permission-Aware Workspace RAG Search
-- **Semantic Querying**: Powered by PostgreSQL `pgvector` for deep contextual search across tasks, wiki documentation, chat history, and pull requests.
-- **Strict Role-Based Filtering**: Vector retrieval enforces SQL-level user permissions prior to context aggregation. External client accounts or restricted roles cannot retrieve internal developer discussions or private technical specs.
-- **Inline Citations**: Every generated answer includes direct links to source tickets, documents, and messages.
+### 3. Permission-Aware Workspace Search ("Ask the Workspace")
+- **Grounded Retrieval**: Natural-language questions are answered only from the workspace's own tasks, wiki, and projects. The model is handed the retrieved context and instructed to say plainly when the answer is not in it, rather than guessing.
+- **Strict Role-Based Filtering**: Retrieval runs through the caller's own session, so row-level security applies *before* any content reaches the prompt. A client or restricted role cannot be answered from projects they were never added to — those rows never enter the context.
+- **Cited Sources**: Every generated answer returns the source tickets and documents it drew from.
 
 ### 4. Sprint & Kanban Management
 - **Interactive Board**: Drag-and-drop workflow across customizable status columns (Backlog, To Do, In Progress, Code Review, Testing, Done).
@@ -72,7 +72,7 @@ Loop addresses this root cause by connecting development activity directly to pr
 - **Task Details**: Nested subtasks, dependency mapping, custom tags, attachments, checklists, and time tracking logs.
 
 ### 5. Real-Time Communication & Activity Feeds
-- **Workspace Channels & DMs**: Socket.IO-powered messaging with thread support, rich attachments, @mentions, and emoji reactions.
+- **Workspace Channels & DMs**: Supabase Realtime messaging with thread support, attachments, @mentions, and emoji reactions.
 - **In-App Notifications**: Real-time notifications for task assignments, blocker alerts, and system notifications.
 
 ### 6. Interactive 3D Architecture Visualizations
@@ -84,22 +84,22 @@ Loop addresses this root cause by connecting development activity directly to pr
 
 ### Frontend Architecture
 - **Framework**: Next.js 15 (App Router), React 19, TypeScript
-- **Styling**: Tailwind CSS v4, Lucide Icons, Framer Motion, GSAP
+- **Styling & Animation**: Tailwind CSS v4, GSAP, custom SVG icon set
 - **3D Engine**: Three.js, React Three Fiber
 
 ### Backend & Infrastructure
-- **Server Environment**: Node.js, Express 4, Next.js Server Actions & API Routes
-- **Real-Time Communication**: Socket.IO (WebSocket with polling fallback)
+- **Server Environment**: Node.js, Next.js App Router Route Handlers (deployed on Vercel)
+- **Real-Time Communication**: Supabase Realtime (Postgres change feeds over WebSocket, filtered by row-level security)
 - **Validation**: Zod schema enforcement
 
 ### Data Layer
-- **Primary Database**: PostgreSQL 16
-- **Vector Search Engine**: `pgvector`
-- **ORM & Data Client**: Prisma ORM 6, Supabase Client
+- **Primary Database**: PostgreSQL 16 (managed by Supabase)
+- **Data Client**: `supabase-js` with row-level security enforced on every query
+- **Workspace Search**: Permission-scoped retrieval over tasks, wiki, and projects
 
 ### External Integrations & AI Services
-- **Primary LLM**: Groq API
-- **Fallback LLM & Vector Embeddings**: Google Gemini API (`gemini-2.5-flash` & `text-embedding-004`)
+- **Primary LLM**: Groq API (`llama-3.3-70b-versatile`)
+- **Fallback LLM**: Google Gemini API (`gemini-flash-latest`, with automatic failover from Groq)
 - **Asset Storage**: Cloudinary (with local filesystem fallback)
 - **Email Service**: Resend (with console logging fallback)
 
@@ -110,7 +110,7 @@ Loop addresses this root cause by connecting development activity directly to pr
 ### Prerequisites
 - **Node.js**: Version 20.x or later
 - **npm**: Version 10.x or later
-- **Docker Desktop** *(Optional)*: Required for running local PostgreSQL (`pgvector`) and Redis containers
+- **Docker Desktop** *(Optional)*: Required only to run the local Supabase stack (PostgreSQL, Auth, Storage) via the Supabase CLI
 
 ### 1. Clone Repository
 ```bash
@@ -124,15 +124,18 @@ Create a `.env` file in the root directory based on `.env.example`:
 cp .env.example .env
 ```
 
-Ensure the following configuration variables are defined:
+Ensure the following configuration variables are defined (see `.env.example` for the full list):
 ```env
-DATABASE_URL="postgresql://postgres:postgres@localhost:5433/loop?schema=public"
-REDIS_URL="redis://localhost:6380"
-PORT=4000
-API_URL="http://localhost:4000"
-WEB_URL="http://localhost:3000"
-GEMINI_API_KEY="your-gemini-api-key"
+# Supabase — database, auth, storage, realtime
+NEXT_PUBLIC_SUPABASE_URL="https://<project-ref>.supabase.co"
+NEXT_PUBLIC_SUPABASE_ANON_KEY="your-anon-key"
+SUPABASE_SERVICE_ROLE_KEY="your-service-role-key"   # server-side only, never exposed to the client
+
+# AI providers (Groq primary, Gemini fallback)
 GROQ_API_KEY="your-groq-api-key"
+GEMINI_API_KEY="your-gemini-api-key"
+
+# Optional: Cloudinary (falls back to local storage), Resend (falls back to console)
 ```
 
 ### 3. Install Dependencies
@@ -152,8 +155,8 @@ npm run db:seed
 npm run dev
 ```
 
-- **Web Application**: Access at `http://localhost:3000` (or `http://localhost:3001`)
-- **API Documentation**: Access OpenAPI / Swagger interface at `http://localhost:4000/api/docs`
+- **Web Application**: Access at `http://localhost:3000`
+- **API Documentation**: OpenAPI specification served at `http://localhost:3000/api/openapi.json`
 
 ---
 
@@ -174,9 +177,9 @@ All pre-configured seed accounts share the default password: **`Password123`**
 
 ## Known Limitations & Design Trade-Offs
 
-1. **WebSocket Proxy Fallback**: In environments behind strict enterprise proxies or firewalls, Socket.IO connection falls back to HTTP long-polling, introducing a slight latency (~1-2 seconds) for real-time messages.
-2. **AI Provider Rate Limits**: During peak concurrent semantic queries, free-tier Groq API rate limits may be reached. The engine automatically handles failover to Google Gemini.
-3. **Asynchronous Embedding Generation**: Vector embeddings for newly added wiki pages and discussion messages are processed asynchronously in background jobs, resulting in a 3-5 second delay before appearing in RAG search indices.
+1. **WebSocket Proxy Fallback**: In environments behind strict enterprise proxies or firewalls, the Supabase Realtime connection falls back to HTTP long-polling, introducing a slight latency (~1-2 seconds) for real-time messages.
+2. **AI Provider Rate Limits**: During peak concurrent AI queries, free-tier Groq API rate limits may be reached. The engine automatically fails over to Google Gemini, and reports which provider answered.
+3. **Keyword Retrieval Scope**: "Ask the Workspace" retrieves context by permission-scoped keyword match over titles and content, not semantic similarity — so a question shares best results when it shares vocabulary with the source material. The row-level-security-before-retrieval guarantee and the Groq→Gemini failover are unaffected.
 4. **WebGL Hardware Requirements**: Complex 3D network visuals on the marketing page require WebGL support; performance may throttle on older integrated GPUs or low-power mobile devices.
 
 ---

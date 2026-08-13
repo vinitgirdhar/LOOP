@@ -1,5 +1,6 @@
 import { requireMember, requirePermission } from '@/lib/server/context';
 import { assertOk, badRequest, notFound, ok, route } from '@/lib/server/http';
+import { recordAudit } from '@/lib/server/audit';
 
 type Params = { params: Promise<{ suggestionId: string; decision: string }> };
 
@@ -60,5 +61,16 @@ export const POST = route(async (request: Request, { params }: Params) => {
     .single();
 
   assertOk(error, 'Suggestion');
+
+  // The PRD's promise: accepting (or rejecting) is an auditable act, not magic.
+  await recordAudit({
+    workspaceId: ctx.ws.workspaceId,
+    actorId: ctx.user.id,
+    action: decision === 'accept' ? 'suggestion.accepted' : 'suggestion.rejected',
+    entity: 'ai_suggestion',
+    entityId: suggestionId,
+    meta: { kind: suggestion.kind, taskId: suggestion.task_id ?? null },
+  });
+
   return ok(data);
 });

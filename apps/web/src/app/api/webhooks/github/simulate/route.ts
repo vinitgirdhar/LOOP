@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { requireMember, requirePermission } from '@/lib/server/context';
 import { badRequest, body, ok, route } from '@/lib/server/http';
+import { createAdminClient } from '@/lib/supabase/admin';
 import { GITHUB_EVENTS, suggestFromGithubEvent } from '@/lib/server/autopilot';
 
 /**
@@ -23,7 +24,14 @@ export const POST = route(async (request: Request) => {
   await requirePermission(ctx, ctx.ws, 'workspace.integration.manage');
   const input = await body(request, schema);
 
-  const outcome = await suggestFromGithubEvent(ctx.supabase, {
+  // A real webhook carries no user session, so ai_suggestions has an RLS SELECT
+  // and DECIDE policy but no INSERT one — the engine writes under the service
+  // role. The user's own context above already gated who may fire this; the
+  // write itself runs with the admin client, exactly as a live webhook would.
+  // Every query inside is scoped to this validated workspaceId, so nothing
+  // crosses a tenant boundary.
+  const admin = createAdminClient();
+  const outcome = await suggestFromGithubEvent(admin, {
     workspaceId: ctx.ws.workspaceId,
     actorId: ctx.user.id,
     event: input.kind,

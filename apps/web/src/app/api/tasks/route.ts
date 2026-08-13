@@ -3,6 +3,7 @@ import { PRIORITIES } from '@loop/shared';
 import { requireMember, requirePermission } from '@/lib/server/context';
 import { assertOk, badRequest, body, created, ok, pagination, route } from '@/lib/server/http';
 import { TASK_SELECT, withKey, withKeys } from '@/lib/server/tasks';
+import { recordAudit } from '@/lib/server/audit';
 
 export const GET = route(async (request: Request) => {
   const { supabase, ws } = await requireMember(request);
@@ -91,5 +92,15 @@ export const POST = route(async (request: Request) => {
     .single();
 
   assertOk(error, 'Task');
+
+  await recordAudit({
+    workspaceId: ctx.ws.workspaceId,
+    actorId: ctx.user.id,
+    action: 'task.created',
+    entity: 'task',
+    entityId: (data as unknown as { id: string }).id,
+    meta: { title: input.title, projectId: input.projectId },
+  });
+
   return created(withKey(data!));
 });

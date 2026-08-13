@@ -6,6 +6,32 @@ import { chat, isAiConfigured } from '@/lib/server/ai';
 
 const schema = z.object({ question: z.string().trim().min(3, 'Ask a fuller question').max(500) });
 
+const STOPWORDS = new Set([
+  'the', 'and', 'for', 'are', 'with', 'this', 'that', 'from', 'have', 'what', 'which', 'who', 'when', 'where', 'why', 'how',
+  'does', 'did', 'is', 'was', 'were', 'will', 'would', 'about', 'into', 'over', 'tell', 'show', 'give', 'list', 'all', 'any',
+  'can', 'our', 'your', 'their', 'been', 'being', 'they', 'them', 'there', 'here',
+]);
+
+/**
+ * Significant, LIKE-safe words from a question, for keyword retrieval.
+ *
+ * The `[a-z0-9]{3,}` match drops punctuation, so the words are safe to drop
+ * straight into a PostgREST `.or()` filter — a stray comma or parenthesis there
+ * would be read as filter syntax, not text.
+ */
+function keywords(question: string): string[] {
+  const words = question.toLowerCase().match(/[a-z0-9]{3,}/g) ?? [];
+  const seen = new Set<string>();
+  const out: string[] = [];
+  for (const word of words) {
+    if (STOPWORDS.has(word) || seen.has(word)) continue;
+    seen.add(word);
+    out.push(word);
+    if (out.length >= 8) break;
+  }
+  return out;
+}
+
 /**
  * Ask the Workspace.
  *
@@ -20,15 +46,21 @@ export const POST = route(async (request: Request) => {
 
   if (!isAiConfigured()) throw badRequest('AI is not configured on this deployment');
 
-  const like = `%${question.replace(/[,()]/g, ' ').slice(0, 60)}%`;
+  // Keyword retrieval matches rows whose title or body contains *any*
+  // significant word from the question. The previous version used the entire
+  // question as one LIKE pattern, so it only ever matched a title that repeated
+  // the question verbatim — tasks and docs almost never reached the context.
+  const terms = keywords(question);
+  const tasksQuery = supabase
+    .from('tasks')
+    .select('id, number, title, status, priority, due_date, project:projects (key, name)')
+    .eq('workspace_id', ws.workspaceId)
+    .limit(15);
+  const wikiQuery = supabase.from('wiki_pages').select('id, title, content').eq('workspace_id', ws.workspaceId).limit(5);
+
   const [tasks, pages, projects] = await Promise.all([
-    supabase
-      .from('tasks')
-      .select('number, title, status, priority, due_date, project:projects (key, name)')
-      .eq('workspace_id', ws.workspaceId)
-      .ilike('title', like)
-      .limit(15),
-    supabase.from('wiki_pages').select('title, content').eq('workspace_id', ws.workspaceId).ilike('title', like).limit(5),
+    terms.length ? tasksQuery.or(terms.map((word) => `title.ilike.%${word}%,description.ilike.%${word}%`).join(',')) : tasksQuery,
+    terms.length ? wikiQuery.or(terms.map((word) => `title.ilike.%${word}%,content.ilike.%${word}%`).join(',')) : wikiQuery,
     supabase.from('projects').select('name, key, status, deadline').eq('workspace_id', ws.workspaceId).limit(20),
   ]);
 
@@ -63,11 +95,40 @@ export const POST = route(async (request: Request) => {
     answer,
   });
 
+  // Citations the Ask page renders: tasks deep-link to their detail view; wiki
+  // pages are named without a link (there is no per-page route yet).
+  const taskCitations = (tasks.data ?? []).map((t) => {
+    const project = (Array.isArray(t.project) ? t.project[0] : t.project) as { key?: string } | null;
+    return {
+      title: `${project?.key ?? '?'}-${t.number} ${t.title}`,
+      url: `/w/${ws.workspaceId}/tasks/${t.id}`,
+      sourceType: 'task',
+      sourceId: t.id as string,
+    };
+  });
+  const pageCitations = (pages.data ?? []).map((p) => ({
+    title: p.title,
+    url: null,
+    sourceType: 'wiki',
+    sourceId: p.id as string,
+  }));
+  const citations = [...taskCitations, ...pageCitations].map((citation, index) => ({ index: index + 1, ...citation }));
+
+  // Which model the UI reports as having answered. It follows the same
+  // primary→fallback order the request itself does.
+  const model = process.env.GROQ_API_KEY
+    ? process.env.GROQ_MODEL ?? 'llama-3.3-70b-versatile'
+    : process.env.GEMINI_API_KEY
+      ? process.env.GEMINI_MODEL ?? 'gemini-flash-latest'
+      : null;
+
   return ok({
     answer,
-    sources: {
-      tasks: tasks.data ?? [],
-      pages: (pages.data ?? []).map((page) => page.title),
-    },
+    citations,
+    retrieved: citations.length,
+    model,
+    // Retrieval is already RLS-filtered for everyone; the flag tells the reader
+    // a client's answer was drawn from a deliberately narrower set.
+    restricted: ws.role === 'CLIENT',
   });
 });

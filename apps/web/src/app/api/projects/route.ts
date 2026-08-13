@@ -2,6 +2,7 @@ import { z } from 'zod';
 import { DEFAULT_COLUMNS, PROJECT_STATUSES, PRIORITIES } from '@loop/shared';
 import { requireMember, requirePermission } from '@/lib/server/context';
 import { assertOk, badRequest, body, created, ok, route } from '@/lib/server/http';
+import { recordAudit } from '@/lib/server/audit';
 
 /**
  * The project list, with the figures the cards render.
@@ -163,6 +164,15 @@ export const POST = route(async (request: Request) => {
   assertOk(columnsFailed, 'Board columns');
 
   await ctx.supabase.from('project_members').insert({ project_id: project!.id, user_id: ctx.user.id, role: 'LEAD' });
+
+  await recordAudit({
+    workspaceId: ctx.ws.workspaceId,
+    actorId: ctx.user.id,
+    action: 'project.created',
+    entity: 'project',
+    entityId: project!.id,
+    meta: { key: project!.key, name: project!.name },
+  });
 
   return created(project);
 });
