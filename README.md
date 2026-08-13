@@ -1,212 +1,194 @@
-# Loop — Enterprise Project Management & Team Collaboration Platform
+# Loop
 
-> **DevFusion 4.0 — Problem Statement 5**  
-> *The project management platform that keeps itself updated and proves why it says what it says.*
+### Enterprise Project Management & Team Collaboration Platform
+> **Problem Statement 5: Enterprise Project Management & Team Collaboration Platform (Jira + Notion + Slack + GitHub)**  
+> *Combining Jira, Notion, Slack, and GitHub into a self-updating, evidence-backed workspace.*
 
----
-
-## 🚀 Overview
-
-Every team already uses Jira, Notion, Slack, and GitHub. The pain isn't missing tools—the pain is that **the board is always out of date**. Work happens in chat and in commits, requiring manual card dragging, status write-ups, and blocker chasing.
-
-**Loop** is a single workspace for projects, docs, and chat where an AI layer reads real activity (commits, chat, task events) and keeps the board honest. Every AI action is backed by evidence that a human can accept or reject.
-
-### 🌟 Key Differentiators
-
-1. **🤖 Auto-Pilot Board (Self-Updating Status)**
-   - GitHub webhooks, chat activity, and task events feed a deterministic rules + AI pipeline.
-   - When a commit mentions `PAY-12`, Loop proposes moving `PAY-12` to **Code Review**.
-   - Proposals land in a **Suggestions Inbox** with evidence (links, quotes), confidence score, and Accept/Reject controls. High-confidence rules can auto-apply per project.
-2. **📊 Explainable Project Health Score**
-   - A 0–100 score per project computed via pure, deterministic arithmetic (5 signals: overdue ratio, blocked dependencies, velocity trend, WIP overload, silent tasks).
-   - **No model invents numbers.** AI only generates the plain-English executive narrative on top of the calculated arithmetic.
-3. **🔒 Ask the Workspace (Permission-Aware RAG)**
-   - Semantic workspace query engine powered by `pgvector`.
-   - Answers cite exact source tasks, wiki pages, messages, and commits.
-   - **Strict RBAC filtering in SQL:** Client roles can never retrieve internal developer chat or confidential documents.
+<p align="left">
+  <a href="https://ps-5-devfolio-web.vercel.app/"><img src="https://img.shields.io/badge/Live_Demo-ps--5--devfolio--web.vercel.app-000000?style=for-the-badge&logo=vercel&logoColor=white" alt="Live Demo" /></a>
+  <img src="https://img.shields.io/badge/Next.js-15-black?style=for-the-badge&logo=nextdotjs&logoColor=white" alt="Next.js 15" />
+  <img src="https://img.shields.io/badge/TypeScript-5.7-blue?style=for-the-badge&logo=typescript&logoColor=white" alt="TypeScript" />
+  <img src="https://img.shields.io/badge/PostgreSQL-16-336791?style=for-the-badge&logo=postgresql&logoColor=white" alt="PostgreSQL" />
+  <img src="https://img.shields.io/badge/License-MIT-green?style=for-the-badge" alt="License" />
+</p>
 
 ---
 
-## 🏗 Architecture & Tech Stack
+## Executive Summary
 
-```mermaid
-flowchart TD
-    subgraph Frontend["Next.js 15 Web Application"]
-        React["React 19 + TypeScript"]
-        Tailwind["Tailwind CSS v4 (Hand-rolled Mobile-First UI)"]
-    end
-
-    subgraph Backend["Express 4 API & Real-Time Service"]
-        API["Node.js + Express Services"]
-        Sockets["Socket.IO Server (Real-time Chat & Updates)"]
-        Cron["Node Cron (Anti-sleep & Health jobs)"]
-    end
-
-    subgraph Persistence["Database & Caching"]
-        PG[("PostgreSQL 16 + pgvector")]
-        Prisma["Prisma ORM 6"]
-        Redis[("Redis 7 (Rate limiting & Sockets)")]
-    end
-
-    subgraph External["Third-Party & AI Providers"]
-        Groq["Groq API (Primary LLM)"]
-        Gemini["Google Gemini (Fallback LLM + Embeddings)"]
-        Cloudinary["Cloudinary (Media storage)"]
-        Resend["Resend (Transactional Email)"]
-    end
-
-    Frontend <-->|REST API + WebSockets| Backend
-    Backend <--> Prisma
-    Prisma <--> PG
-    Backend <--> Redis
-    Backend <--> External
-```
-
-- **Frontend:** Next.js 15 App Router, React 19, TypeScript, Tailwind CSS v4.
-- **Backend API:** Node.js, Express 4, Socket.IO (Real-time events), Zod, Helmet, Swagger UI.
-- **Database & Vector Store:** PostgreSQL 16 with `pgvector` extension & Prisma ORM 6.
-- **Caching & Real-Time:** Redis 7.
-- **AI Infrastructure:** Groq API (Primary LLM), Google Gemini (Fallback LLM & Vector Embeddings).
-- **Integrations & Fallbacks:** Cloudinary (Local-disk fallback), Resend (Console logging fallback).
+| Requirement | Specification |
+|:---|:---|
+| **Project Name** | **Loop** |
+| **Problem Statement** | **Problem Statement 5: Enterprise Project Management & Team Collaboration Platform (Jira + Notion + Slack + GitHub)** |
+| **Difficulty Level** | Advanced |
+| **Domain** | SaaS • Productivity • Project Management • DevTools |
+| **Duration** | 24–48 Hours |
+| **Live Application** | [https://ps-5-devfolio-web.vercel.app/](https://ps-5-devfolio-web.vercel.app/) |
+| **API Specification** | `http://localhost:4000/api/docs` (OpenAPI 3.0 / Swagger) |
 
 ---
 
-## ⚡ Quick Start & Local Setup
+## Team & Responsibilities
+
+- **Lane 1 — Infrastructure & Security**: Authentication, RBAC system, database schema architecture, security middleware, and cloud deployment pipelines.
+- **Lane 2 — Product & Core Application**: Project planning, issue tracking, interactive Kanban board, sprint backlog, wiki documentation, and time logging.
+- **Lane 3 — Real-Time Engine & AI Systems**: Auto-Pilot suggestions inbox, explainable health score calculation, permission-aware RAG search, Socket.IO real-time channels, and 3D visual components.
+
+---
+
+## Problem Statement & Background
+
+### Official Context
+Modern software teams operate across fragmented toolchains: Jira for issue tracking, Notion for documentation, Slack for daily communication, GitHub for source code, and spreadsheets for executive status reports. This fragmentation leads to constant context switching, duplicated effort, stale project status, and poor cross-functional visibility.
+
+The objective of **Problem Statement 5** is to build a production-grade enterprise SaaS platform that integrates project planning, issue tracking, documentation, sprint management, real-time communication, and AI-driven productivity into a unified environment while adhering to enterprise security and role-based access standards.
+
+### The Core Problem Loop Solves
+In practice, project management software fails not because features are missing, but because **project boards are almost always out of date**. Actual development occurs in terminal sessions, pull requests, and chat threads. Updating ticket statuses manually is administrative overhead that engineers often delay or skip.
+
+Loop addresses this root cause by connecting development activity directly to project governance. An AI-assisted Auto-Pilot engine monitors real-world events—such as Git commits, pull requests, and discussion threads—and generates status update proposals. To maintain complete transparency, Loop never mutates project state silently. Every proposal includes verifiable evidence and requires explicit human approval unless project-level auto-apply rules are enabled.
+
+---
+
+## Key Feature Capabilities
+
+### 1. Auto-Pilot Governance Engine
+- **Event Ingestion**: Ingests GitHub webhooks, team chat messages, and task status changes into a rules-and-AI evaluation pipeline.
+- **Evidence-Backed Proposals**: When a branch or commit referencing a ticket (e.g., `PAY-12`) is detected, Loop drafts a proposal to move `PAY-12` to Code Review.
+- **Suggestions Inbox**: Proposals arrive in a dedicated inbox displaying code snippets, message quotes, commit hashes, confidence ratings, and Accept/Reject controls. Approved actions write directly to the audit log.
+
+### 2. Deterministic & Explainable Health Scoring
+- **0–100 Mathematical Index**: Project health is computed through pure deterministic arithmetic across five explicit indicators: overdue task ratio, blocked dependency depth, velocity trend, work-in-progress overload per member, and stale task inactivity.
+- **Auditable & Non-Hallucinatory**: Language models never compute or guess numerical scores. AI is restricted strictly to generating plain-English executive summaries based on the computed metrics and recommending corrective actions.
+
+### 3. Permission-Aware Workspace RAG Search
+- **Semantic Querying**: Powered by PostgreSQL `pgvector` for deep contextual search across tasks, wiki documentation, chat history, and pull requests.
+- **Strict Role-Based Filtering**: Vector retrieval enforces SQL-level user permissions prior to context aggregation. External client accounts or restricted roles cannot retrieve internal developer discussions or private technical specs.
+- **Inline Citations**: Every generated answer includes direct links to source tickets, documents, and messages.
+
+### 4. Sprint & Kanban Management
+- **Interactive Board**: Drag-and-drop workflow across customizable status columns (Backlog, To Do, In Progress, Code Review, Testing, Done).
+- **Sprint Analytics**: Sprint backlog planning, capacity tracking, story point allocation, and real-time burndown charts.
+- **Task Details**: Nested subtasks, dependency mapping, custom tags, attachments, checklists, and time tracking logs.
+
+### 5. Real-Time Communication & Activity Feeds
+- **Workspace Channels & DMs**: Socket.IO-powered messaging with thread support, rich attachments, @mentions, and emoji reactions.
+- **In-App Notifications**: Real-time notifications for task assignments, blocker alerts, and system notifications.
+
+### 6. Interactive 3D Architecture Visualizations
+- High-performance landing experience with WebGL graphics rendered via Three.js and React Three Fiber.
+
+---
+
+## Technology Stack
+
+### Frontend Architecture
+- **Framework**: Next.js 15 (App Router), React 19, TypeScript
+- **Styling**: Tailwind CSS v4, Lucide Icons, Framer Motion, GSAP
+- **3D Engine**: Three.js, React Three Fiber
+
+### Backend & Infrastructure
+- **Server Environment**: Node.js, Express 4, Next.js Server Actions & API Routes
+- **Real-Time Communication**: Socket.IO (WebSocket with polling fallback)
+- **Validation**: Zod schema enforcement
+
+### Data Layer
+- **Primary Database**: PostgreSQL 16
+- **Vector Search Engine**: `pgvector`
+- **ORM & Data Client**: Prisma ORM 6, Supabase Client
+
+### External Integrations & AI Services
+- **Primary LLM**: Groq API
+- **Fallback LLM & Vector Embeddings**: Google Gemini API (`gemini-2.5-flash` & `text-embedding-004`)
+- **Asset Storage**: Cloudinary (with local filesystem fallback)
+- **Email Service**: Resend (with console logging fallback)
+
+---
+
+## Local Setup & Deployment Guide
 
 ### Prerequisites
-- **Node.js**: `v20.x` or higher
-- **Docker Desktop**: For PostgreSQL (with `pgvector`) and Redis containers
+- **Node.js**: Version 20.x or later
+- **npm**: Version 10.x or later
+- **Docker Desktop** *(Optional)*: Required for running local PostgreSQL (`pgvector`) and Redis containers
 
-### Step-by-Step Installation
+### 1. Clone Repository
+```bash
+git clone https://github.com/vinitgirdhar/PS5-Devfolio.git
+cd PS5-Devfolio
+```
 
-1. **Clone the Repository**
-   ```bash
-   git clone https://github.com/<your-username>/loop.git
-   cd loop
-   ```
+### 2. Environment Setup
+Create a `.env` file in the root directory based on `.env.example`:
+```bash
+cp .env.example .env
+```
 
-2. **Start Local Infrastructure (Docker)**
-   Starts PostgreSQL with `pgvector` on port `5433` and Redis on port `6380`.
-   ```bash
-   docker compose up -d
-   ```
+Ensure the following configuration variables are defined:
+```env
+DATABASE_URL="postgresql://postgres:postgres@localhost:5433/loop?schema=public"
+REDIS_URL="redis://localhost:6380"
+PORT=4000
+API_URL="http://localhost:4000"
+WEB_URL="http://localhost:3000"
+GEMINI_API_KEY="your-gemini-api-key"
+GROQ_API_KEY="your-groq-api-key"
+```
 
-3. **Install Dependencies**
-   ```bash
-   npm install
-   ```
+### 3. Install Dependencies
+```bash
+npm install
+```
 
-4. **Initialize & Seed Database**
-   *Note: Prisma commands must be run from the root workspace directory.*
-   ```bash
-   npm run db:push
-   npm run db:seed
-   ```
+### 4. Database Setup & Seed
+Execute database schema push and populate initial seed data:
+```bash
+npm run db:push
+npm run db:seed
+```
 
-5. **Start Development Servers**
-   Starts both `@loop/api` (port 4000) and `@loop/web` (port 3000) concurrently.
-   ```bash
-   npm run dev
-   ```
+### 5. Launch Development Server
+```bash
+npm run dev
+```
 
-   - **Web App**: `http://localhost:3000`
-   - **API Server**: `http://localhost:4000`
-   - **Swagger / OpenAPI Documentation**: `http://localhost:4000/api/docs`
-
----
-
-## 🔑 Seed Test Accounts
-
-All accounts share the default password: **`Password123`**
-
-| Role | Email Address | Description & Scope |
-|---|---|---|
-| **Workspace Owner** | `owner@loop.dev` | Full admin privileges across "Northwind Labs" workspace |
-| **Project Manager** | `pm@loop.dev` | Project management, sprint creation, health monitoring |
-| **Team Member** | `member@loop.dev` | Primary developer, task execution, time logging |
-| **Developer 2** | `dev2@loop.dev` | Secondary developer for multi-user collaboration |
-| **Developer 3** | `dev3@loop.dev` | Tertiary developer for multi-user collaboration |
-| **QA Engineer** | `qa@loop.dev` | Quality assurance, testing, and task review |
-| **Client** | `client@loop.dev` | External client role (locked down, SHARED visibility only) |
-| **Platform Admin** | `admin@loop.dev` | Global platform administrator (feature flags, audit logs) |
-
-*The seed script populates 2 workspaces ("Northwind Product" & secondary), 3 projects (`PAY`, `MOB`, `INF`), 27 tasks, 3 sprints with burndown snapshots, wiki documentation, chat history, 14 days of time logs, GitHub integration rows, pending Auto-Pilot suggestions, and audit logs.*
+- **Web Application**: Access at `http://localhost:3000` (or `http://localhost:3001`)
+- **API Documentation**: Access OpenAPI / Swagger interface at `http://localhost:4000/api/docs`
 
 ---
 
-## 📋 Environment Variables
+## Seeded Test Credentials
 
-Copy `.env.example` to `.env` in the root directory:
+All pre-configured seed accounts share the default password: **`Password123`**
 
-| Variable | Description | Default / Example |
-|---|---|---|
-| `DATABASE_URL` | PostgreSQL connection string | `postgresql://postgres:postgres@localhost:5433/loop?schema=public` |
-| `REDIS_URL` | Redis server connection string | `redis://localhost:6380` |
-| `PORT` | API server port | `4000` |
-| `API_URL` | Public backend URL | `http://localhost:4000` |
-| `WEB_URL` | Public frontend URL | `http://localhost:3000` |
-| `JWT_ACCESS_SECRET` | Secret for short-lived JWT access tokens | `your-access-secret` |
-| `JWT_REFRESH_SECRET` | Secret for httpOnly refresh tokens | `your-refresh-secret` |
-| `GROQ_API_KEY` | Groq API Key (Primary LLM) | `gsk_...` (optional fallback to Gemini) |
-| `GEMINI_API_KEY` | Google Gemini API Key (RAG embeddings & fallback LLM) | `AIzaSy...` |
-| `CLOUDINARY_URL` | Cloudinary API connection string | Optional (falls back to local disk storage) |
-| `RESEND_API_KEY` | Resend API Key for transactional email | Optional (falls back to console logging) |
+| Role | Email Address | Access Level & Scope |
+|:---|:---|:---|
+| **Workspace Owner** | `owner@loop.dev` | Complete administrative authority over organization, settings, and billing |
+| **Project Manager** | `pm@loop.dev` | Project configuration, sprint management, delegation, and reporting |
+| **Developer / Team Member** | `member@loop.dev` | Task execution, code activity tracking, time logging, and channel discussion |
+| **QA Engineer** | `qa@loop.dev` | Quality assurance review, bug ticket creation, and test validation |
+| **External Client** | `client@loop.dev` | Read-only shared visibility view (Strict SQL-level RBAC isolation) |
+| **Platform Admin** | `admin@loop.dev` | Global platform configuration, feature flag toggles, and audit log inspection |
 
 ---
 
-## 🚢 Deployment (Render & Docker)
+## Known Limitations & Design Trade-Offs
 
-### Render Blueprint Deployment
-The repository includes a ready-to-deploy [`render.yaml`](file:///d:/Cooking%20stuff/PS5%20Devfolio/render.yaml) blueprint:
-1. Connect your GitHub repository to **Render**.
-2. Select **New Blueprint Instance**.
-3. Render automatically provisions:
-   - **PostgreSQL 16** with `pgvector` enabled
-   - **Redis Key-Value store**
-   - **Loop API Web Service** (Node/Express)
-   - **Loop Frontend Service** (Next.js)
-4. Fill in external API secrets (`GROQ_API_KEY`, `GEMINI_API_KEY`, `GOOGLE_CLIENT_ID`, etc.) in the Render dashboard.
-
-### Anti-Sleep Mechanism (2 Layers)
-To prevent Render's free instances from spinning down after 15 minutes of inactivity:
-- **Layer 1 (Internal Keep-Alive)**: [`apps/api/src/jobs/keepAlive.ts`](file:///d:/Cooking%20stuff/PS5%20Devfolio/apps/api/src/jobs/keepAlive.ts) pings `/api/health` every 5 minutes when running in production.
-- **Layer 2 (External Keep-Alive)**: [`.github/workflows/keep-alive.yml`](file:///d:/Cooking%20stuff/PS5%20Devfolio/.github/workflows/keep-alive.yml) runs every 10 minutes via GitHub Actions to wake slept services. Configure repository variables `API_PING_URL` and `WEB_PING_URL`.
+1. **WebSocket Proxy Fallback**: In environments behind strict enterprise proxies or firewalls, Socket.IO connection falls back to HTTP long-polling, introducing a slight latency (~1-2 seconds) for real-time messages.
+2. **AI Provider Rate Limits**: During peak concurrent semantic queries, free-tier Groq API rate limits may be reached. The engine automatically handles failover to Google Gemini.
+3. **Asynchronous Embedding Generation**: Vector embeddings for newly added wiki pages and discussion messages are processed asynchronously in background jobs, resulting in a 3-5 second delay before appearing in RAG search indices.
+4. **WebGL Hardware Requirements**: Complex 3D network visuals on the marketing page require WebGL support; performance may throttle on older integrated GPUs or low-power mobile devices.
 
 ---
 
-## 📖 API Documentation & ER Diagram
+## Project Documentation & Resources
 
-- **OpenAPI / Swagger Specs**: Navigate to `/api/docs` on any running API instance (or [`apps/api/src/docs/openapi.ts`](file:///d:/Cooking%20stuff/PS5%20Devfolio/apps/api/src/docs/openapi.ts)).
-- **Entity-Relationship Diagram**: Comprehensive database schema model and relationships documentation is available in [`docs/ER.md`](file:///d:/Cooking%20stuff/PS5%20Devfolio/docs/ER.md).
-
----
-
-## 🚫 Out of Scope for v2
-
-To maintain hyper-focus on solving project stale-data issues with maximum quality, the following features are explicitly designated for **v2**:
-- Real payment processing & billing checkout gateway integrations
-- Native WebRTC video calling
-- Interactive whiteboard & mind-mapping canvases
-- Gantt chart timeline view
-- Offline Progressive Web App (PWA) sync
-- Multi-language i18n localization
+- **Live Application**: [ps-5-devfolio-web.vercel.app](https://ps-5-devfolio-web.vercel.app/)
+- **API Specification**: `http://localhost:4000/api/docs`
+- **Database Architecture Diagram**: [`docs/ER.md`](file:///d:/Cooking%20stuff/PS5%20Devfolio/docs/ER.md)
 
 ---
 
-## 📽️ Demo Walkthrough Script
+## License
 
-For evaluators and judges recording or testing the 3–5 minute presentation:
-1. **Landing & Authentication** (20s): Show landing page, dark mode, sign in.
-2. **Workspace & Roles** (30s): Overview of organization members and RBAC matrix.
-3. **Kanban & Task Management** (60s): Create task, drag & drop across columns, subtasks, @mentions.
-4. **Auto-Pilot Suggestions Inbox** (60s): Push commit / trigger task event. Show evidence card in inbox, confidence score, accept action, and audit log write.
-5. **Explainable Health Score** (45s): Review 5 mathematical signals, point weighting, top 3 corrective actions, and AI narrative.
-6. **Permission-Aware Ask Workspace** (45s): Query RAG engine as PM/Member with citations. Switch to Client account and demonstrate blocked internal chat retrieval.
-7. **Analytics & Specs** (30s): Velocity burndown charts, Swagger API docs (`/api/docs`), and database ER diagram (`docs/ER.md`).
-
----
-
-## 📜 License & Acknowledgments
-
-Built for **DevFusion 4.0 Hackathon — Problem Statement 5**.  
-Developed with Next.js 15, Express, Prisma 6, pgvector, Groq, and Google Gemini.
+Built for **DevFusion 4.0 — Problem Statement 5**. Released under the MIT License.
