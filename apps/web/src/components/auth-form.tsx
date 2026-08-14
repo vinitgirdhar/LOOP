@@ -55,6 +55,11 @@ export function AuthCard({
     scrolls behind it. Any overflow is handled inside the sheet, so a short
     handset degrades to a small internal scroll instead of the page itself
     sliding around under a floating hero.
+
+    That last part has to be `overflow-y-auto`, not `overflow-hidden`. With the
+    root pinned to `h-dvh` and the sheet clipping, anything past the fold — the
+    demo account chips on a 664px viewport — was unreachable rather than
+    scrollable: the page could not scroll and neither could the sheet.
   */
   return (
     <div className="flex h-dvh flex-col overflow-hidden bg-[var(--ink)] text-[var(--ink-text)] lg:h-auto lg:min-h-dvh lg:flex-row lg:overflow-visible">
@@ -97,10 +102,10 @@ export function AuthCard({
 
       {/* ── sheet ─────────────────────────────────────────────────────── */}
       <div
-        className="auth-sheet fade-in relative -mt-6 flex min-h-0 flex-1 flex-col overflow-hidden rounded-tl-none rounded-tr-[6rem] sm:rounded-tr-[7.5rem] bg-[var(--bg)] px-5 pb-5 pt-6 text-[var(--text)] sm:-mt-8 sm:px-8 sm:pb-8 sm:pt-8 lg:-ml-9 lg:mt-0 lg:justify-center lg:rounded-l-[3.5rem] lg:rounded-tr-none lg:px-12 lg:py-12 xl:px-16"
+        className="auth-sheet scroll-thin fade-in relative -mt-6 flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain rounded-tl-none rounded-tr-[6rem] sm:rounded-tr-[7.5rem] bg-[var(--bg)] px-5 pb-5 pt-6 text-[var(--text)] sm:-mt-8 sm:px-8 sm:pb-8 sm:pt-8 lg:-ml-9 lg:mt-0 lg:justify-center lg:overflow-visible lg:rounded-l-[3.5rem] lg:rounded-tr-none lg:px-12 lg:py-12 xl:px-16"
         style={{ paddingBottom: 'max(1.5rem, env(safe-area-inset-bottom))' }}
       >
-        <div className="mx-auto flex w-full max-w-sm flex-1 flex-col justify-between py-1 lg:max-w-md lg:justify-center lg:py-0 xl:max-w-lg">
+        <div className="mx-auto flex w-full min-h-full max-w-sm flex-1 shrink-0 flex-col justify-between py-1 lg:max-w-md lg:justify-center lg:py-0 xl:max-w-lg">
           <div>
             <h1 className="text-[25px] font-bold leading-tight sm:text-[30px] lg:text-[36px] xl:text-[40px]">{title}</h1>
             {subtitle && <p className="mt-1 text-[13px] leading-relaxed text-[var(--text-muted)] sm:mt-1.5 sm:text-[14.5px] lg:text-[16px]">{subtitle}</p>}
