@@ -65,7 +65,7 @@ export function AuthCard({
     <div className="flex h-dvh flex-col overflow-hidden bg-[var(--ink)] text-[var(--ink-text)] lg:h-auto lg:min-h-dvh lg:flex-row lg:overflow-visible">
       {/* ── hero ──────────────────────────────────────────────────────── */}
       <div
-        className="relative flex h-[38vh] min-h-[250px] shrink-0 flex-col justify-between overflow-hidden px-5 pb-6 pt-3 sm:h-[40vh] sm:min-h-[280px] sm:px-8 lg:h-auto lg:w-[44%] lg:min-h-0 lg:justify-start lg:pb-8 lg:pt-8"
+        className="relative flex h-[30vh] min-h-[190px] shrink-0 flex-col justify-between overflow-hidden px-5 pb-5 pt-3 sm:h-[40vh] sm:min-h-[260px] sm:px-8 lg:h-auto lg:w-[44%] lg:min-h-0 lg:justify-start lg:pb-8 lg:pt-8"
         style={{ paddingTop: 'max(0.75rem, env(safe-area-inset-top))' }}
       >
         <ConstellationMark />
@@ -102,8 +102,8 @@ export function AuthCard({
 
       {/* ── sheet ─────────────────────────────────────────────────────── */}
       <div
-        className="auth-sheet scroll-thin fade-in relative -mt-6 flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain rounded-tl-none rounded-tr-[6rem] sm:rounded-tr-[7.5rem] bg-[var(--bg)] px-5 pb-5 pt-6 text-[var(--text)] sm:-mt-8 sm:px-8 sm:pb-8 sm:pt-8 lg:-ml-9 lg:mt-0 lg:justify-center lg:overflow-visible lg:rounded-l-[3.5rem] lg:rounded-tr-none lg:px-12 lg:py-12 xl:px-16"
-        style={{ paddingBottom: 'max(1.5rem, env(safe-area-inset-bottom))' }}
+        className="auth-sheet scroll-thin fade-in relative -mt-6 flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain rounded-tl-none rounded-tr-[6rem] sm:rounded-tr-[7.5rem] bg-[var(--bg)] px-5 pb-8 pt-6 text-[var(--text)] sm:-mt-8 sm:px-8 sm:pb-8 sm:pt-8 lg:-ml-9 lg:mt-0 lg:justify-center lg:overflow-visible lg:rounded-l-[3.5rem] lg:rounded-tr-none lg:px-12 lg:py-12 xl:px-16"
+        style={{ paddingBottom: 'max(2rem, env(safe-area-inset-bottom))' }}
       >
         <div className="mx-auto flex w-full min-h-full max-w-sm flex-1 shrink-0 flex-col justify-between py-1 lg:max-w-md lg:justify-center lg:py-0 xl:max-w-lg">
           <div>
